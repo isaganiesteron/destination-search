@@ -17,7 +17,7 @@ const page = () => {
 
 				<div>
 					<p className="font-bold text-md">City:</p>
-					<select className="border border-black rounded-md w-full" name="cities" id="cities">
+					<select className="border border-black rounded-md w-full" name="cities" id="cities" disabled>
 						<option value="1">1</option>
 						<option value="2">2</option>
 						<option value="3">3</option>
@@ -27,6 +27,13 @@ const page = () => {
 
 				<div>
 					<p className="font-bold text-md">Top 10 Hotels:</p>
+					<div className="border border-black rounded-md h-96 p-2">
+						<p className="text-sm">[status] Please Choose Country... </p>
+					</div>
+				</div>
+
+				<div className="flex flex-row-reverse">
+					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-slate-300 font-bold">Reset</button>
 				</div>
 			</div>
 		</main>
