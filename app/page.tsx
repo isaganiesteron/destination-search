@@ -4,12 +4,21 @@ import ResultItem from "@/components/ResultItem"
 
 const page = () => {
 	const [allCountries, setallCountries] = useState<any[]>([])
+	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
 
 	const getAllCountriesHandler = async () => {
 		console.log("get all countries")
 		const response = await fetch("/api/countries")
 		const allCountries = await response.json()
 		setallCountries(allCountries)
+	}
+
+	const fetchAllCities = async (country: string) => {
+		console.log(`Fetch all cities of ${country}`)
+		const response = await fetch(`/api/cities/${country}`)
+		const allCities = await response.json()
+		console.log(allCities)
+		setCurrentAllCities(allCities)
 	}
 
 	useEffect(() => {
@@ -33,6 +42,8 @@ const page = () => {
 						disabled={allCountries.length < 1}
 						onChange={(e) => {
 							console.log(e.target.value + " selected")
+
+							fetchAllCities(e.target.value)
 						}}
 					>
 						{allCountries.length > 0
