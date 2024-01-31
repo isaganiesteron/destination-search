@@ -1,13 +1,9 @@
 "use client"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+import ResultItem from "@/components/ResultItem"
 
-const Home = () => {
+const page = () => {
 	const [allCountries, setallCountries] = useState<any[]>([])
-	const [allCities, setallCities] = useState<any[]>([])
-	const [currentCountry, setcurrentCountry] = useState<string>("")
-	const [currentCities, setCurrentCities] = useState<any[]>([])
-
-	// const allCities = await apiCall("string")
 
 	const getAllCountriesHandler = async () => {
 		console.log("get all countries")
@@ -16,57 +12,74 @@ const Home = () => {
 		setallCountries(allCountries)
 	}
 
-	const getCurrentCityHandler = async (city: string) => {
-		console.log(`Click ${city}`)
-		const response = await fetch(`/api/cities/${city}`)
-		const allCities = await response.json()
-		console.log(allCities)
-		setallCities(allCities)
-	}
+	useEffect(() => {
+		// fetch all countries at first load
+		getAllCountriesHandler()
+	}, [])
 
-	// const getAllCitiesHandler = async () => {
-	// 	console.log("get all cities")
-	// 	// const allCountries = await apiCall("/common/locations/cities", {})
-	// 	// setallCities(setCurrentCity)
-	// }
+	// useEffect(() => {
+	// 	console.log(allCountries)
+	// }, [allCountries])
 
 	return (
-		<div className="container ">
-			<button className="bg-slate-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={getAllCountriesHandler}>
-				Get all Coutries
-			</button>{" "}
-			<button
-				className="bg-slate-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-				onClick={() => {
-					console.log("Click")
-				}}
-			>
-				Get top 10 hotels
-			</button>
-			<div>
-				<h1>Countries:</h1>
-				{allCountries
-					? allCountries.map((x) => {
-							return (
-								<div key={x.id}>
-									<button onClick={() => getCurrentCityHandler(x.id)} className="bg-slate-100 py-2 px-4 m-1 rounded">
-										{x.name["en-gb" as keyof typeof x.name]}
-									</button>
-								</div>
-							)
-					  })
-					: "Countries havent been fetched yet"}
+		<main>
+			<div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
+				<div>
+					<p className="font-bold text-md">Country:</p>
+					<select
+						className="border border-black rounded-md w-full"
+						name="countries"
+						id="countries"
+						disabled={allCountries.length < 1}
+						onChange={(e) => {
+							console.log(e.target.value + " selected")
+						}}
+					>
+						{allCountries.length > 0
+							? allCountries.map((x) => {
+									return (
+										<option key={x.id} value={x.id}>
+											{x.name["en-gb" as keyof typeof x.name]}
+										</option>
+									)
+							  })
+							: null}
+					</select>
+				</div>
+
+				<div>
+					<p className="font-bold text-md">City:</p>
+					<select className="border border-black rounded-md w-full " name="cities" id="cities" disabled>
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3">3</option>
+						<option value="4">4</option>
+					</select>
+				</div>
+
+				<div>
+					<p className="font-bold text-md">Top 10 Hotels:</p>
+					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
+						<p className="text-sm">[status] Please Choose Country... </p>
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+						<ResultItem />
+					</div>
+				</div>
+
+				<div className="flex flex-row-reverse">
+					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-slate-300 font-bold">Reset</button>
+				</div>
 			</div>
-			<div>
-				<h1>Cities:</h1>
-				{allCities
-					? allCities.map((x) => {
-							return <div key={x.id}>{JSON.stringify(x)}</div>
-					  })
-					: "No city has been selected"}
-			</div>
-		</div>
+		</main>
 	)
 }
 
-export default Home
+export default page
