@@ -1,12 +1,33 @@
 "use client"
 import React, { useEffect, useState } from "react"
 import ResultItem from "@/components/ResultItem"
+import { Settings as I_Settings } from "@/constants/interfaces"
+import Settings from "@/components/Settings"
 
 const page = () => {
 	const [status, setStatus] = useState<string>("Choose a country first")
 	const [allCountries, setallCountries] = useState<any[]>([])
 	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
+	const [showSettings, setShowSettings] = useState<boolean>(true)
+	const [settings, setSettings] = useState<I_Settings>({
+		review: 0,
+		budget: {
+			min_price: 0,
+			max_price: 100,
+			conditions: {},
+		},
+		midrange: {
+			min_price: 100,
+			max_price: 200,
+			conditions: {},
+		},
+		luxury: {
+			min_price: 200,
+			max_price: 20000,
+			conditions: {},
+		},
+	})
 
 	const getAllCountriesHandler = async () => {
 		setStatus("Fetching all countries...")
@@ -39,6 +60,11 @@ const page = () => {
 	useEffect(() => {
 		getAllCountriesHandler()
 	}, [])
+
+	useEffect(() => {
+		console.log("sEttings updated")
+		console.log(settings)
+	}, [settings])
 
 	return (
 		<main>
@@ -108,7 +134,12 @@ const page = () => {
 
 				<div>
 					<p className="text-sm">{status}</p>
+					<button onClick={() => setShowSettings(!showSettings)} className="p-1 text-xs">
+						({!showSettings ? "open" : "close"} settings)
+					</button>
 				</div>
+
+				{showSettings && <Settings settings={settings} saveSettings={setSettings} />}
 				<div className="flex flex-row-reverse">
 					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-slate-300 font-bold">Reset</button>
 				</div>
