@@ -24,6 +24,7 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 							<h1 className="font-bold">{`${index + 1}: ${name}`}</h1>
 							<p className="text-sm">{description}</p>
 							<p>Review Score: {review}</p>
+							<p>Price: {JSON.stringify(priceObj)}</p>
 							{/* <p>Price Book: {price === "NA" ? "Not Available" : price["book" as keyof typeof price]}</p>
 							<p>Price Total: {price === "NA" ? "Not Available" : price["total" as keyof typeof price]}</p> */}
 						</div>
