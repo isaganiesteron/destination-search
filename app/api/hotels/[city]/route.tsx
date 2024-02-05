@@ -1906,6 +1906,48 @@ const tempHotels = [
 		url: "https://www.booking.com/hotel/ph/anita.html?aid=1198318",
 	},
 ]
+
+// const _fakeSearchAPI = (ids: number[]) => {
+// 	return new Promise((resolve, reject) => {
+// 		setTimeout(() => {
+// 			console.log(`_fakeSearchAPI ${ids}`)
+// 			resolve(ids)
+// 		}, 5000) // 1000 milliseconds = 1 second
+// 	})
+// }
+
+const _chunkArray = (array: any[], chunkSize: number) => {
+	const chunks = []
+	for (let i = 0; i < array.length; i += chunkSize) {
+		chunks.push(array.slice(i, i + chunkSize))
+	}
+	return chunks
+}
+
+const _fetchHotelPrices = async (hotels: number[]) => {
+	const splitArray = _chunkArray(hotels, 2) //search endpoint only allow 100 hotels per search
+	console.log(`There will be ${splitArray.length} requests.`)
+	const promises = splitArray.map((array) => {
+		const requestBody = {
+			booker: {
+				country: "nl",
+				platform: "desktop",
+			},
+			checkin: "2024-02-05",
+			checkout: "2024-02-06",
+			accommodations: array,
+			guests: {
+				number_of_adults: 2,
+				number_of_rooms: 1,
+			},
+		}
+		return apiCall("/accommodations/search", requestBody)
+	})
+
+	const allHotelPrices = await Promise.all(promises)
+	const flattenedArray = ([] as object[]).concat(...allHotelPrices)
+	return flattenedArray
+}
 export async function GET(request: Request, params: any) {
 	// const { city } = params.params
 	// const body = {
@@ -1913,6 +1955,19 @@ export async function GET(request: Request, params: any) {
 	// 	extras: ["description", "photos"],
 	// }
 	// const allHotels = await apiCall("/accommodations/details", body)
+
+	/**
+	 * After getting allHotels here, use /accommodations/search with an array of hotel ID's from above to get pricing
+	 * NOTE: the limit here is 100 hotels
+	 *
+	 */
+
+	const hotelIDs = tempHotels.map((x) => x.id)
+
+	const hotelWithPrice = await _fetchHotelPrices(hotelIDs)
+
+	console.log(JSON.stringify(hotelWithPrice))
+
 	// return NextResponse.json(allHotels)
 	return NextResponse.json(tempHotels)
 }
