@@ -203,7 +203,7 @@ const page = () => {
 									const currDescription = x.description.important_information["en-gb" as keyof typeof x.description.important_information]
 									const currPhoto = x.photos[0].url.thumbnail
 									const rating = x.rating.review_score
-									return <ResultItem key={`hotel_${i}`} name={x.name["en-gb" as keyof typeof x.name]} description={currDescription} photoUrl={currPhoto} index={i} review={rating} />
+									return <ResultItem key={`hotel_${i}`} name={x.name["en-gb" as keyof typeof x.name]} description={currDescription} photoUrl={currPhoto} index={i} review={rating} priceObj={x.price} />
 							  })
 							: null}
 					</div>
