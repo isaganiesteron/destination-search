@@ -8,10 +8,11 @@ const page = () => {
 	const [status, setStatus] = useState<string>("Choose a country first")
 	const [allCountries, setallCountries] = useState<any[]>([])
 	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
+	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
-	const [showSettings, setShowSettings] = useState<boolean>(true)
+	const [showSettings, setShowSettings] = useState<boolean>(false)
 	const [settings, setSettings] = useState<I_Settings>({
-		review: 0,
+		review: 8.3,
 		budget: {
 			min_price: 0,
 			max_price: 100,
@@ -49,12 +50,27 @@ const page = () => {
 		setStatus(`Fetch all hotels in the city of ${city}...`)
 		const response = await fetch(`/api/hotels/${city}`)
 		const allHotels = await response.json()
+		setAllHotelsFetched(allHotels) //save all hotels fetched so you can filter it later on
+		prepareHotelResults(allHotels)
 		setStatus(`Done fetching ${allHotels.length} hotels.`)
+	}
+
+	const prepareHotelResults = (hotels: any[] | null) => {
+		// filter results based on settings
+		const allHotels = hotels ? hotels : allHotelsFetched
+
+		console.log(allHotels)
+		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => {
+			if (x.rating.review_score >= settings.review) console.log("hotel is greater than " + settings.review)
+			return x.rating.review_score >= settings.review
+		})
 		// sort based on review score
-		allHotels.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
+		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
 			return b.rating.review_score - a.rating.review_score
 		})
-		setCurrentAllHotels(allHotels.slice(0, 10))
+
+		console.log(`Will show ${allHotelsFiltered.length} hotels`)
+		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
 
 	useEffect(() => {
@@ -62,8 +78,8 @@ const page = () => {
 	}, [])
 
 	useEffect(() => {
-		console.log("sEttings updated")
-		console.log(settings)
+		console.log("settings updated, reset results")
+		prepareHotelResults(null)
 	}, [settings])
 
 	return (
@@ -102,7 +118,6 @@ const page = () => {
 						id="cities"
 						disabled={currentAllCities.length < 1}
 						onChange={(e) => {
-							console.log(`Fetch hotels in ${e.target.value}`)
 							fetchHotels(e.target.value)
 						}}
 					>
@@ -119,6 +134,14 @@ const page = () => {
 				</div>
 
 				<div>
+					<p className="text-sm">{status}</p>
+					<button onClick={() => setShowSettings(!showSettings)} className="p-1 text-xs">
+						{!showSettings ? "+ open" : "- close"} settings
+					</button>
+					{showSettings && <Settings settings={settings} saveSettings={setSettings} />}
+				</div>
+
+				<div>
 					<p className="font-bold text-md">Top 10 Hotels:</p>
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
 						{currentAllHotels.length > 0
@@ -132,14 +155,6 @@ const page = () => {
 					</div>
 				</div>
 
-				<div>
-					<p className="text-sm">{status}</p>
-					<button onClick={() => setShowSettings(!showSettings)} className="p-1 text-xs">
-						({!showSettings ? "open" : "close"} settings)
-					</button>
-				</div>
-
-				{showSettings && <Settings settings={settings} saveSettings={setSettings} />}
 				<div className="flex flex-row-reverse">
 					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-slate-300 font-bold">Reset</button>
 				</div>

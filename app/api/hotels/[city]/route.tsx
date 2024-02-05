@@ -1907,12 +1907,12 @@ const tempHotels = [
 	},
 ]
 export async function GET(request: Request, params: any) {
-	const { city } = params.params
-	const body = {
-		city: Number(city),
-		extras: ["description", "photos"],
-	}
-	const allHotels = await apiCall("/accommodations/details", body)
-	return NextResponse.json(allHotels)
-	// return NextResponse.json(tempHotels)
+	// const { city } = params.params
+	// const body = {
+	// 	city: Number(city),
+	// 	extras: ["description", "photos"],
+	// }
+	// const allHotels = await apiCall("/accommodations/details", body)
+	// return NextResponse.json(allHotels)
+	return NextResponse.json(tempHotels)
 }
