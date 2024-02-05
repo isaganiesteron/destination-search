@@ -1948,6 +1948,25 @@ const _fetchHotelPrices = async (hotels: number[]) => {
 	const flattenedArray = ([] as object[]).concat(...allHotelPrices)
 	return flattenedArray
 }
+
+const _combinePricesAndDetails = (details: object[], prices: object[]) => {
+	const detailsAndPrices = details.map((detail: object) => {
+		let tempDetail = { ...detail }
+		// look this current ID in the prices object
+		let currentPrice = prices.filter((price: object) => {
+			return price["id" as keyof typeof price] === detail["id" as keyof typeof price]
+		})
+		console.log("currentPrice")
+		console.log(currentPrice)
+
+		tempDetail = { ...tempDetail, price: currentPrice.length === 1 ? currentPrice : "NA" }
+
+		return tempDetail
+	})
+
+	return detailsAndPrices
+}
+
 export async function GET(request: Request, params: any) {
 	// const { city } = params.params
 	// const body = {
@@ -1962,12 +1981,13 @@ export async function GET(request: Request, params: any) {
 	 *
 	 */
 
+	// !!IMPORTANT!! replace tempHotels here
 	const hotelIDs = tempHotels.map((x) => x.id)
 
 	const hotelWithPrice = await _fetchHotelPrices(hotelIDs)
 
-	console.log(JSON.stringify(hotelWithPrice))
+	const hotelsDetailsAndPrice = _combinePricesAndDetails(tempHotels, hotelWithPrice)
 
 	// return NextResponse.json(allHotels)
-	return NextResponse.json(tempHotels)
+	return NextResponse.json(hotelsDetailsAndPrice)
 }
