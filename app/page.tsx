@@ -85,7 +85,6 @@ const page = () => {
 
 	useEffect(() => {
 		getAllCountriesHandler()
-		fetchHotels("")
 	}, [])
 
 	useEffect(() => {
