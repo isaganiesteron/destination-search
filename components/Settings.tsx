@@ -1,5 +1,4 @@
 import React, { useState } from "react"
-import { Settings as ISettings } from "@/constants/interfaces"
 
 type settingsProps = {
 	settings: any
@@ -17,6 +16,7 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
 
 	const saveHandler = () => {
 		saveSettings({
+			...settings,
 			review: curReviewScore,
 			budget: {
 				min_price: curBudgetMinPrice,

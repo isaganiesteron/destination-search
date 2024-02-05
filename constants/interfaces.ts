@@ -1,5 +1,6 @@
 export interface Settings {
 	review: number
+	tier: string
 	budget: Budget
 	midrange: Midrange
 	luxury: Luxury

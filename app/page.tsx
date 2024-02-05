@@ -11,8 +11,10 @@ const page = () => {
 	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
 	const [showSettings, setShowSettings] = useState<boolean>(false)
+	const [currentTier, setCurrentTier] = useState<string>("budget")
 	const [settings, setSettings] = useState<I_Settings>({
 		review: 8.3,
+		tier: "budget",
 		budget: {
 			min_price: 0,
 			max_price: 100,
@@ -59,11 +61,19 @@ const page = () => {
 		// filter results based on settings
 		const allHotels = hotels ? hotels : allHotelsFetched
 
-		console.log(allHotels)
-		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => {
-			if (x.rating.review_score >= settings.review) console.log("hotel is greater than " + settings.review)
-			return x.rating.review_score >= settings.review
-		})
+		console.log(`Only include hotels that are ${settings.tier} based on the following requirements`)
+		console.log(settings[settings.tier as keyof typeof settings])
+
+		// filter hotels by review
+		const allHotelsFiltered = allHotels
+			.filter((x: { rating: { review_score: number } }) => x.rating.review_score >= settings.review)
+			.filter((x) => {
+				console.log(`Only include hotels that are ${settings.tier}`)
+				return true
+			})
+
+		// filter hotels by tier
+
 		// sort based on review score
 		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
 			return b.rating.review_score - a.rating.review_score
@@ -78,7 +88,11 @@ const page = () => {
 	}, [])
 
 	useEffect(() => {
-		console.log("settings updated, reset results")
+		setSettings({ ...settings, tier: currentTier })
+	}, [currentTier])
+
+	useEffect(() => {
+		console.log("Settings updated, reset results")
 		prepareHotelResults(null)
 	}, [settings])
 
@@ -93,8 +107,6 @@ const page = () => {
 						id="countries"
 						disabled={allCountries.length < 1}
 						onChange={(e) => {
-							console.log(e.target.value + " selected")
-
 							fetchAllCities(e.target.value)
 						}}
 					>
@@ -131,6 +143,48 @@ const page = () => {
 							  })
 							: null}
 					</select>
+				</div>
+
+				<div>
+					<form>
+						<div className="flex items-center">
+							<input
+								checked={currentTier === "budget"}
+								type="radio"
+								onChange={(e) => {
+									setCurrentTier("budget")
+								}}
+								name="hotel_tier"
+								value="Budget"
+								className="mr-1"
+							/>
+							<label className="text-sm">Budget</label>
+						</div>
+						<div className="flex items-center">
+							<input
+								type="radio"
+								onChange={(e) => {
+									setCurrentTier("midrange")
+								}}
+								name="hotel_tier"
+								value="Midrange"
+								className="mr-1"
+							/>
+							<label className="text-sm">Mid Range</label>
+						</div>
+						<div className="flex items-center">
+							<input
+								type="radio"
+								onChange={(e) => {
+									setCurrentTier("luxury")
+								}}
+								name="hotel_tier"
+								value="Luxury"
+								className="mr-1"
+							/>
+							<label className="text-sm">Luxury</label>
+						</div>
+					</form>
 				</div>
 
 				<div>
