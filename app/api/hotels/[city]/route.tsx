@@ -1,3 +1,5 @@
+// ****There is a new version of this file and this file won't be used anymore
+
 import apiCall from "@/utils/apiCall"
 import { NextResponse } from "next/server"
 
@@ -2102,7 +2104,6 @@ export async function GET(request: Request, params: any) {
 
 	// const hotelsDetailsAndPrice = await _combinePricesAndDetails(hotelDetails, hotelPrices)
 	// return NextResponse.json(hotelsDetailsAndPrice)
-
 
 	return NextResponse.json(tempHotelsDetailsAndPrices)
 }
