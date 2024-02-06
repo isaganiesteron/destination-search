@@ -194,7 +194,6 @@ const page = () => {
 					</button>
 					{showSettings && <Settings settings={settings} saveSettings={setSettings} />}
 				</div>
-
 				<div>
 					<p className="font-bold text-md">Top 10 Hotels:</p>
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
@@ -203,7 +202,8 @@ const page = () => {
 									const currDescription = x.description.important_information["en-gb" as keyof typeof x.description.important_information]
 									const currPhoto = x.photos[0].url.thumbnail
 									const rating = x.rating.review_score
-									return <ResultItem key={`hotel_${i}`} name={x.name["en-gb" as keyof typeof x.name]} description={currDescription} photoUrl={currPhoto} index={i} review={rating} priceObj={x.price} />
+									const price = x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null
+									return <ResultItem key={`hotel_${i}`} name={x.name["en-gb" as keyof typeof x.name]} description={currDescription} photoUrl={currPhoto} index={i} review={rating} priceObj={price} />
 							  })
 							: null}
 					</div>

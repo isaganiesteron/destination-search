@@ -7,11 +7,22 @@ type T_ResultItem = {
 	description: string
 	photoUrl: string
 	review: number
-	priceObj: object | string
+	priceObj: object | null
 }
 
 const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_ResultItem) => {
 	console.log(`${index}: ${JSON.stringify(priceObj)}`)
+
+	let total: number | undefined,
+		book: string | undefined,
+		currency: string | undefined = undefined
+
+	if (priceObj !== null && priceObj !== undefined) {
+		total = priceObj["total" as keyof typeof priceObj]
+		book = priceObj["book" as keyof typeof priceObj]
+		currency = priceObj["currency" as keyof typeof priceObj]
+	}
+
 	return (
 		<>
 			<div className="border border-black rounded-md flex flex-col w-full mt-2">
@@ -24,9 +35,8 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 							<h1 className="font-bold">{`${index + 1}: ${name}`}</h1>
 							<p className="text-sm">{description}</p>
 							<p>Review Score: {review}</p>
-							<p>Price: {JSON.stringify(priceObj)}</p>
-							{/* <p>Price Book: {price === "NA" ? "Not Available" : price["book" as keyof typeof price]}</p>
-							<p>Price Total: {price === "NA" ? "Not Available" : price["total" as keyof typeof price]}</p> */}
+							<p>Price (book): {book ? `${book}${currency}` : "NA"}</p>
+							<p>Price (total): {total ? `${total}${currency}` : "NA"}</p>
 						</div>
 					</div>
 				</div>
