@@ -11,8 +11,6 @@ type T_ResultItem = {
 }
 
 const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_ResultItem) => {
-	console.log(`${index}: ${JSON.stringify(priceObj)}`)
-
 	let total: number | undefined,
 		book: string | undefined,
 		currency: string | undefined = undefined

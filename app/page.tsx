@@ -49,8 +49,10 @@ const page = () => {
 	}
 
 	const fetchHotels = async (city: string) => {
-		setStatus(`Fetch all hotels in the city of ${city}...`)
-		const response = await fetch(`/api/hotels/${city}`)
+		const tierSettings = settings[settings.tier as keyof typeof settings]
+		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
+		setStatus(`Fetch all hotels in the city of ${city} with a maximum price of ${maxPrice}...`)
+		const response = await fetch(`/api/hotels/${city}/${maxPrice}`) // maxPrice is in USD
 		const allHotels = await response.json()
 		setAllHotelsFetched(allHotels) //save all hotels fetched so you can filter it later on
 		prepareHotelResults(allHotels)

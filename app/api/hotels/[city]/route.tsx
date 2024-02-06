@@ -2090,7 +2090,7 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
 }
 
 export async function GET(request: Request, params: any) {
-	// const { city } = params.params
+	const { city, price } = params.params
 	// const body = {
 	// 	city: Number(city),
 	// 	extras: ["description", "photos"],
@@ -2102,6 +2102,7 @@ export async function GET(request: Request, params: any) {
 
 	// const hotelsDetailsAndPrice = await _combinePricesAndDetails(hotelDetails, hotelPrices)
 	// return NextResponse.json(hotelsDetailsAndPrice)
+
 
 	return NextResponse.json(tempHotelsDetailsAndPrices)
 }
