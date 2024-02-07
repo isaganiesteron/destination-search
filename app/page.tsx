@@ -3,14 +3,17 @@ import React, { useEffect, useState } from "react"
 import ResultItem from "@/components/ResultItem"
 import { Settings as I_Settings } from "@/constants/interfaces"
 import Settings from "@/components/Settings"
+import Spinner from "@/components/Spinner"
 
 const page = () => {
 	const [status, setStatus] = useState<string>("Choose a country first")
+	const [searching, setSearching] = useState<boolean>(false)
 	const [allCountries, setallCountries] = useState<any[]>([])
 	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
 	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
 	const [showSettings, setShowSettings] = useState<boolean>(false)
+	const [currentCity, setCurrentCity] = useState<number>(0)
 	const [currentTier, setCurrentTier] = useState<string>("budget")
 	const [settings, setSettings] = useState<I_Settings>({
 		review: 8.3,
@@ -32,7 +35,7 @@ const page = () => {
 		},
 	})
 
-	const getAllCountriesHandler = async () => {
+	const getAllCountries = async () => {
 		setStatus("Fetching all countries...")
 		const response = await fetch("/api/countries")
 		const allCountries = await response.json()
@@ -48,34 +51,23 @@ const page = () => {
 		setCurrentAllCities(allCities)
 	}
 
-	const fetchHotels = async (city: string) => {
+	const fetchHotels = async () => {
+		setSearching(true)
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
-		setStatus(`Fetch all hotels in the city of ${city} with a maximum price of ${maxPrice}...`)
-		const response = await fetch(`/api/hotels/${city}/${maxPrice}`) // maxPrice is in USD
+		setStatus(`Fetch all hotels in the city of ${currentCity} with a maximum price of ${maxPrice}...`)
+		const response = await fetch(`/api/hotels/${currentCity}/${maxPrice}`) // maxPrice is in USD
 		const allHotels = await response.json()
 		setAllHotelsFetched(allHotels) //save all hotels fetched so you can filter it later on
 		prepareHotelResults(allHotels)
 		setStatus(`Done fetching ${allHotels.length} hotels.`)
+		setSearching(false)
 	}
 
 	const prepareHotelResults = (hotels: any[] | null) => {
-		// filter results based on settings
 		const allHotels = hotels ? hotels : allHotelsFetched
-
-		console.log(`Only include hotels that are ${settings.tier} based on the following requirements`)
-		console.log(settings[settings.tier as keyof typeof settings])
-
 		// filter hotels by review
-		const allHotelsFiltered = allHotels
-			.filter((x: { rating: { review_score: number } }) => x.rating.review_score >= settings.review)
-			.filter((x) => {
-				console.log(`Only include hotels that are ${settings.tier}`)
-				return true
-			})
-
-		// filter hotels by tier
-
+		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating.review_score >= settings.review)
 		// sort based on review score
 		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
 			return b.rating.review_score - a.rating.review_score
@@ -85,8 +77,29 @@ const page = () => {
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
 
+	const handleSearch = () => {
+		if (showSettings) setShowSettings(false)
+
+		if (currentCity === 0) {
+			setStatus("Please select a city first")
+			return
+		}
+		if (currentTier === "") {
+			setStatus("Please select a tier first")
+			return
+		}
+
+		fetchHotels()
+	}
+
+	const handleReset = () => {
+		setAllHotelsFetched([])
+		setCurrentCity(0)
+		setStatus("Choose a country first")
+	}
+
 	useEffect(() => {
-		getAllCountriesHandler()
+		getAllCountries()
 	}, [])
 
 	useEffect(() => {
@@ -95,8 +108,11 @@ const page = () => {
 	}, [currentTier])
 
 	useEffect(() => {
+		console.log(currentCity)
+	}, [currentCity])
+
+	useEffect(() => {
 		console.log("Settings updated, reset results")
-		console.log(settings)
 		prepareHotelResults(null)
 		if (showSettings) setShowSettings(false)
 	}, [settings])
@@ -106,7 +122,7 @@ const page = () => {
 			<div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
 				<div className="grid grid-cols-3 gap-4">
 					<div>
-						<p className="font-bold text-md">Country:</p>
+						<p className="font-bold text-md">Country</p>
 						<select
 							className="border border-black rounded-md w-full p-2"
 							name="countries"
@@ -116,6 +132,7 @@ const page = () => {
 								fetchAllCities(e.target.value)
 							}}
 						>
+							<option value={""}>---</option>
 							{allCountries.length > 0
 								? allCountries.map((x) => {
 										return (
@@ -128,16 +145,17 @@ const page = () => {
 						</select>
 					</div>
 					<div>
-						<p className="font-bold text-md">City:</p>
+						<p className="font-bold text-md">City</p>
 						<select
 							className="border border-black rounded-md w-full p-2"
 							name="cities"
 							id="cities"
 							disabled={currentAllCities.length < 1}
 							onChange={(e) => {
-								fetchHotels(e.target.value)
+								setCurrentCity(parseInt(e.target.value))
 							}}
 						>
+							<option value={0}>---</option>
 							{currentAllCities.length > 0
 								? currentAllCities.map((x) => {
 										return (
@@ -150,7 +168,7 @@ const page = () => {
 						</select>
 					</div>
 					<div>
-						<p className="font-bold text-md">Price Tier:</p>
+						<p className="font-bold text-md">Price Tier</p>
 						<select
 							className="border border-black rounded-md w-full p-2"
 							name="tier"
@@ -165,6 +183,11 @@ const page = () => {
 						</select>
 					</div>
 				</div>
+
+				<button className="w-full flex items-center space-x-2 border border-black bg-green-400 hover:bg-green-500 px-4 py-2 rounded justify-center font-bold" onClick={handleSearch}>
+					{searching && <Spinner />}
+					Search
+				</button>
 
 				<div>
 					<p className="text-sm">{status}</p>
@@ -189,7 +212,9 @@ const page = () => {
 				</div>
 
 				<div className="flex flex-row-reverse">
-					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-slate-300 font-bold">Reset</button>
+					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold" onChange={handleReset}>
+						Reset
+					</button>
 				</div>
 			</div>
 		</main>
