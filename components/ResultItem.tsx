@@ -31,10 +31,10 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 					<div className="p-2 col-span-5 items-center">
 						<div className="flex flex-col">
 							<h1 className="font-bold">{`${index + 1}: ${name}`}</h1>
-							<p className="text-sm">{description}</p>
+							{/* <p className="text-sm">{description}</p> */}
 							<p>Review Score: {review}</p>
-							<p>Price (book): {book ? `${book}${currency}` : "NA"}</p>
-							<p>Price (total): {total ? `${total}${currency}` : "NA"}</p>
+							{/* <p>Price (book): {book ? `${book}${currency}` : "NA"}</p> */}
+							<p>Price: {total ? `${total}${currency}` : "NA"}</p>
 						</div>
 					</div>
 				</div>
