@@ -91,102 +91,79 @@ const page = () => {
 
 	useEffect(() => {
 		setSettings({ ...settings, tier: currentTier })
+		// reload results based on the new tier
 	}, [currentTier])
 
 	useEffect(() => {
 		console.log("Settings updated, reset results")
+		console.log(settings)
 		prepareHotelResults(null)
+		if (showSettings) setShowSettings(false)
 	}, [settings])
 
 	return (
 		<main>
 			<div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-				<div>
-					<p className="font-bold text-md">Country:</p>
-					<select
-						className="border border-black rounded-md w-full"
-						name="countries"
-						id="countries"
-						disabled={allCountries.length < 1}
-						onChange={(e) => {
-							fetchAllCities(e.target.value)
-						}}
-					>
-						{allCountries.length > 0
-							? allCountries.map((x) => {
-									return (
-										<option key={x.id} value={x.id}>
-											{x.name["en-gb" as keyof typeof x.name]}
-										</option>
-									)
-							  })
-							: null}
-					</select>
-				</div>
-
-				<div>
-					<p className="font-bold text-md">City:</p>
-					<select
-						className="border border-black rounded-md w-full "
-						name="cities"
-						id="cities"
-						disabled={currentAllCities.length < 1}
-						onChange={(e) => {
-							fetchHotels(e.target.value)
-						}}
-					>
-						{currentAllCities.length > 0
-							? currentAllCities.map((x) => {
-									return (
-										<option key={x.id} value={x.id}>
-											{x.name["en-gb" as keyof typeof x.name]}
-										</option>
-									)
-							  })
-							: null}
-					</select>
-				</div>
-
-				<div>
-					<form>
-						<div className="flex items-center">
-							<input
-								checked={currentTier === "budget"}
-								type="radio"
-								onChange={(e) => {
-									setCurrentTier("budget")
-								}}
-								name="hotel_tier"
-								value="Budget"
-								className="mr-1"
-							/>
-							<label className="text-sm">Budget</label>
-						</div>
-						<div className="flex items-center">
-							<input
-								type="radio"
-								onChange={(e) => {
-									setCurrentTier("midrange")
-								}}
-								name="hotel_tier"
-								value="Midrange"
-								className="mr-1"
-							/>
-							<label className="text-sm">Mid Range</label>
-						</div>
-						<div className="flex items-center">
-							<input
-								type="radio"
-								onChange={(e) => {
-									setCurrentTier("luxury")
-								}}
-								name="hotel_tier"
-								value="Luxury"
-								className="mr-1"
-							/>
-							<label className="text-sm">Luxury</label>
-						</div>
-					</form>
+				<div className="grid grid-cols-3 gap-4">
+					<div>
+						<p className="font-bold text-md">Country:</p>
+						<select
+							className="border border-black rounded-md w-full p-2"
+							name="countries"
+							id="countries"
+							disabled={allCountries.length < 1}
+							onChange={(e) => {
+								fetchAllCities(e.target.value)
+							}}
+						>
+							{allCountries.length > 0
+								? allCountries.map((x) => {
+										return (
+											<option key={x.id} value={x.id}>
+												{x.name["en-gb" as keyof typeof x.name]}
+											</option>
+										)
+								  })
+								: null}
+						</select>
+					</div>
+					<div>
+						<p className="font-bold text-md">City:</p>
+						<select
+							className="border border-black rounded-md w-full p-2"
+							name="cities"
+							id="cities"
+							disabled={currentAllCities.length < 1}
+							onChange={(e) => {
+								fetchHotels(e.target.value)
+							}}
+						>
+							{currentAllCities.length > 0
+								? currentAllCities.map((x) => {
+										return (
+											<option key={x.id} value={x.id}>
+												{x.name["en-gb" as keyof typeof x.name]}
+											</option>
+										)
+								  })
+								: null}
+						</select>
+					</div>
+					<div>
+						<p className="font-bold text-md">Price Tier:</p>
+						<select
+							className="border border-black rounded-md w-full p-2"
+							name="tier"
+							id="tier"
+							onChange={(e) => {
+								setCurrentTier(e.target.value)
+							}}
+						>
+							<option value={"budget"}>Budget</option>
+							<option value={"midrange"}>Mid Range</option>
+							<option value={"luxury"}>Luxury</option>
+						</select>
+					</div>
 				</div>
 
 				<div>
