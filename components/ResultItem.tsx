@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useState } from "react"
 import Image from "next/image"
+import Spinner from "@/components/Spinner"
 
 type T_ResultItem = {
 	index: number
@@ -11,6 +12,9 @@ type T_ResultItem = {
 }
 
 const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_ResultItem) => {
+	const [currentDescription, setCurrentDescription] = useState<string>(description)
+	const [descLoading, setDescLoading] = useState<boolean>(false)
+
 	let total: number | undefined,
 		book: string | undefined,
 		currency: string | undefined = undefined
@@ -19,6 +23,17 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 		total = priceObj["total" as keyof typeof priceObj]
 		book = priceObj["book" as keyof typeof priceObj]
 		currency = priceObj["currency" as keyof typeof priceObj]
+	}
+
+	const _generateHandler = () => {
+		setDescLoading(true)
+		console.log(`Generate description from ${currentDescription}`)
+		// fetch genereated description from openAi
+		setTimeout(() => {
+			setDescLoading(false)
+			setCurrentDescription("This is a generated description")
+		}, 1000)
+		setCurrentDescription("")
 	}
 
 	return (
@@ -40,10 +55,20 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 							<p>
 								<span className="font-bold">Description:</span>
 							</p>
-							<p className="text-sm">{description}</p>
+							{descLoading ? (
+								<div className="flex justify-center items-center min-h-20 align-middle transition-opacity ease-in-out duration-500">
+									<Spinner />
+								</div>
+							) : (
+								<div className="transition-opacity ease-in-out duration-500">
+									<p className="text-sm">{currentDescription}</p>
+								</div>
+							)}
 						</div>
 						<div className="space-x-2 space-y-1">
-							<button className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700">Generate Description</button>
+							<button className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700" onClick={_generateHandler}>
+								Generate Description
+							</button>
 							<button className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700">Regenerate Description</button>
 						</div>
 					</div>
