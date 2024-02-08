@@ -213,7 +213,7 @@ const page = () => {
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
 						{currentAllHotels.length > 0
 							? currentAllHotels.map((x, i) => {
-									const currDescription = x.description.important_information["en-gb" as keyof typeof x.description.important_information]
+									const currDescription = x.description.text["en-gb" as keyof typeof x.description.text]
 									const currPhoto = x.photos[0].url.thumbnail
 									const rating = x.rating.review_score
 									const price = x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null

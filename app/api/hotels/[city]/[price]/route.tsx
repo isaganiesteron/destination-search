@@ -81,9 +81,7 @@ export async function GET(request: Request, params: any) {
 	const hotelDetails = await _fetchHotelDetails(hotelPrices.map((x: { id: number }) => x.id))
 	const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices)
 
-	console.log(hotelPrices.length)
-	console.log(hotelDetails.length)
 	console.log("*******")
-	console.log(hotelPricesAndDetails.length)
+	console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)
 	return NextResponse.json(hotelPricesAndDetails)
 }
