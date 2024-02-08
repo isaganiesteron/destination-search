@@ -25,9 +25,9 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 		currency = priceObj["currency" as keyof typeof priceObj]
 	}
 
-	const _generateHandler = () => {
+	const _regenerateHandler = () => {
 		setDescLoading(true)
-		console.log(`Generate description from ${currentDescription}`)
+		console.log(`Regenerate description from ${currentDescription}`)
 		// fetch genereated description from openAi
 		setTimeout(() => {
 			setDescLoading(false)
@@ -66,10 +66,9 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 							)}
 						</div>
 						<div className="space-x-2 space-y-1">
-							<button className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700" onClick={_generateHandler}>
-								Generate Description
+							<button className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700" onClick={_regenerateHandler}>
+								Regenerate Description
 							</button>
-							<button className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700">Regenerate Description</button>
 						</div>
 					</div>
 				</div>

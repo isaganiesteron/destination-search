@@ -196,6 +196,24 @@ const page = () => {
 					</div>
 				</div>
 
+				<button
+					className="w-full flex items-center space-x-2 border border-black bg-red-400 hover:bg-red-500 px-4 py-2 rounded justify-center font-bold"
+					onClick={() => {
+						fetch("/api/new-desc", {
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ description: "This is a test description" }),
+						})
+							.then((res) => res.json())
+							.then((data) => console.log(data))
+							.catch((err) => console.error(err))
+					}}
+				>
+					TEST POST REQUEST
+				</button>
+
 				<button className="w-full flex items-center space-x-2 border border-black bg-green-400 hover:bg-green-500 px-4 py-2 rounded justify-center font-bold" onClick={handleSearch}>
 					{searching && <Spinner />}
 					Search
