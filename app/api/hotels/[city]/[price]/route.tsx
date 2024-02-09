@@ -1,6 +1,7 @@
 import apiCall from "@/utils/apiCall"
 import { NextResponse } from "next/server"
 import tempHotelPricesAndDetails from "@/mock_data/hotels"
+import moment from "moment"
 
 const _chunkArray = (array: any[], chunkSize: number) => {
 	const chunks = []
@@ -37,6 +38,9 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
 }
 
 const _fetchHotelPrices = async (city: string, price: string) => {
+	let currentDate: string = moment().format("YYYY-MM-DD")
+
+	let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
 	const requestBody = {
 		booker: {
 			country: "nl",
@@ -47,13 +51,15 @@ const _fetchHotelPrices = async (city: string, price: string) => {
 			maximum: Number(price),
 		},
 		currency: "USD",
-		checkin: "2024-05-01",
-		checkout: "2024-05-02",
+		checkin: currentDate,
+		checkout: tomorrowDate,
 		guests: {
 			number_of_adults: 2,
 			number_of_rooms: 1,
 		},
 	}
+	console.log("requestBody")
+	console.log(requestBody)
 	const hotelSearch = await apiCall("/accommodations/search", requestBody)
 	console.log(JSON.stringify(hotelSearch))
 	return hotelSearch

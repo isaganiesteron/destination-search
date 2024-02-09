@@ -50,6 +50,15 @@ const page = () => {
 		setStatus({ loading: true, message: "Fetching all countries..." })
 		const response = await fetch("/api/countries")
 		const allCountries = await response.json()
+		const allCountriesSorted = allCountries.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
+			if (a.name["en-gb"] < b.name["en-gb"]) {
+				return -1
+			}
+			if (a.name["en-gb"] > b.name["en-gb"]) {
+				return 1
+			}
+			return 0
+		})
 		setStatus({ loading: false, message: `Done fetching ${allCountries.length} countries.` })
 		setallCountries(allCountries)
 	}
@@ -58,8 +67,17 @@ const page = () => {
 		setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}...` })
 		const response = await fetch(`/api/cities/${country}`)
 		const allCities = await response.json()
-		setStatus({ loading: false, message: `Done fetching ${allCities.length} cities.` })
-		setCurrentAllCities(allCities)
+		const allCitiesSorted = allCities.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
+			if (a.name["en-gb"] < b.name["en-gb"]) {
+				return -1
+			}
+			if (a.name["en-gb"] > b.name["en-gb"]) {
+				return 1
+			}
+			return 0
+		})
+		setStatus({ loading: false, message: `Done fetching ${allCitiesSorted.length} cities.` })
+		setCurrentAllCities(allCitiesSorted)
 	}
 
 	const fetchHotels = async () => {
