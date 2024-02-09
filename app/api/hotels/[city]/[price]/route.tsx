@@ -77,16 +77,21 @@ const _fetchHotelDetails = async (hotelIds: number[]) => {
 }
 
 export async function GET(request: Request, params: any) {
-	// const { city, price } = params.params
-	// const hotelPrices = await _fetchHotelPrices(city, price)
-	// const hotelDetails = await _fetchHotelDetails(hotelPrices.map((x: { id: number }) => x.id))
-	// const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices)
+	try {
+		const { city, price } = params.params
+		const hotelPrices = await _fetchHotelPrices(city, price)
+		const hotelDetails = await _fetchHotelDetails(hotelPrices.map((x: { id: number }) => x.id))
+		const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices)
 
-	// console.log("*******")
-	// console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)
+		console.log("*******")
+		console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)
 
-	// console.log(JSON.stringify(hotelPricesAndDetails))
-	// return NextResponse.json(hotelPricesAndDetails)
+		console.log(JSON.stringify(hotelPricesAndDetails))
+		return NextResponse.json(hotelPricesAndDetails)
+	} catch (error) {
+		console.log(error)
+		return NextResponse.json({ error }, { status: 500 })
+	}
 
-	return NextResponse.json(tempHotelPricesAndDetails)
+	// return NextResponse.json(tempHotelPricesAndDetails)
 }

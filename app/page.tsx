@@ -6,7 +6,7 @@ import Settings from "@/components/Settings"
 import Spinner from "@/components/Spinner"
 
 const page = () => {
-	const [status, setStatus] = useState<string>("Choose a country first")
+	const [status, setStatus] = useState<object>({ loading: false, message: "Choose a country first" })
 	const [searching, setSearching] = useState<boolean>(false)
 	const [allCountries, setallCountries] = useState<any[]>([])
 	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
@@ -47,18 +47,18 @@ const page = () => {
 	}
 
 	const getAllCountries = async () => {
-		setStatus("Fetching all countries...")
+		setStatus({ loading: true, message: "Fetching all countries..." })
 		const response = await fetch("/api/countries")
 		const allCountries = await response.json()
-		setStatus(`Done fetching ${allCountries.length} countries.`)
+		setStatus({ loading: false, message: `Done fetching ${allCountries.length} countries.` })
 		setallCountries(allCountries)
 	}
 
 	const fetchAllCities = async (country: string) => {
-		setStatus(`Fetch all cities of ${getCountryLabel(country)}...`)
+		setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}...` })
 		const response = await fetch(`/api/cities/${country}`)
 		const allCities = await response.json()
-		setStatus(`Done fetching ${allCities.length} cities.`)
+		setStatus({ loading: false, message: `Done fetching ${allCities.length} cities.` })
 		setCurrentAllCities(allCities)
 	}
 
@@ -66,16 +66,19 @@ const page = () => {
 		setSearching(true)
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
-		setStatus(`Fetch all hotels in the city of ${getCityLabel(currentCity)} with a maximum price of ${maxPrice}...`)
+		setStatus({ loading: true, message: `Fetch all hotels in the city of ${getCityLabel(currentCity)} with a maximum price of ${maxPrice}...` })
 		const response = await fetch(`/api/hotels/${currentCity}/${maxPrice}`) // maxPrice is in USD
 		const allHotels = await response.json()
-		setStatus(`Done fetching ${allHotels.length} hotels.`)
+		setStatus({ loading: false, message: `Done fetching ${allHotels.length} hotels.` })
 		setAllHotelsFetched(allHotels) //save all hotels fetched so you can filter it later on
 		prepareHotelResults(allHotels)
 		setSearching(false)
 	}
 
 	const prepareHotelResults = (hotels: any[] | null) => {
+		if (allCountries.length < 1) return
+		if (currentAllCities.length < 1) return
+
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
@@ -87,7 +90,7 @@ const page = () => {
 			return b.rating.review_score - a.rating.review_score
 		})
 
-		setStatus(`Result: Found ${allHotelsFiltered.length} hotels in ${getCityLabel(currentCity)} ${getCountryLabel(currentCountry)}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.`)
+		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getCityLabel(currentCity)} ${getCountryLabel(currentCountry)}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
 
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
@@ -96,11 +99,11 @@ const page = () => {
 		if (showSettings) setShowSettings(false)
 
 		if (currentCity === 0) {
-			setStatus("Please select a city first")
+			setStatus({ loading: false, message: "Please select a city first" })
 			return
 		}
 		if (currentTier === "") {
-			setStatus("Please select a tier first")
+			setStatus({ loading: false, message: "Please select a tier first" })
 			return
 		}
 
@@ -110,7 +113,7 @@ const page = () => {
 	const handleReset = () => {
 		setAllHotelsFetched([])
 		setCurrentCity(0)
-		setStatus("Choose a country first")
+		setStatus({ loading: false, message: "Choose a country first" })
 	}
 
 	useEffect(() => {
@@ -220,7 +223,10 @@ const page = () => {
 				</button>
 
 				<div>
-					<p className="text-sm">{status}</p>
+					<div className="flex flex-row">
+						<div>{status["loading" as keyof typeof status] ? <Spinner /> : ""}</div>
+						<p className="text-sm">{status["message" as keyof typeof status]}</p>
+					</div>
 					<button onClick={() => setShowSettings(!showSettings)} className="p-1 text-xs">
 						{!showSettings ? "+ open" : "- close"} settings
 					</button>
