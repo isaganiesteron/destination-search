@@ -196,7 +196,7 @@ const page = () => {
 					</div>
 				</div>
 
-				<button
+				{/* <button
 					className="w-full flex items-center space-x-2 border border-black bg-red-400 hover:bg-red-500 px-4 py-2 rounded justify-center font-bold"
 					onClick={() => {
 						fetch("/api/new-desc", {
@@ -212,7 +212,7 @@ const page = () => {
 					}}
 				>
 					TEST POST REQUEST
-				</button>
+				</button> */}
 
 				<button className="w-full flex items-center space-x-2 border border-black bg-green-400 hover:bg-green-500 px-4 py-2 rounded justify-center font-bold" onClick={handleSearch}>
 					{searching && <Spinner />}
