@@ -44,19 +44,16 @@ const apiCall = async (endpoint: string, fetchBody: object) => {
 			}
 
 			// pause for 1 second before next request
+			console.log("pause 1 second before request")
 			await new Promise((resolve) => setTimeout(resolve, 1000))
 			if (currentPage % 5 === 0) {
 				// pause an extra 5 seconds every 5 requests
+				console.log("***pause AN EXTRA 5 seconds before request")
 				await new Promise((resolve) => setTimeout(resolve, 5000))
 			}
 		} else {
 			console.log(`Status ${response.status}`)
 			console.log(response)
-
-			if (response.status === 429) {
-				// pause for 5 seconds then resume
-				// console.log("Rate limited. Pausing for 10 seconds.")
-			}
 			morePagesAvailable = false
 			page = ""
 		}
