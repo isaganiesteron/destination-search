@@ -82,6 +82,7 @@ const Page = () => {
 					const res = await response.json()
 					if (res.data) {
 						collectedCities.push(...res.data)
+						setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}. Fetched: ${collectedCities.length}` })
 					} else if (res.errors) {
 						console.log("**ERROR1")
 						console.log(res)
@@ -100,6 +101,13 @@ const Page = () => {
 					console.log(err)
 					morePagesAvailable = false
 					page = "null"
+				}
+
+				// pause for 1 second before next request
+				await new Promise((resolve) => setTimeout(resolve, 1000))
+				if (currentPage % 5 === 0) {
+					// pause an extra 5 seconds every 5 requests
+					await new Promise((resolve) => setTimeout(resolve, 5000))
 				}
 			} else {
 				console.log(`Status ${response.status}`)
