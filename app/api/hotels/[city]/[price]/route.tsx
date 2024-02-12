@@ -1,7 +1,7 @@
 import apiCall from "@/utils/apiCall"
 import { NextResponse } from "next/server"
-import tempHotelPricesAndDetails from "@/mock_data/hotels"
 import moment from "moment"
+// import tempHotelPricesAndDetails from "@/mock_data/hotels"
 
 const _chunkArray = (array: any[], chunkSize: number) => {
 	const chunks = []
