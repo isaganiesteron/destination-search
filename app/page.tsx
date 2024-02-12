@@ -76,7 +76,7 @@ const page = () => {
 			}
 			return 0
 		})
-		setStatus({ loading: false, message: `Done fetching ${allCities.length} cities.` })
+		setStatus({ loading: false, message: `Done fetching ${allCities.length} cities. ` })
 		setCurrentAllCities(allCities)
 	}
 
