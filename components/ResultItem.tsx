@@ -27,11 +27,10 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 
 	const _regenerateHandler = () => {
 		setDescLoading(true)
-		console.log(`Regenerate description from ${currentDescription}`)
 		// fetch genereated description from openAi
 		setTimeout(() => {
 			setDescLoading(false)
-			setCurrentDescription("This is a generated description")
+			setCurrentDescription(`[Regenerated with openAI in developement]   ${currentDescription}`)
 		}, 1000)
 		setCurrentDescription("")
 	}
