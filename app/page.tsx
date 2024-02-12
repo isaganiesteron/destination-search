@@ -67,6 +67,8 @@ const Page = () => {
 		setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}...` })
 		const response = await fetch(`/api/cities/${country}`)
 		const allCities = await response.json()
+		console.log("allCities")
+		console.log(allCities)
 		allCities.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
 			if (a.name["en-gb"] < b.name["en-gb"]) {
 				return -1
