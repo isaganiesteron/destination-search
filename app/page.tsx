@@ -65,11 +65,54 @@ const Page = () => {
 
 	const fetchAllCities = async (country: string) => {
 		setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}...` })
-		const response = await fetch(`/api/cities/${country}`)
-		const allCities = await response.json()
-		console.log("allCities")
-		console.log(allCities)
-		allCities.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
+
+		let collectedCities: any[] = []
+		let morePagesAvailable: boolean = true
+		let currentPage: number = 0
+		let page: string = "null"
+
+		while (morePagesAvailable) {
+			currentPage++
+			console.log(`Fetching page: ${currentPage}`)
+
+			const response = await fetch(`/api/cities/${country}/${page}`)
+
+			if (response.status == 200) {
+				try {
+					const res = await response.json()
+					if (res.data) {
+						collectedCities.push(...res.data)
+					} else if (res.errors) {
+						console.log("**ERROR1")
+						console.log(res)
+						morePagesAvailable = false
+						page = "null"
+					}
+
+					if (res.next_page) {
+						page = res.next_page
+					} else {
+						morePagesAvailable = false
+						page = "null"
+					}
+				} catch (err) {
+					console.log("**ERROR2")
+					console.log(err)
+					morePagesAvailable = false
+					page = "null"
+				}
+			} else {
+				console.log(`Status ${response.status}`)
+				console.log(response)
+				morePagesAvailable = false
+				page = "null"
+			}
+
+			console.log("collectedCities")
+			console.log(collectedCities)
+		}
+
+		collectedCities.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
 			if (a.name["en-gb"] < b.name["en-gb"]) {
 				return -1
 			}
@@ -78,8 +121,8 @@ const Page = () => {
 			}
 			return 0
 		})
-		setStatus({ loading: false, message: `Done fetching ${allCities.length} cities. ` })
-		setCurrentAllCities(allCities)
+		setStatus({ loading: false, message: `Done fetching ${collectedCities.length} cities. ` })
+		setCurrentAllCities(collectedCities)
 	}
 
 	const fetchHotels = async () => {
