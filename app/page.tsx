@@ -82,7 +82,7 @@ const Page = () => {
 					const res = await response.json()
 					if (res.data) {
 						collectedCities.push(...res.data)
-						setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}. Fetched: ${collectedCities.length}` })
+						setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}. Fetched ${collectedCities.length} cities...` })
 					} else if (res.errors) {
 						console.log("**ERROR1")
 						console.log(res)
@@ -115,9 +115,6 @@ const Page = () => {
 				morePagesAvailable = false
 				page = "null"
 			}
-
-			console.log("collectedCities")
-			console.log(collectedCities)
 		}
 
 		collectedCities.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
