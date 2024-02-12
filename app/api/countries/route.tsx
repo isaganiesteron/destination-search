@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server"
-import tempCountries from "@/mock_data/countries"
-import apiCall from "@/utils/apiCall"
+import tempCountries from "./countries"
 
-export async function GET(request: Request) {
-	// return NextResponse.json(tempCountries)
+export async function GET() {
 	try {
-		const allCountries = await apiCall("/common/locations/countries", {})
-		return NextResponse.json(allCountries, { status: 200 })
+		return NextResponse.json(tempCountries, { status: 200 })
 	} catch (error) {
 		console.log(error)
 		return NextResponse.json({ error }, { status: 500 })
