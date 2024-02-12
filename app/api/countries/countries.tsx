@@ -1,4 +1,4 @@
-export default [
+const countries = [
 	{ id: "ad", name: { "en-gb": "Andorra" } },
 	{ id: "ae", name: { "en-gb": "United Arab Emirates" } },
 	{ id: "af", name: { "en-gb": "Afghanistan" } },
@@ -247,3 +247,5 @@ export default [
 	{ id: "zm", name: { "en-gb": "Zambia" } },
 	{ id: "zw", name: { "en-gb": "Zimbabwe" } },
 ]
+
+export default countries

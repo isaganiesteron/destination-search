@@ -5,7 +5,7 @@ import { Settings as I_Settings } from "@/constants/interfaces"
 import Settings from "@/components/Settings"
 import Spinner from "@/components/Spinner"
 
-const page = () => {
+const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Choose a country first" })
 	const [searching, setSearching] = useState<boolean>(false)
 	const [allCountries, setallCountries] = useState<any[]>([])
@@ -275,4 +275,4 @@ const page = () => {
 	)
 }
 
-export default page
+export default Page
