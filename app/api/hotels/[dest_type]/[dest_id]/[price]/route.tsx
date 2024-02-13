@@ -93,26 +93,24 @@ const _fetchHotelDetails = async (hotelIds: number[]) => {
 	})
 	const allHotelDetails = await Promise.all(promises)
 	const allHotelDetailsFlattened = ([] as object[]).concat(...allHotelDetails)
-	console.log(JSON.stringify(allHotelDetailsFlattened))
 	return allHotelDetailsFlattened
 }
+
 export async function GET(request: Request, params: any) {
 	const { dest_type, dest_id, price } = params.params
 
 	try {
 		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price)
-		const hotelDetails = await _fetchHotelDetails(hotelPrices.map((x: { id: number }) => x.id))
-		const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices)
+		// const hotelDetails = await _fetchHotelDetails(hotelPrices.map((x: { id: number }) => x.id))
+		// const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices)
 
+		console.log(JSON.stringify(hotelPrices))
 		console.log("*******")
-		console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)
-
-		console.log(JSON.stringify(hotelPricesAndDetails))
-		return NextResponse.json(hotelPricesAndDetails)
+		// console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)
+		return NextResponse.json(hotelPrices)
+		// return NextResponse.json(hotelPricesAndDetails)
 	} catch (error) {
 		console.log(error)
 		return NextResponse.json({ error }, { status: 500 })
 	}
-
-	return NextResponse.json("result")
 }

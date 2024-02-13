@@ -40,14 +40,6 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
 const _fetchHotelPrices = async (city: string, price: string) => {
 	let currentDate: string = moment().format("YYYY-MM-DD")
 
-	//user can search hotels based on:
-	// airport
-	// city
-	// country
-	// district
-	// landmark
-	// region
-
 	let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
 	const requestBody = {
 		booker: {

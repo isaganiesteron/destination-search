@@ -7,7 +7,7 @@ import Spinner from "@/components/Spinner"
 import SuggestedItem from "@/components/SuggestedItem"
 
 const Page = () => {
-	const [status, setStatus] = useState<object>({ loading: false, message: "Choose a country first" })
+	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a desintation." })
 
 	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
@@ -54,13 +54,17 @@ const Page = () => {
 	}
 
 	const fetchHotels = async () => {
-		setSuggestions([])
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
-		const destintationType = currentDestination["type" as keyof typeof currentDestination]
+		const destinationType = currentDestination["type" as keyof typeof currentDestination]
 		const destinationId = currentDestination["id" as keyof typeof currentDestination]
-		setStatus({ loading: true, message: `Fetch all hotels in ${destintationType} that is a ${destinationId} with a maximum price of ${maxPrice}...` })
-		const response = await fetch(`/api/hotels/${destintationType}/${destinationId}/${maxPrice}`) // maxPrice is in USD
+
+		if (destinationType === "null" || destinationId === "null") return
+
+		setSuggestions([])
+		setStatus({ loading: true, message: `Fetch all hotels in ${destinationType} that is a ${destinationId} with a maximum price of ${maxPrice}...` })
+
+		const response = await fetch(`/api/hotels/${destinationType}/${destinationId}/${maxPrice}`) // maxPrice is in USD
 		const allHotels = await response.json()
 		setStatus({ loading: false, message: `Done fetching ${allHotels.length} hotels.` })
 		setAllHotelsFetched(allHotels) //save all hotels fetched so you can filter it later on
@@ -72,20 +76,21 @@ const Page = () => {
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
 		const allHotels = hotels ? hotels : allHotelsFetched
-		// filter hotels by review
-		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating.review_score >= settings.review)
-		// sort based on review score
-		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
-			return b.rating.review_score - a.rating.review_score
-		})
-		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
+		if (allHotels.length === 0) return
 
-		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
-	}
+		// // filter hotels by review
+		// const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score || 0 >= settings.review)
+		// // sort based on review score
+		// allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
+		// 	return b.rating?.review_score || 0 - a.rating?.review_score || 0
+		// })
+		// setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
 
-	const handleSearch = () => {
-		if (showSettings) setShowSettings(false)
-		fetchHotels()
+		// setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
+
+		setStatus({ loading: false, message: `Result: Found ${allHotels.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
+
+		setCurrentAllHotels(allHotels.slice(0, 10))
 	}
 
 	const handleReset = () => {
@@ -105,8 +110,6 @@ const Page = () => {
 	}, [settings])
 
 	useEffect(() => {
-		console.log("Currenty destination changed to ")
-		console.log(currentDestination)
 		fetchHotels()
 	}, [currentDestination])
 
@@ -177,11 +180,13 @@ const Page = () => {
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
 						{currentAllHotels.length > 0
 							? currentAllHotels.map((x, i) => {
-									const currDescription = x.description.text["en-gb" as keyof typeof x.description.text]
-									const currPhoto = x.photos[0].url.thumbnail
-									const rating = x.rating.review_score
-									const price = x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null
-									return <ResultItem key={`hotel_${i}`} name={x.name["en-gb" as keyof typeof x.name]} description={currDescription} photoUrl={currPhoto} index={i} review={rating} priceObj={price} />
+									console.log(x)
+									const name = x.name ? x.name["en-gb" as keyof typeof x.name] : "NA"
+									const currDescription = x.description ? x.description.text["en-gb" as keyof typeof x.description.text] : "NA"
+									const currPhoto = x.photos ? x.photos[0].url.thumbnail : "NA"
+									const rating = x.rating ? x.rating.review_score : "0"
+									const price = x.price ? (x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null) : null
+									return <ResultItem key={`hotel_${i}`} name={name} description={currDescription} photoUrl={currPhoto} index={i} review={rating} priceObj={price} />
 							  })
 							: null}
 					</div>
