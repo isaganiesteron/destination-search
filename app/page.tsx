@@ -5,7 +5,6 @@ import { Settings as I_Settings } from "@/constants/interfaces"
 import Settings from "@/components/Settings"
 import Spinner from "@/components/Spinner"
 import SuggestedItem from "@/components/SuggestedItem"
-import next from "next"
 
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a desintation." })
@@ -41,8 +40,9 @@ const Page = () => {
 		},
 	})
 
-	const [inputValue, setInputValue] = useState("")
-	const [typingTimeout, setTypingTimeout] = useState<any>(0)
+	// ***This isn't working well, it's not getting the data in realtime. TODO
+	// const [inputValue, setInputValue] = useState("")
+	// const [typingTimeout, setTypingTimeout] = useState<any>(0)
 
 	const getDestinationLabel = (destination: any) => {
 		return destination
@@ -66,6 +66,7 @@ const Page = () => {
 		if (destinationType === "null" || destinationId === "null") return
 
 		setSuggestions([])
+		setCurrentAllHotels([])
 		setStatus({ loading: true, message: `Fetch all hotels in ${destinationType} that is a ${destinationId} with a maximum price of ${maxPrice}...` })
 
 		let allHotelsFetched: any[] = []
@@ -111,10 +112,10 @@ const Page = () => {
 		if (allHotels.length === 0) return
 
 		// filter hotels by review
-		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score || 0 >= settings.review)
+		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
 		// sort based on review score
 		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
-			return b.rating.review_score || 0 - a.rating.review_score || 0
+			return b.rating.review_score - a.rating.review_score
 		})
 		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
 
@@ -141,24 +142,28 @@ const Page = () => {
 		fetchHotels()
 	}, [currentDestination])
 
-	useEffect(() => {
-		return () => {
-			clearTimeout(typingTimeout)
-		}
-	}, [typingTimeout])
+	// ***This isn't working well, it's not getting the data in realtime. TODO
+	// useEffect(() => {
+	// 	return () => {
+	// 		clearTimeout(typingTimeout)
+	// 	}
+	// }, [typingTimeout])
 
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
-		if (typingTimeout) clearTimeout(typingTimeout)
+		if (event.target.value.length > 3) fetchSuggestions(event.target.value)
+		else setSuggestions([])
 
-		// will wait half a second before user finishes typing before fetching suggestions
-		setInputValue(event.target.value)
-		setTypingTimeout(
-			setTimeout(() => {
-				console.log("User has finished typing:", inputValue)
-				if (inputValue.length > 3) fetchSuggestions(inputValue)
-				else setSuggestions([])
-			}, 300)
-		)
+		// ***This isn't working well, it's not getting the data in realtime. TODO
+		// if (typingTimeout) clearTimeout(typingTimeout)
+		// // will wait half a second before user finishes typing before fetching suggestions
+		// setInputValue(event.target.value)
+		// setTypingTimeout(
+		// 	setTimeout(() => {
+		// 		console.log("User has finished typing:", inputValue)
+		// 		if (inputValue.length > 3) fetchSuggestions(inputValue)
+		// 		else setSuggestions([])
+		// 	}, 300)
+		// )
 	}
 
 	return (
