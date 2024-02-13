@@ -17,7 +17,6 @@ const Page = () => {
 	const [currentCountry, setCurrentCountry] = useState<string>("")
 	const [currentCity, setCurrentCity] = useState<number>(0)
 
-	const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
 	const [suggestions, setSuggestions] = useState<object[]>([])
 	const [currentDestination, setCurrentDestination] = useState<object>({
 		type: "null",
@@ -183,16 +182,6 @@ const Page = () => {
 
 	const handleSearch = () => {
 		if (showSettings) setShowSettings(false)
-
-		if (currentCity === 0) {
-			setStatus({ loading: false, message: "Please select a city first" })
-			return
-		}
-		if (currentTier === "") {
-			setStatus({ loading: false, message: "Please select a tier first" })
-			return
-		}
-
 		fetchHotels()
 	}
 
@@ -218,23 +207,13 @@ const Page = () => {
 	}, [settings])
 
 	useEffect(() => {
-		console.log("Currenty City changed to ")
+		console.log("Currenty destination changed to ")
 		console.log(currentDestination)
 	}, [currentDestination])
 
-	useEffect(() => {
-		console.log("suggestions")
-		console.log(suggestions)
-	}, [suggestions])
-
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
-		console.log("Search autosuggest for " + event.target.value)
-
-		if (event.target.value.length < 3) return
-
-		// fetch suggestions
-		fetchSuggestions(event.target.value)
-		setShowSuggestions(event.target.value !== "")
+		if (event.target.value.length < 3) setSuggestions([])
+		else fetchSuggestions(event.target.value)
 	}
 
 	return (
