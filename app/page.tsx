@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from "react"
+import React, { ChangeEvent, useEffect, useState } from "react"
 import ResultItem from "@/components/ResultItem"
 import { Settings as I_Settings } from "@/constants/interfaces"
 import Settings from "@/components/Settings"
@@ -8,6 +8,7 @@ import Spinner from "@/components/Spinner"
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Choose a country first" })
 	const [searching, setSearching] = useState<boolean>(false)
+	const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
 	const [allCountries, setallCountries] = useState<any[]>([])
 	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
 	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
@@ -163,6 +164,11 @@ const Page = () => {
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
 
+	const suggestionClick = (data: any) => {
+		console.log("Suggestion clicked")
+		console.log(data)
+	}
+
 	const handleSearch = () => {
 		if (showSettings) setShowSettings(false)
 
@@ -199,11 +205,22 @@ const Page = () => {
 		if (showSettings) setShowSettings(false)
 	}, [settings])
 
+	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
+		console.log("Search autosuggest for " + event.target.value)
+
+		setShowSuggestions(event.target.value !== "")
+	}
+
 	return (
 		<main>
 			<div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-				<div className="grid grid-cols-3 gap-4">
-					<div>
+				<div>
+					<div className="grid grid-cols-3 gap-4">
+						<div className="col-span-2">
+							<p className="font-bold text-md">Search</p>
+							<input type="text" className="border border-black rounded-md w-full p-[5.5px]" onChange={searchHandler} />
+						</div>
+						{/* <div>
 						<p className="font-bold text-md">Country</p>
 						<select
 							className="border border-black rounded-md w-full p-2"
@@ -249,22 +266,38 @@ const Page = () => {
 								  })
 								: null}
 						</select>
+					</div> */}
+						<div>
+							<p className="font-bold text-md">Price Tier</p>
+							<select
+								className="border border-black rounded-md w-full p-2"
+								name="tier"
+								id="tier"
+								onChange={(e) => {
+									setCurrentTier(e.target.value)
+								}}
+							>
+								<option value={"budget"}>Budget</option>
+								<option value={"midrange"}>Mid Range</option>
+								<option value={"luxury"}>Luxury</option>
+							</select>
+						</div>
 					</div>
-					<div>
-						<p className="font-bold text-md">Price Tier</p>
-						<select
-							className="border border-black rounded-md w-full p-2"
-							name="tier"
-							id="tier"
-							onChange={(e) => {
-								setCurrentTier(e.target.value)
-							}}
-						>
-							<option value={"budget"}>Budget</option>
-							<option value={"midrange"}>Mid Range</option>
-							<option value={"luxury"}>Luxury</option>
-						</select>
-					</div>
+
+					{showSuggestions && (
+						<div className="flex flex-col w-full gap-3">
+							<div className="grid grid-cols-3 gap-4">
+								<div className="col-span-2 border border-black rounded-md shadow-lg p-1">
+									<div className="flex p-1 hover:bg-slate-200 rounded-md">
+										<button className="flex flex-col justify-start w-full m-1" onClick={suggestionClick}>
+											<h1 className="font-bold">Something</h1>
+											<small className="text-[11px]">Another</small>
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
 				</div>
 
 				{/* <button
@@ -285,10 +318,10 @@ const Page = () => {
 					TEST POST REQUEST
 				</button> */}
 
-				<button className="w-full flex items-center space-x-2 border border-black bg-green-400 hover:bg-green-500 px-4 py-2 rounded justify-center font-bold" onClick={handleSearch}>
+				{/* <button className="w-full flex items-center space-x-2 border border-black bg-green-400 hover:bg-green-500 px-4 py-2 rounded justify-center font-bold" onClick={handleSearch}>
 					{searching && <Spinner />}
 					Search
-				</button>
+				</button> */}
 
 				<div>
 					<div className="flex flex-row">
