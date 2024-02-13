@@ -111,7 +111,7 @@ export async function GET(request: Request, params: any) {
 	try {
 		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price, next_page)
 		const hotelDetails = await _fetchHotelDetails(hotelPrices?.data.map((x: { id: number }) => x.id))
-		const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices?.data)
+		const hotelPricesAndDetails = await _combinePricesAndDetails(hotelDetails, hotelPrices?.data)
 		const currentNextPage = hotelPrices.next_page ? hotelPrices.next_page : null
 
 		console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)

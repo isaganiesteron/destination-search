@@ -41,6 +41,9 @@ const Page = () => {
 		},
 	})
 
+	const [inputValue, setInputValue] = useState("")
+	const [typingTimeout, setTypingTimeout] = useState<any>(0)
+
 	const getDestinationLabel = (destination: any) => {
 		return destination
 	}
@@ -78,10 +81,11 @@ const Page = () => {
 			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentMaxPrice}`) // maxPrice is in USD
 			const responseJson = await response.json()
 
+			if (responseJson.data) allHotelsFetched.push(...responseJson.data)
+
 			if (responseJson.next_page) {
 				console.log("There is another page")
 				console.log(responseJson.next_page)
-				allHotelsFetched.push(...responseJson.data)
 				nextPage = responseJson.next_page
 				setStatus({ loading: true, message: `Fetched ${allHotelsFetched.length} hotels so far. Fetching more...` })
 				// pause for 1 second before next request
@@ -89,23 +93,17 @@ const Page = () => {
 			} else {
 				console.log("No more pages")
 				console.log("**************************************")
+				nextPage = ""
 				morePages = false
 			}
 		}
-
-		// const response = await fetch(`/api/hotels/${destinationType}/${destinationId}/${maxPrice}`) // maxPrice is in USD
-		// const responseJson = await response.json()
-		// if (responseJson.next_page != "null") {
-		// 	console.log("There is another page")
-		// 	console.log(responseJson.next_page)
-		// }
-		// setStatus({ loading: false, message: `Done fetching ${responseJson.data.length} hotels.` })
-
+		console.log("----done----")
 		setAllHotelsFetched(allHotelsFetched) //save all hotels fetched so you can filter it later on
 		prepareHotelResults(allHotelsFetched)
 	}
 
 	const prepareHotelResults = (hotels: any[] | null) => {
+		console.log("prepareHotelResults")
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
@@ -116,7 +114,7 @@ const Page = () => {
 		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score || 0 >= settings.review)
 		// sort based on review score
 		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
-			return b.rating?.review_score || 0 - a.rating?.review_score || 0
+			return b.rating.review_score || 0 - a.rating.review_score || 0
 		})
 		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
 
@@ -143,14 +141,24 @@ const Page = () => {
 		fetchHotels()
 	}, [currentDestination])
 
-	// useEffect(() => {
-	// 	console.log("**********currentAllHotels Updated**********")
-	// 	console.log(currentAllHotels)
-	// }, [currentAllHotels])
+	useEffect(() => {
+		return () => {
+			clearTimeout(typingTimeout)
+		}
+	}, [typingTimeout])
 
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
-		if (event.target.value.length < 3) setSuggestions([])
-		else fetchSuggestions(event.target.value)
+		if (typingTimeout) clearTimeout(typingTimeout)
+
+		// will wait half a second before user finishes typing before fetching suggestions
+		setInputValue(event.target.value)
+		setTypingTimeout(
+			setTimeout(() => {
+				console.log("User has finished typing:", inputValue)
+				if (inputValue.length > 3) fetchSuggestions(inputValue)
+				else setSuggestions([])
+			}, 300)
+		)
 	}
 
 	return (
@@ -187,7 +195,7 @@ const Page = () => {
 										const label = suggestion["label" as keyof typeof suggestion]
 										const dest_id = suggestion["dest_id" as keyof typeof suggestion]
 										const dest_type = suggestion["dest_type" as keyof typeof suggestion]
-										return <SuggestedItem label={label} type={dest_type} id={dest_id} suggestionClick={setCurrentDestination} />
+										return <SuggestedItem key={dest_id} label={label} type={dest_type} id={dest_id} suggestionClick={setCurrentDestination} />
 									})}
 								</div>
 							</div>
