@@ -65,10 +65,12 @@ const Page = () => {
 		setStatus({ loading: true, message: `Fetch all hotels in ${destinationType} that is a ${destinationId} with a maximum price of ${maxPrice}...` })
 
 		const response = await fetch(`/api/hotels/${destinationType}/${destinationId}/${maxPrice}`) // maxPrice is in USD
-		const allHotels = await response.json()
-		setStatus({ loading: false, message: `Done fetching ${allHotels.length} hotels.` })
-		setAllHotelsFetched(allHotels) //save all hotels fetched so you can filter it later on
-		prepareHotelResults(allHotels)
+		const responseJson = await response.json()
+		console.log(JSON.stringify(responseJson))
+		setStatus({ loading: false, message: `Done fetching ${responseJson.data.length} hotels.` })
+
+		setAllHotelsFetched(responseJson.data) //save all hotels fetched so you can filter it later on
+		prepareHotelResults(responseJson.data)
 	}
 
 	const prepareHotelResults = (hotels: any[] | null) => {
@@ -78,19 +80,15 @@ const Page = () => {
 		const allHotels = hotels ? hotels : allHotelsFetched
 		if (allHotels.length === 0) return
 
-		// // filter hotels by review
-		// const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score || 0 >= settings.review)
-		// // sort based on review score
-		// allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
-		// 	return b.rating?.review_score || 0 - a.rating?.review_score || 0
-		// })
-		// setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
+		// filter hotels by review
+		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score || 0 >= settings.review)
+		// sort based on review score
+		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
+			return b.rating?.review_score || 0 - a.rating?.review_score || 0
+		})
+		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
 
-		// setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
-
-		setStatus({ loading: false, message: `Result: Found ${allHotels.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
-
-		setCurrentAllHotels(allHotels.slice(0, 10))
+		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
 
 	const handleReset = () => {
@@ -180,7 +178,6 @@ const Page = () => {
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
 						{currentAllHotels.length > 0
 							? currentAllHotels.map((x, i) => {
-									console.log(x)
 									const name = x.name ? x.name["en-gb" as keyof typeof x.name] : "NA"
 									const currDescription = x.description ? x.description.text["en-gb" as keyof typeof x.description.text] : "NA"
 									const currPhoto = x.photos ? x.photos[0].url.thumbnail : "NA"

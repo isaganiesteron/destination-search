@@ -1,4 +1,5 @@
 import apiCall from "@/utils/apiCall"
+import fetchApi from "@/utils/fetchApi"
 import { NextResponse } from "next/server"
 import moment from "moment"
 // import tempHotelPricesAndDetails from "@/mock_data/hotels"
@@ -76,13 +77,14 @@ const _fetchHotelPrices = async (type: string, id: string, price: string) => {
 	console.log("updatedRequestBody")
 	console.log(updatedRequestBody)
 
-	const hotelSearch = await apiCall("/accommodations/search", updatedRequestBody)
+	const hotelSearch = await fetchApi("/accommodations/search", updatedRequestBody)
+	// const hotelSearch = await apiCall("/accommodations/search", updatedRequestBody)
 	return hotelSearch
 }
 
 const _fetchHotelDetails = async (hotelIds: number[]) => {
 	//  * Will split hotels into 100 because it can only take 100 hotels per request
-	const splitArray = _chunkArray(hotelIds, 2) // Note: change 2 to 100 after testing
+	const splitArray = _chunkArray(hotelIds, 100) // Note: change 2 to 100 after testing
 	console.log(`There will be ${splitArray.length} requests.`)
 	const promises = splitArray.map((array) => {
 		const requestBody = {
@@ -101,14 +103,12 @@ export async function GET(request: Request, params: any) {
 
 	try {
 		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price)
-		// const hotelDetails = await _fetchHotelDetails(hotelPrices.map((x: { id: number }) => x.id))
-		// const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices)
+		const hotelDetails = await _fetchHotelDetails(hotelPrices.data.map((x: { id: number }) => x.id))
+		const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices.data)
+		const currentNextPage = hotelPrices.next_page ? hotelPrices.next_page : null
 
-		console.log(JSON.stringify(hotelPrices))
-		console.log("*******")
-		// console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)
-		return NextResponse.json(hotelPrices)
-		// return NextResponse.json(hotelPricesAndDetails)
+		console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)
+		return NextResponse.json({ data: hotelPricesAndDetails, next_page: currentNextPage })
 	} catch (error) {
 		console.log(error)
 		return NextResponse.json({ error }, { status: 500 })
