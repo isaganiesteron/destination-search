@@ -9,7 +9,6 @@ import SuggestedItem from "@/components/SuggestedItem"
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Choose a country first" })
 	const [searching, setSearching] = useState<boolean>(false)
-	const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
 	const [allCountries, setallCountries] = useState<any[]>([])
 	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
 	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
@@ -18,6 +17,8 @@ const Page = () => {
 	const [currentCountry, setCurrentCountry] = useState<string>("")
 	const [currentCity, setCurrentCity] = useState<number>(0)
 
+	const [showSuggestions, setShowSuggestions] = useState<boolean>(false)
+	const [suggestions, setSuggestions] = useState<object[]>([])
 	const [currentDestination, setCurrentDestination] = useState<object>({
 		type: "null",
 		id: "null",
@@ -69,6 +70,15 @@ const Page = () => {
 		})
 		setStatus({ loading: false, message: `Done fetching ${allCountries.length} countries.` })
 		setallCountries(allCountries)
+	}
+
+	const fetchSuggestions = async (query: string) => {
+		const response = await fetch("/api/autosuggest/" + query)
+		if (response.status === 200) {
+			const data = await response.json()
+			console.log(data)
+			setSuggestions(data)
+		}
 	}
 
 	const fetchAllCities = async (country: string) => {
@@ -171,11 +181,6 @@ const Page = () => {
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
 
-	const suggestionClick = (data: any) => {
-		console.log("Suggestion clicked")
-		console.log(data)
-	}
-
 	const handleSearch = () => {
 		if (showSettings) setShowSettings(false)
 
@@ -217,9 +222,18 @@ const Page = () => {
 		console.log(currentDestination)
 	}, [currentDestination])
 
+	useEffect(() => {
+		console.log("suggestions")
+		console.log(suggestions)
+	}, [suggestions])
+
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
 		console.log("Search autosuggest for " + event.target.value)
 
+		if (event.target.value.length < 3) return
+
+		// fetch suggestions
+		fetchSuggestions(event.target.value)
 		setShowSuggestions(event.target.value !== "")
 	}
 
@@ -249,11 +263,16 @@ const Page = () => {
 						</div>
 					</div>
 
-					{showSuggestions && (
+					{suggestions.length > 0 && (
 						<div className="flex flex-col w-full gap-3">
 							<div className="grid grid-cols-3 gap-1">
 								<div className="col-span-2 border border-black rounded-md shadow-lg p-1">
-									<SuggestedItem label={"Something"} type={"city"} id="1" suggestionClick={setCurrentDestination} />
+									{suggestions.map((suggestion) => {
+										const label = suggestion["label" as keyof typeof suggestion]
+										const dest_id = suggestion["dest_id" as keyof typeof suggestion]
+										const dest_type = suggestion["dest_type" as keyof typeof suggestion]
+										return <SuggestedItem label={label} type={dest_type} id={dest_id} suggestionClick={setCurrentDestination} />
+									})}
 								</div>
 							</div>
 						</div>

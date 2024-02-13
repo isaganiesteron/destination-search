@@ -12,7 +12,7 @@ export async function GET(request: Request, params: any) {
 		})
 		if (response.status === 200) {
 			const data = await response.json()
-			return NextResponse.json(data, { status: 200 })
+			return NextResponse.json(data.results, { status: 200 })
 		} else {
 			return NextResponse.json(response, { status: 500 })
 		}
