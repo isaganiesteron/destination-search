@@ -38,7 +38,7 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
 	return detailsAndPrices
 }
 
-const _fetchHotelPrices = async (type: string, id: string, price: string) => {
+const _fetchHotelPrices = async (type: string, id: string, price: string, page: string) => {
 	let currentDate: string = moment().format("YYYY-MM-DD")
 
 	let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
@@ -60,25 +60,28 @@ const _fetchHotelPrices = async (type: string, id: string, price: string) => {
 	}
 
 	let updatedRequestBody: object = {}
-	if (type === "airport") {
-		updatedRequestBody = { ...requestBody, airport: Number(id) }
-	} else if (type === "city") {
-		updatedRequestBody = { ...requestBody, city: Number(id) }
-	} else if (type === "country") {
-		updatedRequestBody = { ...requestBody, country: Number(id) }
-	} else if (type === "district") {
-		updatedRequestBody = { ...requestBody, district: Number(id) }
-	} else if (type === "landmark") {
-		updatedRequestBody = { ...requestBody, landmark: Number(id) }
-	} else if (type === "region") {
-		updatedRequestBody = { ...requestBody, region: Number(id) }
+	if (page !== "null") {
+		updatedRequestBody = { page }
+	} else {
+		if (type === "airport") {
+			updatedRequestBody = { ...requestBody, airport: Number(id) }
+		} else if (type === "city") {
+			updatedRequestBody = { ...requestBody, city: Number(id) }
+		} else if (type === "country") {
+			updatedRequestBody = { ...requestBody, country: Number(id) }
+		} else if (type === "district") {
+			updatedRequestBody = { ...requestBody, district: Number(id) }
+		} else if (type === "landmark") {
+			updatedRequestBody = { ...requestBody, landmark: Number(id) }
+		} else if (type === "region") {
+			updatedRequestBody = { ...requestBody, region: Number(id) }
+		}
 	}
 
 	console.log("updatedRequestBody")
 	console.log(updatedRequestBody)
 
 	const hotelSearch = await fetchApi("/accommodations/search", updatedRequestBody)
-	// const hotelSearch = await apiCall("/accommodations/search", updatedRequestBody)
 	return hotelSearch
 }
 
@@ -100,11 +103,15 @@ const _fetchHotelDetails = async (hotelIds: number[]) => {
 
 export async function GET(request: Request, params: any) {
 	const { dest_type, dest_id, price } = params.params
+	/**
+	 * If next_page exists then that means remove all params and just use next_page
+	 */
+	let next_page = dest_type && dest_id === "null" && price === "null" ? dest_type : "null"
 
 	try {
-		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price)
-		const hotelDetails = await _fetchHotelDetails(hotelPrices.data.map((x: { id: number }) => x.id))
-		const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices.data)
+		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price, next_page)
+		const hotelDetails = await _fetchHotelDetails(hotelPrices?.data.map((x: { id: number }) => x.id))
+		const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices?.data)
 		const currentNextPage = hotelPrices.next_page ? hotelPrices.next_page : null
 
 		console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`)

@@ -5,6 +5,7 @@ import { Settings as I_Settings } from "@/constants/interfaces"
 import Settings from "@/components/Settings"
 import Spinner from "@/components/Spinner"
 import SuggestedItem from "@/components/SuggestedItem"
+import next from "next"
 
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a desintation." })
@@ -64,13 +65,44 @@ const Page = () => {
 		setSuggestions([])
 		setStatus({ loading: true, message: `Fetch all hotels in ${destinationType} that is a ${destinationId} with a maximum price of ${maxPrice}...` })
 
-		const response = await fetch(`/api/hotels/${destinationType}/${destinationId}/${maxPrice}`) // maxPrice is in USD
-		const responseJson = await response.json()
-		console.log(JSON.stringify(responseJson))
-		setStatus({ loading: false, message: `Done fetching ${responseJson.data.length} hotels.` })
+		let allHotelsFetched: any[] = []
+		let morePages = true
+		let nextPage = ""
 
-		setAllHotelsFetched(responseJson.data) //save all hotels fetched so you can filter it later on
-		prepareHotelResults(responseJson.data)
+		// fetch all pages
+		while (morePages) {
+			const currentDestinationType = nextPage === "" ? destinationType : nextPage
+			const currentDestinationId = nextPage === "" ? destinationId : "null"
+			const currentMaxPrice = nextPage === "" ? maxPrice : "null"
+
+			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentMaxPrice}`) // maxPrice is in USD
+			const responseJson = await response.json()
+
+			if (responseJson.next_page) {
+				console.log("There is another page")
+				console.log(responseJson.next_page)
+				allHotelsFetched.push(...responseJson.data)
+				nextPage = responseJson.next_page
+				setStatus({ loading: true, message: `Fetched ${allHotelsFetched.length} hotels so far. Fetching more...` })
+				// pause for 1 second before next request
+				await new Promise((resolve) => setTimeout(resolve, 1000))
+			} else {
+				console.log("No more pages")
+				console.log("**************************************")
+				morePages = false
+			}
+		}
+
+		// const response = await fetch(`/api/hotels/${destinationType}/${destinationId}/${maxPrice}`) // maxPrice is in USD
+		// const responseJson = await response.json()
+		// if (responseJson.next_page != "null") {
+		// 	console.log("There is another page")
+		// 	console.log(responseJson.next_page)
+		// }
+		// setStatus({ loading: false, message: `Done fetching ${responseJson.data.length} hotels.` })
+
+		setAllHotelsFetched(allHotelsFetched) //save all hotels fetched so you can filter it later on
+		prepareHotelResults(allHotelsFetched)
 	}
 
 	const prepareHotelResults = (hotels: any[] | null) => {
@@ -111,10 +143,10 @@ const Page = () => {
 		fetchHotels()
 	}, [currentDestination])
 
-	useEffect(() => {
-		console.log("**********currentAllHotels Updated**********")
-		console.log(currentAllHotels)
-	}, [currentAllHotels])
+	// useEffect(() => {
+	// 	console.log("**********currentAllHotels Updated**********")
+	// 	console.log(currentAllHotels)
+	// }, [currentAllHotels])
 
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
 		if (event.target.value.length < 3) setSuggestions([])

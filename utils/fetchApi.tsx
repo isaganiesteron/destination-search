@@ -39,10 +39,7 @@ const apiCall = async (endpoint: string, fetchBody: object) => {
 		console.log(response)
 		next_page = ""
 	}
-
-	console.log("**************************************")
-	console.log(`Done fetching ${data.length} items.`)
-	console.log("**************************************")
+	console.log(`Fetched ${data.length} items.`)
 
 	return { next_page, data }
 }
