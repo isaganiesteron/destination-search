@@ -4,6 +4,7 @@ import ResultItem from "@/components/ResultItem"
 import { Settings as I_Settings } from "@/constants/interfaces"
 import Settings from "@/components/Settings"
 import Spinner from "@/components/Spinner"
+import SuggestedItem from "@/components/SuggestedItem"
 
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Choose a country first" })
@@ -16,6 +17,12 @@ const Page = () => {
 	const [showSettings, setShowSettings] = useState<boolean>(false)
 	const [currentCountry, setCurrentCountry] = useState<string>("")
 	const [currentCity, setCurrentCity] = useState<number>(0)
+
+	const [currentDestination, setCurrentDestination] = useState<object>({
+		type: "null",
+		id: "null",
+	})
+
 	const [currentTier, setCurrentTier] = useState<string>("budget")
 	const [settings, setSettings] = useState<I_Settings>({
 		review: 8.3,
@@ -205,6 +212,11 @@ const Page = () => {
 		if (showSettings) setShowSettings(false)
 	}, [settings])
 
+	useEffect(() => {
+		console.log("Currenty City changed to ")
+		console.log(currentDestination)
+	}, [currentDestination])
+
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
 		console.log("Search autosuggest for " + event.target.value)
 
@@ -215,58 +227,11 @@ const Page = () => {
 		<main>
 			<div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
 				<div>
-					<div className="grid grid-cols-3 gap-4">
+					<div className="grid grid-cols-3 gap-1">
 						<div className="col-span-2">
 							<p className="font-bold text-md">Search</p>
 							<input type="text" className="border border-black rounded-md w-full p-[5.5px]" onChange={searchHandler} />
 						</div>
-						{/* <div>
-						<p className="font-bold text-md">Country</p>
-						<select
-							className="border border-black rounded-md w-full p-2"
-							name="countries"
-							id="countries"
-							disabled={allCountries.length < 1}
-							onChange={(e) => {
-								setCurrentCountry(e.target.value)
-								fetchAllCities(e.target.value)
-							}}
-						>
-							<option value={""}>---</option>
-							{allCountries.length > 0
-								? allCountries.map((x) => {
-										return (
-											<option key={x.id} value={x.id}>
-												{x.name["en-gb" as keyof typeof x.name]}
-											</option>
-										)
-								  })
-								: null}
-						</select>
-					</div>
-					<div>
-						<p className="font-bold text-md">City</p>
-						<select
-							className="border border-black rounded-md w-full p-2"
-							name="cities"
-							id="cities"
-							disabled={currentAllCities.length < 1}
-							onChange={(e) => {
-								setCurrentCity(parseInt(e.target.value))
-							}}
-						>
-							<option value={0}>---</option>
-							{currentAllCities.length > 0
-								? currentAllCities.map((x) => {
-										return (
-											<option key={x.id} value={x.id}>
-												{x.name["en-gb" as keyof typeof x.name]}
-											</option>
-										)
-								  })
-								: null}
-						</select>
-					</div> */}
 						<div>
 							<p className="font-bold text-md">Price Tier</p>
 							<select
@@ -286,42 +251,14 @@ const Page = () => {
 
 					{showSuggestions && (
 						<div className="flex flex-col w-full gap-3">
-							<div className="grid grid-cols-3 gap-4">
+							<div className="grid grid-cols-3 gap-1">
 								<div className="col-span-2 border border-black rounded-md shadow-lg p-1">
-									<div className="flex p-1 hover:bg-slate-200 rounded-md">
-										<button className="flex flex-col justify-start w-full m-1" onClick={suggestionClick}>
-											<h1 className="font-bold">Something</h1>
-											<small className="text-[11px]">Another</small>
-										</button>
-									</div>
+									<SuggestedItem label={"Something"} type={"city"} id="1" suggestionClick={setCurrentDestination} />
 								</div>
 							</div>
 						</div>
 					)}
 				</div>
-
-				{/* <button
-					className="w-full flex items-center space-x-2 border border-black bg-red-400 hover:bg-red-500 px-4 py-2 rounded justify-center font-bold"
-					onClick={() => {
-						fetch("/api/new-desc", {
-							method: "POST",
-							headers: {
-								"Content-Type": "application/json",
-							},
-							body: JSON.stringify({ description: "This is a test description" }),
-						})
-							.then((res) => res.json())
-							.then((data) => console.log(data))
-							.catch((err) => console.error(err))
-					}}
-				>
-					TEST POST REQUEST
-				</button> */}
-
-				{/* <button className="w-full flex items-center space-x-2 border border-black bg-green-400 hover:bg-green-500 px-4 py-2 rounded justify-center font-bold" onClick={handleSearch}>
-					{searching && <Spinner />}
-					Search
-				</button> */}
 
 				<div>
 					<div className="flex flex-row">
