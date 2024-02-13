@@ -51,7 +51,9 @@ const apiCall = async (endpoint: string, fetchBody: object) => {
 			}
 		} else {
 			console.log(`Status ${response.status}`)
+			const res = await response.json()
 			console.log(response)
+			console.log(res)
 			morePagesAvailable = false
 			page = ""
 		}

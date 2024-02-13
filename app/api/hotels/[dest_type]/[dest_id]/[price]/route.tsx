@@ -37,16 +37,15 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
 	return detailsAndPrices
 }
 
-const _fetchHotelPrices = async (city: string, price: string) => {
+const _fetchHotelPrices = async (type: string, id: string, price: string) => {
 	let currentDate: string = moment().format("YYYY-MM-DD")
 
 	let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
-	const requestBody = {
+	let requestBody = {
 		booker: {
 			country: "nl",
 			platform: "desktop",
 		},
-		city: Number(city),
 		price: {
 			maximum: Number(price),
 		},
@@ -58,10 +57,26 @@ const _fetchHotelPrices = async (city: string, price: string) => {
 			number_of_rooms: 1,
 		},
 	}
-	console.log("requestBody")
-	console.log(requestBody)
-	const hotelSearch = await apiCall("/accommodations/search", requestBody)
-	console.log(JSON.stringify(hotelSearch))
+
+	let updatedRequestBody: object = {}
+	if (type === "airport") {
+		updatedRequestBody = { ...requestBody, airport: Number(id) }
+	} else if (type === "city") {
+		updatedRequestBody = { ...requestBody, city: Number(id) }
+	} else if (type === "country") {
+		updatedRequestBody = { ...requestBody, country: Number(id) }
+	} else if (type === "district") {
+		updatedRequestBody = { ...requestBody, district: Number(id) }
+	} else if (type === "landmark") {
+		updatedRequestBody = { ...requestBody, landmark: Number(id) }
+	} else if (type === "region") {
+		updatedRequestBody = { ...requestBody, region: Number(id) }
+	}
+
+	console.log("updatedRequestBody")
+	console.log(updatedRequestBody)
+
+	const hotelSearch = await apiCall("/accommodations/search", updatedRequestBody)
 	return hotelSearch
 }
 
@@ -81,11 +96,11 @@ const _fetchHotelDetails = async (hotelIds: number[]) => {
 	console.log(JSON.stringify(allHotelDetailsFlattened))
 	return allHotelDetailsFlattened
 }
-
 export async function GET(request: Request, params: any) {
+	const { dest_type, dest_id, price } = params.params
+
 	try {
-		const { city, price } = params.params
-		const hotelPrices = await _fetchHotelPrices(city, price)
+		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price)
 		const hotelDetails = await _fetchHotelDetails(hotelPrices.map((x: { id: number }) => x.id))
 		const hotelPricesAndDetails = _combinePricesAndDetails(hotelDetails, hotelPrices)
 
@@ -99,5 +114,5 @@ export async function GET(request: Request, params: any) {
 		return NextResponse.json({ error }, { status: 500 })
 	}
 
-	// return NextResponse.json(tempHotelPricesAndDetails)
+	return NextResponse.json("result")
 }

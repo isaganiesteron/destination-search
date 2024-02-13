@@ -8,14 +8,10 @@ import SuggestedItem from "@/components/SuggestedItem"
 
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Choose a country first" })
-	const [searching, setSearching] = useState<boolean>(false)
-	const [allCountries, setallCountries] = useState<any[]>([])
-	const [currentAllCities, setCurrentAllCities] = useState<any[]>([])
+
 	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
 	const [showSettings, setShowSettings] = useState<boolean>(false)
-	const [currentCountry, setCurrentCountry] = useState<string>("")
-	const [currentCity, setCurrentCity] = useState<number>(0)
 
 	const [suggestions, setSuggestions] = useState<object[]>([])
 	const [currentDestination, setCurrentDestination] = useState<object>({
@@ -44,31 +40,8 @@ const Page = () => {
 		},
 	})
 
-	const getCountryLabel = (id: string) => {
-		const country = allCountries.find((x) => x.id === id)
-		return country ? country.name["en-gb" as keyof typeof country.name] : "Unknown"
-	}
-
-	const getCityLabel = (id: number) => {
-		const city = currentAllCities.find((x) => x.id === id)
-		return city ? city.name["en-gb" as keyof typeof city.name] : "Unknown"
-	}
-
-	const getAllCountries = async () => {
-		setStatus({ loading: true, message: "Fetching all countries..." })
-		const response = await fetch("/api/countries")
-		const allCountries = await response.json()
-		allCountries.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
-			if (a.name["en-gb"] < b.name["en-gb"]) {
-				return -1
-			}
-			if (a.name["en-gb"] > b.name["en-gb"]) {
-				return 1
-			}
-			return 0
-		})
-		setStatus({ loading: false, message: `Done fetching ${allCountries.length} countries.` })
-		setallCountries(allCountries)
+	const getDestinationLabel = (destination: any) => {
+		return destination
 	}
 
 	const fetchSuggestions = async (query: string) => {
@@ -80,90 +53,21 @@ const Page = () => {
 		}
 	}
 
-	const fetchAllCities = async (country: string) => {
-		setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}...` })
-
-		let collectedCities: any[] = []
-		let morePagesAvailable: boolean = true
-		let currentPage: number = 0
-		let page: string = "null"
-
-		while (morePagesAvailable) {
-			currentPage++
-			console.log(`Fetching page: ${currentPage}`)
-
-			const response = await fetch(`/api/cities/${country}/${page}`)
-
-			if (response.status == 200) {
-				try {
-					const res = await response.json()
-					if (res.data) {
-						collectedCities.push(...res.data)
-						setStatus({ loading: true, message: `Fetch all cities of ${getCountryLabel(country)}. Fetched ${collectedCities.length} cities...` })
-					} else if (res.errors) {
-						console.log("**ERROR1")
-						console.log(res)
-						morePagesAvailable = false
-						page = "null"
-					}
-
-					if (res.next_page) {
-						page = res.next_page
-					} else {
-						morePagesAvailable = false
-						page = "null"
-					}
-				} catch (err) {
-					console.log("**ERROR2")
-					console.log(err)
-					morePagesAvailable = false
-					page = "null"
-				}
-
-				// pause for 1 second before next request
-				await new Promise((resolve) => setTimeout(resolve, 1000))
-				if (currentPage % 5 === 0) {
-					// pause an extra 5 seconds every 5 requests
-					await new Promise((resolve) => setTimeout(resolve, 5000))
-				}
-			} else {
-				console.log(`Status ${response.status}`)
-				console.log(response)
-				morePagesAvailable = false
-				page = "null"
-			}
-		}
-
-		collectedCities.sort((a: { name: { "en-gb": string } }, b: { name: { "en-gb": string } }) => {
-			if (a.name["en-gb"] < b.name["en-gb"]) {
-				return -1
-			}
-			if (a.name["en-gb"] > b.name["en-gb"]) {
-				return 1
-			}
-			return 0
-		})
-		setStatus({ loading: false, message: `Done fetching ${collectedCities.length} cities. ` })
-		setCurrentAllCities(collectedCities)
-	}
-
 	const fetchHotels = async () => {
-		setSearching(true)
+		setSuggestions([])
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
-		setStatus({ loading: true, message: `Fetch all hotels in the city of ${getCityLabel(currentCity)} with a maximum price of ${maxPrice}...` })
-		const response = await fetch(`/api/hotels/${currentCity}/${maxPrice}`) // maxPrice is in USD
+		const destintationType = currentDestination["type" as keyof typeof currentDestination]
+		const destinationId = currentDestination["id" as keyof typeof currentDestination]
+		setStatus({ loading: true, message: `Fetch all hotels in ${destintationType} that is a ${destinationId} with a maximum price of ${maxPrice}...` })
+		const response = await fetch(`/api/hotels/${destintationType}/${destinationId}/${maxPrice}`) // maxPrice is in USD
 		const allHotels = await response.json()
 		setStatus({ loading: false, message: `Done fetching ${allHotels.length} hotels.` })
 		setAllHotelsFetched(allHotels) //save all hotels fetched so you can filter it later on
 		prepareHotelResults(allHotels)
-		setSearching(false)
 	}
 
 	const prepareHotelResults = (hotels: any[] | null) => {
-		if (allCountries.length < 1) return
-		if (currentAllCities.length < 1) return
-
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
@@ -174,8 +78,7 @@ const Page = () => {
 		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
 			return b.rating.review_score - a.rating.review_score
 		})
-
-		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getCityLabel(currentCity)} ${getCountryLabel(currentCountry)}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
+		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
 
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
@@ -187,13 +90,8 @@ const Page = () => {
 
 	const handleReset = () => {
 		setAllHotelsFetched([])
-		setCurrentCity(0)
 		setStatus({ loading: false, message: "Choose a country first" })
 	}
-
-	useEffect(() => {
-		getAllCountries()
-	}, [])
 
 	useEffect(() => {
 		setSettings({ ...settings, tier: currentTier })
@@ -209,7 +107,13 @@ const Page = () => {
 	useEffect(() => {
 		console.log("Currenty destination changed to ")
 		console.log(currentDestination)
+		fetchHotels()
 	}, [currentDestination])
+
+	useEffect(() => {
+		console.log("**********currentAllHotels Updated**********")
+		console.log(currentAllHotels)
+	}, [currentAllHotels])
 
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
 		if (event.target.value.length < 3) setSuggestions([])

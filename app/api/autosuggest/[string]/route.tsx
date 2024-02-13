@@ -8,7 +8,7 @@ export async function GET(request: Request, params: any) {
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ query: string, language: "en-us", size: 5 }),
+			body: JSON.stringify({ query: string, language: "en-us", size: 10 }),
 		})
 		if (response.status === 200) {
 			const data = await response.json()
