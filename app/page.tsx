@@ -22,7 +22,7 @@ const Page = () => {
 	const [currentTier, setCurrentTier] = useState<string>("budget")
 	const [settings, setSettings] = useState<I_Settings>({
 		review: 8.3,
-		consider_review_quantity: false,
+		consider_review_quantity: true,
 		tier: "budget",
 		budget: {
 			min_price: 0,
@@ -118,9 +118,15 @@ const Page = () => {
 		// filter hotels by review
 		const allHotelsFiltered = allHotelsRatingInfoAdded.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
 		// sort based on review score
-		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
-			return b.rating.review_score - a.rating.review_score
-		})
+		if (settings.consider_review_quantity) {
+			allHotelsFiltered.sort((a: { rating: { additional_info: { average_review_score: number } } }, b: { rating: { additional_info: { average_review_score: number } } }) => {
+				return b.rating.additional_info.average_review_score - a.rating.additional_info.average_review_score
+			})
+		} else {
+			allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
+				return b.rating.review_score - a.rating.review_score
+			})
+		}
 		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
 
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
@@ -130,12 +136,12 @@ const Page = () => {
 		let highestReviewQuantity = allHotels.map((x) => x.rating.number_of_reviews).reduce((a, b) => Math.max(a, b))
 		let allHotelsWithReviewQuantity = allHotels.map((x) => {
 			const currentReviewQuantity = x.rating.number_of_reviews
-			const percentage = Math.round((currentReviewQuantity / highestReviewQuantity) * 100)
+			const percentage = (currentReviewQuantity / highestReviewQuantity) * 10
 
 			const additionalRatingInfo = {
 				most_reviews: highestReviewQuantity,
 				review_percentage: percentage,
-				average_review_score: Math.round((x.rating.review_score * 10 + percentage) / 2),
+				average_review_score: (x.rating.review_score + percentage) / 2,
 			}
 
 			let newRating = { ...x }
@@ -255,9 +261,10 @@ const Page = () => {
 									const name = x.name ? x.name["en-gb" as keyof typeof x.name] : "NA"
 									const currDescription = x.description ? x.description.text["en-gb" as keyof typeof x.description.text] : "NA"
 									const currPhoto = x.photos ? x.photos[0].url.thumbnail : "NA"
-									const rating = x.rating ? x.rating.review_score : "0"
+									const additionRatingInfo = x.rating.additional_info
+									const rating = x.rating ? { score: x.rating.review_score, reviews: x.rating.number_of_reviews, average: additionRatingInfo.average_review_score } : { score: 0, reviews: 0, average: 0 }
 									const price = x.price ? (x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null) : null
-									return <ResultItem key={`hotel_${i}`} name={name} description={currDescription} photoUrl={currPhoto} index={i} review={rating} priceObj={price} />
+									return <ResultItem key={`hotel_${i}`} name={name} description={currDescription} photoUrl={currPhoto} index={i} rating={rating} priceObj={price} />
 							  })
 							: null}
 					</div>

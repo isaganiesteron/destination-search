@@ -7,11 +7,15 @@ type T_ResultItem = {
 	name: string
 	description: string
 	photoUrl: string
-	review: number
+	rating: {
+		score: number
+		reviews: number
+		average: number
+	}
 	priceObj: object | null
 }
 
-const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_ResultItem) => {
+const ResultItem = ({ index, name, description, photoUrl, rating, priceObj }: T_ResultItem) => {
 	const [currentDescription, setCurrentDescription] = useState<string>(description)
 	const [descLoading, setDescLoading] = useState<boolean>(false)
 
@@ -46,7 +50,16 @@ const ResultItem = ({ index, name, description, photoUrl, review, priceObj }: T_
 						<div className="flex flex-col">
 							<h1 className="font-bold text-lg">{`${index + 1}: ${name}`}</h1>
 							<p>
-								<span className="font-bold">Review Score:</span> {review}
+								<span className="font-bold">Rating:</span> {rating.score}
+							</p>
+							<p>
+								<span className="font-bold">
+									Adjusted Rating <span className="text-xs">(considering # of reviews)</span>:
+								</span>{" "}
+								{rating.average.toFixed(2)}
+							</p>
+							<p>
+								<span className="font-bold">Number of Reviews:</span> {rating.reviews}
 							</p>
 							<p>
 								<span className="font-bold">Price:</span> {total ? `${total}${currency}` : "NA"}
