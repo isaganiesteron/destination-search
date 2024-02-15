@@ -1,7 +1,7 @@
 import apiCall from "@/utils/apiCall"
 import fetchApi from "@/utils/fetchApi"
 import { NextResponse } from "next/server"
-import moment from "moment"
+import moment, { min } from "moment"
 // import tempHotelPricesAndDetails from "@/mock_data/hotels"
 
 const _chunkArray = (array: any[], chunkSize: number) => {
@@ -40,8 +40,11 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
 
 const _fetchHotelPrices = async (type: string, id: string, price: string, review: string, page: string) => {
 	let currentDate: string = moment().format("YYYY-MM-DD")
-
 	let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
+
+	let min_price = price.split("_")[0]
+	let max_price = price.split("_")[1]
+
 	let requestBody = {
 		booker: {
 			country: "nl",
@@ -49,7 +52,8 @@ const _fetchHotelPrices = async (type: string, id: string, price: string, review
 		},
 		currency: "USD",
 		price: {
-			maximum: Number(price),
+			minimum: parseInt(min_price),
+			maximum: parseInt(max_price),
 		},
 		rating: {
 			minimum_review_score: parseInt(review),

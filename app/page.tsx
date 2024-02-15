@@ -59,6 +59,7 @@ const Page = () => {
 
 	const fetchHotels = async () => {
 		const tierSettings = settings[settings.tier as keyof typeof settings]
+		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 		const review = settings.review
 		const destinationType = currentDestination["type" as keyof typeof currentDestination]
@@ -78,9 +79,9 @@ const Page = () => {
 		while (morePages) {
 			const currentDestinationType = nextPage === "" ? destinationType : nextPage
 			const currentDestinationId = nextPage === "" ? destinationId : "null"
-			const currentMaxPrice = nextPage === "" ? maxPrice : "null"
+			const currentPriceRange = nextPage === "" ? `${minPrice}_${maxPrice}` : "null"
 
-			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentMaxPrice}/${review}`) // maxPrice is in USD
+			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}`) // maxPrice is in USD
 			const responseJson = await response.json()
 
 			if (responseJson.data) allHotelsFetched.push(...responseJson.data)
