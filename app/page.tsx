@@ -87,26 +87,23 @@ const Page = () => {
 			if (responseJson.data) allHotelsFetched.push(...responseJson.data)
 
 			if (responseJson.next_page) {
-				console.log("There is another page")
-				console.log(responseJson.next_page)
+				console.log("Fetching next page...")
 				nextPage = responseJson.next_page
 				setStatus({ loading: true, message: `Fetched ${allHotelsFetched.length} hotels so far. Fetching more...` })
 				// pause for 1 second before next request
 				await new Promise((resolve) => setTimeout(resolve, 1000))
 			} else {
-				console.log("No more pages")
-				console.log("**************************************")
+				console.log("All pages fetched.")
 				nextPage = ""
 				morePages = false
 			}
 		}
-		console.log("----done----")
+		console.log("----Done Fetching Hotels----")
 		setAllHotelsFetched(allHotelsFetched) //save all hotels fetched so you can filter it later on
 		prepareHotelResults(allHotelsFetched)
 	}
 
 	const prepareHotelResults = (hotels: any[] | null) => {
-		console.log("prepareHotelResults")
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
@@ -143,7 +140,6 @@ const Page = () => {
 	}, [currentTier])
 
 	useEffect(() => {
-		console.log("Settings updated, reset results")
 		if (showSettings) setShowSettings(false)
 		fetchHotels()
 	}, [currentDestination, settings])
