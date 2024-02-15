@@ -60,6 +60,7 @@ const Page = () => {
 	const fetchHotels = async () => {
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
+		const review = settings.review
 		const destinationType = currentDestination["type" as keyof typeof currentDestination]
 		const destinationId = currentDestination["id" as keyof typeof currentDestination]
 
@@ -67,7 +68,7 @@ const Page = () => {
 
 		setSuggestions([])
 		setCurrentAllHotels([])
-		setStatus({ loading: true, message: `Fetch all hotels in ${destinationType} that is a ${destinationId} with a maximum price of ${maxPrice}...` })
+		setStatus({ loading: true, message: `Fetch all hotels in ${destinationId} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 
 		let allHotelsFetched: any[] = []
 		let morePages = true
@@ -79,7 +80,7 @@ const Page = () => {
 			const currentDestinationId = nextPage === "" ? destinationId : "null"
 			const currentMaxPrice = nextPage === "" ? maxPrice : "null"
 
-			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentMaxPrice}`) // maxPrice is in USD
+			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentMaxPrice}/${review}`) // maxPrice is in USD
 			const responseJson = await response.json()
 
 			if (responseJson.data) allHotelsFetched.push(...responseJson.data)
