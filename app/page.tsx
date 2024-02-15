@@ -7,12 +7,13 @@ import Spinner from "@/components/Spinner"
 import SuggestedItem from "@/components/SuggestedItem"
 
 const Page = () => {
-	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a desintation." })
+	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a destination." })
 
 	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
 	const [showSettings, setShowSettings] = useState<boolean>(false)
 
+	const [destination, setDestination] = useState<string>("")
 	const [suggestions, setSuggestions] = useState<object[]>([])
 	const [currentDestination, setCurrentDestination] = useState<object>({
 		type: "null",
@@ -111,7 +112,10 @@ const Page = () => {
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
 		const allHotels = hotels ? hotels : allHotelsFetched
-		if (allHotels.length === 0) return
+		if (allHotels.length === 0) {
+			setStatus({ loading: false, message: `Result: Found 0 hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
+			return
+		}
 
 		// filter hotels by review
 		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
@@ -125,8 +129,12 @@ const Page = () => {
 	}
 
 	const handleReset = () => {
+		setCurrentDestination({ type: "null", id: "null" })
+		setDestination("")
+		setSuggestions([])
+		setCurrentAllHotels([])
 		setAllHotelsFetched([])
-		setStatus({ loading: false, message: "Choose a country first" })
+		setStatus({ loading: false, message: "Search for a destination." })
 	}
 
 	useEffect(() => {
@@ -153,6 +161,7 @@ const Page = () => {
 	// }, [typingTimeout])
 
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
+		setDestination(event.target.value)
 		if (event.target.value.length > 3) fetchSuggestions(event.target.value)
 		else setSuggestions([])
 
@@ -176,7 +185,7 @@ const Page = () => {
 					<div className="grid grid-cols-3 gap-1">
 						<div className="col-span-2">
 							<p className="font-bold text-md">Search</p>
-							<input type="text" className="border border-black rounded-md w-full p-[5.5px]" onChange={searchHandler} />
+							<input type="text" value={destination} className="border border-black rounded-md w-full p-[5.5px]" onChange={searchHandler} />
 						</div>
 						<div>
 							<p className="font-bold text-md">Price Tier</p>
@@ -238,7 +247,7 @@ const Page = () => {
 				</div>
 
 				<div className="flex flex-row-reverse">
-					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold" onChange={handleReset}>
+					<button className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold" onClick={handleReset}>
 						Reset
 					</button>
 				</div>
