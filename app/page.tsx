@@ -9,7 +9,6 @@ import SuggestedItem from "@/components/SuggestedItem"
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a destination." })
 
-	const [allHotelsFetched, setAllHotelsFetched] = useState<any[]>([])
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
 	const [showSettings, setShowSettings] = useState<boolean>(false)
 
@@ -100,20 +99,22 @@ const Page = () => {
 			}
 		}
 		console.log("----Done Fetching Hotels----")
-		setAllHotelsFetched(allHotelsFetched) //save all hotels fetched so you can filter it later on
 		prepareHotelResults(allHotelsFetched)
 	}
 
-	const prepareHotelResults = (hotels: any[] | null) => {
+	const prepareHotelResults = (allHotels: any[] | null) => {
+		if (allHotels === null) return
+		console.log(allHotels)
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
-		const allHotels = hotels ? hotels : allHotelsFetched
 		if (allHotels.length === 0) {
 			setStatus({ loading: false, message: `Result: Found 0 hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
 			return
 		}
+
+		addReviewQuantityPercentage(allHotels)
 
 		// filter hotels by review
 		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
@@ -126,12 +127,32 @@ const Page = () => {
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
 
+	const addReviewQuantityPercentage = (allHotels: any[]) => {
+		/**
+		 * 1. get the highest review quantity
+		 * 2. get the percentage score based on review quantity [reviewquanitity] / [highestreviewquantity] * 100
+		 */
+
+		console.log("All Hotels: ", allHotels)
+		let highestReviewQuantity = allHotels.map((x) => x.rating.number_of_reviews).reduce((a, b) => Math.max(a, b))
+		console.log("Highest Review Quantity: ")
+		console.log(highestReviewQuantity)
+		let allHotelsWithReviewQuantity = allHotels.map((x) => {
+			let currentReviewQuantity = x.rating.number_of_reviews
+			let percentage = (currentReviewQuantity / highestReviewQuantity) * 100
+			let newRating = { ...x }
+			newRating.rating.review_percentage = percentage
+			return newRating
+		})
+		console.log("All Hotels with Review Quantity: ", allHotelsWithReviewQuantity)
+		return allHotelsWithReviewQuantity
+	}
+
 	const handleReset = () => {
 		setCurrentDestination({ type: "null", id: "null" })
 		setDestination("")
 		setSuggestions([])
 		setCurrentAllHotels([])
-		setAllHotelsFetched([])
 		setStatus({ loading: false, message: "Search for a destination." })
 	}
 
