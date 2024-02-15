@@ -52,7 +52,6 @@ const Page = () => {
 		const response = await fetch("/api/autosuggest/" + query)
 		if (response.status === 200) {
 			const data = await response.json()
-			console.log(data)
 			setSuggestions(data)
 		}
 	}
@@ -108,6 +107,7 @@ const Page = () => {
 	const prepareHotelResults = (hotels: any[] | null) => {
 		console.log("prepareHotelResults")
 		const tierSettings = settings[settings.tier as keyof typeof settings]
+		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
 		const allHotels = hotels ? hotels : allHotelsFetched
@@ -119,7 +119,7 @@ const Page = () => {
 		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
 			return b.rating.review_score - a.rating.review_score
 		})
-		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a maximum price of ${maxPrice}.` })
+		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
 
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
@@ -136,13 +136,14 @@ const Page = () => {
 
 	useEffect(() => {
 		console.log("Settings updated, reset results")
-		prepareHotelResults(null)
 		if (showSettings) setShowSettings(false)
-	}, [settings])
-
-	useEffect(() => {
 		fetchHotels()
-	}, [currentDestination])
+	}, [currentDestination, settings])
+
+	// useEffect(() => {
+	//   // trigger also when Price Tier Changes
+	// 	fetchHotels()
+	// }, [currentDestination])
 
 	// ***This isn't working well, it's not getting the data in realtime. TODO
 	// useEffect(() => {
