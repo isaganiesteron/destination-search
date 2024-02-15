@@ -23,6 +23,7 @@ const Page = () => {
 	const [currentTier, setCurrentTier] = useState<string>("budget")
 	const [settings, setSettings] = useState<I_Settings>({
 		review: 8.3,
+		consider_review_quantity: false,
 		tier: "budget",
 		budget: {
 			min_price: 0,
@@ -141,6 +142,7 @@ const Page = () => {
 
 	useEffect(() => {
 		if (showSettings) setShowSettings(false)
+		console.log(settings)
 		fetchHotels()
 	}, [currentDestination, settings])
 

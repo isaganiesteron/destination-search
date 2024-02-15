@@ -1,5 +1,6 @@
 export interface Settings {
 	review: number
+	consider_review_quantity: boolean
 	tier: string
 	budget: Budget
 	midrange: Midrange
