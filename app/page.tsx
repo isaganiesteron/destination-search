@@ -104,7 +104,6 @@ const Page = () => {
 
 	const prepareHotelResults = (allHotels: any[] | null) => {
 		if (allHotels === null) return
-		console.log(allHotels)
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
@@ -114,10 +113,10 @@ const Page = () => {
 			return
 		}
 
-		addReviewQuantityPercentage(allHotels)
+		const allHotelsRatingInfoAdded = addRatingInfo(allHotels)
 
 		// filter hotels by review
-		const allHotelsFiltered = allHotels.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
+		const allHotelsFiltered = allHotelsRatingInfoAdded.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
 		// sort based on review score
 		allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
 			return b.rating.review_score - a.rating.review_score
@@ -127,24 +126,23 @@ const Page = () => {
 		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
 	}
 
-	const addReviewQuantityPercentage = (allHotels: any[]) => {
-		/**
-		 * 1. get the highest review quantity
-		 * 2. get the percentage score based on review quantity [reviewquanitity] / [highestreviewquantity] * 100
-		 */
-
-		console.log("All Hotels: ", allHotels)
+	const addRatingInfo = (allHotels: any[]) => {
 		let highestReviewQuantity = allHotels.map((x) => x.rating.number_of_reviews).reduce((a, b) => Math.max(a, b))
-		console.log("Highest Review Quantity: ")
-		console.log(highestReviewQuantity)
 		let allHotelsWithReviewQuantity = allHotels.map((x) => {
-			let currentReviewQuantity = x.rating.number_of_reviews
-			let percentage = (currentReviewQuantity / highestReviewQuantity) * 100
+			const currentReviewQuantity = x.rating.number_of_reviews
+			const percentage = Math.round((currentReviewQuantity / highestReviewQuantity) * 100)
+
+			const additionalRatingInfo = {
+				most_reviews: highestReviewQuantity,
+				review_percentage: percentage,
+				average_review_score: Math.round((x.rating.review_score * 10 + percentage) / 2),
+			}
+
 			let newRating = { ...x }
-			newRating.rating.review_percentage = percentage
+
+			newRating.rating.additional_info = additionalRatingInfo
 			return newRating
 		})
-		console.log("All Hotels with Review Quantity: ", allHotelsWithReviewQuantity)
 		return allHotelsWithReviewQuantity
 	}
 
@@ -163,7 +161,6 @@ const Page = () => {
 
 	useEffect(() => {
 		if (showSettings) setShowSettings(false)
-		console.log(settings)
 		fetchHotels()
 	}, [currentDestination, settings])
 
@@ -254,6 +251,7 @@ const Page = () => {
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
 						{currentAllHotels.length > 0
 							? currentAllHotels.map((x, i) => {
+									console.log(x)
 									const name = x.name ? x.name["en-gb" as keyof typeof x.name] : "NA"
 									const currDescription = x.description ? x.description.text["en-gb" as keyof typeof x.description.text] : "NA"
 									const currPhoto = x.photos ? x.photos[0].url.thumbnail : "NA"
