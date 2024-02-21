@@ -13,9 +13,10 @@ type T_ResultItem = {
 		average: number
 	}
 	priceObj: object | null
+	url: string
 }
 
-const ResultItem = ({ index, name, description, photoUrl, rating, priceObj }: T_ResultItem) => {
+const ResultItem = ({ index, name, description, photoUrl, rating, priceObj, url }: T_ResultItem) => {
 	const [currentDescription, setCurrentDescription] = useState<string>(description)
 	const [descLoading, setDescLoading] = useState<boolean>(false)
 
@@ -48,7 +49,13 @@ const ResultItem = ({ index, name, description, photoUrl, rating, priceObj }: T_
 					</div>
 					<div className="p-2 col-span-5 items-center">
 						<div className="flex flex-col">
-							<h1 className="font-bold text-lg">{`${index + 1}: ${name}`}</h1>
+							<div className="flex flex-row">
+								<h1 className="font-bold text-lg">{`${index + 1}: ${name}`}</h1>
+								<button type="button" className="pl-2 text-[12px] hover:underline text-black-100" onClick={_regenerateHandler}>
+									Link to Hotel
+								</button>
+							</div>
+
 							<p>
 								<span className="font-bold">Rating:</span> {rating.score}
 							</p>
