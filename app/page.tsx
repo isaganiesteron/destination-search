@@ -5,6 +5,7 @@ import { Settings as I_Settings } from "@/constants/interfaces"
 import Settings from "@/components/Settings"
 import Spinner from "@/components/Spinner"
 import SuggestedItem from "@/components/SuggestedItem"
+import { apartmentTypes, hotelTypes } from "@/constants/accommodationtypes"
 
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a destination." })
@@ -71,7 +72,7 @@ const Page = () => {
 		setCurrentAllHotels([])
 		setStatus({ loading: true, message: `Fetch all hotels in ${destinationId} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 
-		let allHotelsFetched: any[] = []
+		let allAccommodationsFetched: any[] = []
 		let morePages = true
 		let nextPage = ""
 
@@ -84,12 +85,12 @@ const Page = () => {
 			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}`) // maxPrice is in USD
 			const responseJson = await response.json()
 
-			if (responseJson.data) allHotelsFetched.push(...responseJson.data)
+			if (responseJson.data) allAccommodationsFetched.push(...responseJson.data)
 
 			if (responseJson.next_page) {
 				console.log("Fetching next page...")
 				nextPage = responseJson.next_page
-				setStatus({ loading: true, message: `Fetched ${allHotelsFetched.length} hotels so far. Fetching more...` })
+				setStatus({ loading: true, message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...` })
 				// pause for 1 second before next request
 				await new Promise((resolve) => setTimeout(resolve, 1000))
 			} else {
@@ -99,11 +100,26 @@ const Page = () => {
 			}
 		}
 		console.log("----Done Fetching Hotels----")
-		prepareHotelResults(allHotelsFetched)
+		prepareHotelResults(allAccommodationsFetched)
+		prepareApartmentsResults(allAccommodationsFetched)
 	}
 
-	const prepareHotelResults = (allHotels: any[] | null) => {
-		if (allHotels === null) return
+	const prepareApartmentsResults = (allAccommodations: any[] | null) => {
+		if (allAccommodations === null) return
+
+		const allApartments = allAccommodations.filter((x) => apartmentTypes.includes(x.accommodation_type))
+		console.log("allApartments")
+		console.log(allApartments)
+	}
+
+	const prepareHotelResults = (allAccommodations: any[] | null) => {
+		if (allAccommodations === null) return
+
+		const allHotels = allAccommodations.filter((x) => hotelTypes.includes(x.accommodation_type))
+
+		console.log("allHotels")
+		console.log(allHotels)
+
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
