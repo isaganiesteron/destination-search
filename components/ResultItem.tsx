@@ -51,7 +51,7 @@ const ResultItem = ({ index, name, description, photoUrl, rating, priceObj, url 
 						<div className="flex flex-col">
 							<div className="flex flex-row">
 								<h1 className="font-bold text-lg">{`${index + 1}: ${name}`}</h1>
-								<button type="button" className="pl-2 text-[12px] hover:underline text-black-100" onClick={_regenerateHandler}>
+								<button type="button" className="pl-2 text-[12px] hover:underline text-black-100" onClick={() => window.open(url, "_blank")}>
 									Link to Hotel
 								</button>
 							</div>

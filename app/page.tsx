@@ -264,7 +264,7 @@ const Page = () => {
 									const additionRatingInfo = x.rating.additional_info
 									const rating = x.rating ? { score: x.rating.review_score, reviews: x.rating.number_of_reviews, average: additionRatingInfo.average_review_score } : { score: 0, reviews: 0, average: 0 }
 									const price = x.price ? (x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null) : null
-									return <ResultItem key={`hotel_${i}`} name={name} description={currDescription} photoUrl={currPhoto} index={i} rating={rating} priceObj={price} />
+									return <ResultItem key={`hotel_${i}`} name={name} description={currDescription} photoUrl={currPhoto} index={i} rating={rating} priceObj={price} url={x.url} />
 							  })
 							: null}
 					</div>
