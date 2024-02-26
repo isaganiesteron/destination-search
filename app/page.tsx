@@ -103,7 +103,7 @@ const Page = () => {
 			}
 		}
 
-		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetched.length} accommodations in ${destinationLabel} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
+		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetched.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 		console.log("----Done Fetching Hotels----")
 		const preparedHotels = prepareResults(allAccommodationsFetched, "hotels")
 		const prepareFlats = prepareResults(allAccommodationsFetched, "flats")
@@ -115,14 +115,14 @@ const Page = () => {
 	const prepareResults = (allAccommodations: any[] | null, accommodation_type: string) => {
 		if (allAccommodations === null) return
 		let currentStatusText = ""
-		const accommodationsIncluded = accommodation_type == "hotels" ? settings.apartmenttypes : settings.hoteltypes
+		const accommodationsIncluded = accommodation_type == "hotels" ? settings.hoteltypes : settings.apartmenttypes
 		const allHotels = allAccommodations.filter((x) => accommodationsIncluded.includes(String(x.accommodation_type)))
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
 		if (allHotels.length === 0) {
-			currentStatusText = `Result: No ${accommodation_type} found in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
+			currentStatusText = `No ${accommodation_type} found in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
 
 			if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
 			else setFlatStatus({ loading: false, message: currentStatusText })
@@ -144,7 +144,7 @@ const Page = () => {
 			})
 		}
 
-		currentStatusText = `Result: Found ${allHotelsFiltered.length} ${accommodation_type} in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
+		currentStatusText = `Found ${allHotelsFiltered.length} ${accommodation_type} in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
 		if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
 		else setFlatStatus({ loading: false, message: currentStatusText })
 
@@ -276,22 +276,21 @@ const Page = () => {
 				</div>
 
 				<div>
-					<p className="font-bold text-xl">Top 10 Hotels:</p>
+					{currentAllHotels.length > 0 && <p className="font-bold text-xl">Top 10 Hotels:</p>}
 					<div className="flex flex-row">
 						<div>{hotelStatus["loading" as keyof typeof hotelStatus] ? <Spinner /> : ""}</div>
 						<p className="text-sm">{hotelStatus["message" as keyof typeof hotelStatus]}</p>
 					</div>
-					<div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllHotels.length > 0 ? currentAllHotels.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>
+					{currentAllHotels.length > 0 && <div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllHotels.length > 0 ? currentAllHotels.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>}
 				</div>
 
 				<div>
-					<p className="font-bold text-xl">Top 10 Flats:</p>
-
+					{currentAllFlats.length > 0 && <p className="font-bold text-xl">Top 10 Flats:</p>}
 					<div className="flex flex-row">
 						<div>{flatStatus["loading" as keyof typeof flatStatus] ? <Spinner /> : ""}</div>
 						<p className="text-sm">{flatStatus["message" as keyof typeof flatStatus]}</p>
 					</div>
-					<div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllFlats.length > 0 ? currentAllFlats.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>
+					{currentAllFlats.length > 0 && <div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllFlats.length > 0 ? currentAllFlats.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>}
 				</div>
 
 				<div className="flex flex-row-reverse">
