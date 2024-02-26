@@ -176,7 +176,10 @@ const Page = () => {
 		setDestination("")
 		setSuggestions([])
 		setCurrentAllHotels([])
+		setCurrentAllFlats([])
 		setStatus({ loading: false, message: "Search for a destination." })
+		setHotelStatus({ loading: false, message: "" })
+		setFlatStatus({ loading: false, message: "" })
 	}
 
 	useEffect(() => {
