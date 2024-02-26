@@ -8,7 +8,7 @@ const ResultItem = ({ index, result }: { index: number; result: any }) => {
 	const currDescription = result.description ? result.description.text["en-gb" as keyof typeof result.description.text] : "NA"
 	const currPhoto = result.photos ? (result.photos.length > 0 ? result.photos[0].url.thumbnail : "NA") : "NA"
 	const additionRatingInfo = result.rating.additional_info
-	const rating = result.rating ? { score: result.rating.review_score, reviews: result.rating.number_of_reviews, average: additionRatingInfo.average_review_score } : { score: 0, reviews: 0, average: 0 }
+	const rating = result.rating ? { score: result.rating.review_score, reviews: result.rating.number_of_reviews, average: additionRatingInfo?.average_review_score || 0 } : { score: 0, reviews: 0, average: 0 }
 	const price = result.price ? (result.price?.price ? { total: result.price.price.total, book: result.price.price.book, currency: result.price.currency } : null) : null
 	const accommodationType = accommodationTypes.filter((x) => x.id === result.accommodation_type).map((x) => x.name)[0]
 
@@ -47,7 +47,7 @@ const ResultItem = ({ index, result }: { index: number; result: any }) => {
 							<div className="flex flex-row">
 								<h1 className="font-bold text-lg">{`${index + 1}: ${name} (${accommodationType})`}</h1>
 								<button type="button" className="pl-2 text-[12px] hover:underline text-black-100" onClick={() => window.open(result.url, "_blank")}>
-									Link to Hotel
+									{`Link to ${accommodationType}`}
 								</button>
 							</div>
 

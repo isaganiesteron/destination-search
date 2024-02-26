@@ -1,5 +1,5 @@
 export const hotelTypes = ["204", "205", "206", "216", "218", "219", "221", "224", "225", "226", "228", "230", "231", "233"]
-export const apartmentTypes = ["201"]
+export const apartmentTypes = ["201", "207", "220", "222", "223", "229", "235"]
 
 export const accommodationTypes = [
 	{

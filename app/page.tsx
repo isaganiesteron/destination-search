@@ -11,6 +11,7 @@ const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a destination." })
 
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
+	const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([])
 	const [showSettings, setShowSettings] = useState<boolean>(false)
 
 	const [destination, setDestination] = useState<string>("")
@@ -102,29 +103,40 @@ const Page = () => {
 			}
 		}
 		console.log("----Done Fetching Hotels----")
-		prepareHotelResults(allAccommodationsFetched)
+		const preparedHotels = prepareResults(allAccommodationsFetched, settings.hoteltypes)
+		const prepareFlats = prepareResults(allAccommodationsFetched, settings.apartmenttypes)
+
+		setCurrentAllHotels(preparedHotels || [])
+		setCurrentAllFlats(prepareFlats || [])
+
 		// prepareApartmentsResults(allAccommodationsFetched)
 	}
 
 	// const prepareApartmentsResults = (allAccommodations: any[] | null) => {
 	// 	if (allAccommodations === null) return
 
-	// 	const allApartments = allAccommodations.filter((x) => apartmentTypes.includes(x.accommodation_type))
+	// 	const allApartments = allAccommodations.filter((x) => apartmentTypes.includes(String(x.accommodation_type)))
 	// 	console.log("allApartments")
 	// 	console.log(allApartments)
+
+	// 	allApartments.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
+	// 		return b.rating.review_score - a.rating.review_score
+	// 	})
+
+	// 	setCurrentAllFlats(allApartments.slice(0, 10))
 	// }
 
-	const prepareHotelResults = (allAccommodations: any[] | null) => {
+	const prepareResults = (allAccommodations: any[] | null, accommodation_type: string[]) => {
 		if (allAccommodations === null) return
 
-		const allHotels = allAccommodations.filter((x) => settings.hoteltypes.includes(String(x.accommodation_type)))
-		const tierSettings = settings[settings.tier as keyof typeof settings]
-		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
-		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
+		const allHotels = allAccommodations.filter((x) => accommodation_type.includes(String(x.accommodation_type)))
+		// const tierSettings = settings[settings.tier as keyof typeof settings]
+		// const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
+		// const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
 		if (allHotels.length === 0) {
-			setStatus({ loading: false, message: `Result: Found 0 hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
-			return
+			// setStatus({ loading: false, message: `Result: Found 0 hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
+			return []
 		}
 
 		const allHotelsRatingInfoAdded = addRatingInfo(allHotels)
@@ -141,9 +153,10 @@ const Page = () => {
 				return b.rating.review_score - a.rating.review_score
 			})
 		}
-		setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
+		// setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
 
-		setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
+		// setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
+		return allHotelsFiltered.slice(0, 10)
 	}
 
 	const addRatingInfo = (allHotels: any[]) => {
@@ -271,9 +284,15 @@ const Page = () => {
 					</button>
 					{showSettings && <Settings settings={settings} saveSettings={setSettings} />}
 				</div>
+
 				<div>
-					<p className="font-bold text-md">Top 10 Hotels:</p>
+					<p className="font-bold text-xl">Top 10 Hotels:</p>
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllHotels.length > 0 ? currentAllHotels.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>
+				</div>
+
+				<div>
+					<p className="font-bold text-xl">Top 10 Flats:</p>
+					<div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllFlats.length > 0 ? currentAllFlats.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>
 				</div>
 
 				<div className="flex flex-row-reverse">
