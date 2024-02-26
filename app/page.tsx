@@ -273,19 +273,7 @@ const Page = () => {
 				</div>
 				<div>
 					<p className="font-bold text-md">Top 10 Hotels:</p>
-					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
-						{currentAllHotels.length > 0
-							? currentAllHotels.map((x, i) => {
-									const name = x.name ? x.name["en-gb" as keyof typeof x.name] : "NA"
-									const currDescription = x.description ? x.description.text["en-gb" as keyof typeof x.description.text] : "NA"
-									const currPhoto = x.photos ? (x.photos.length > 0 ? x.photos[0].url.thumbnail : "NA") : "NA"
-									const additionRatingInfo = x.rating.additional_info
-									const rating = x.rating ? { score: x.rating.review_score, reviews: x.rating.number_of_reviews, average: additionRatingInfo.average_review_score } : { score: 0, reviews: 0, average: 0 }
-									const price = x.price ? (x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null) : null
-									return <ResultItem key={`hotel_${i}`} name={name} description={currDescription} photoUrl={currPhoto} index={i} rating={rating} priceObj={price} url={x.url} />
-							  })
-							: null}
-					</div>
+					<div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllHotels.length > 0 ? currentAllHotels.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>
 				</div>
 
 				<div className="flex flex-row-reverse">

@@ -1,33 +1,28 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import Spinner from "@/components/Spinner"
+import { accommodationTypes } from "@/constants/accommodationtypes"
 
-type T_ResultItem = {
-	index: number
-	name: string
-	description: string
-	photoUrl: string
-	rating: {
-		score: number
-		reviews: number
-		average: number
-	}
-	priceObj: object | null
-	url: string
-}
+const ResultItem = ({ index, result }: { index: number; result: any }) => {
+	const name = result.name ? result.name["en-gb" as keyof typeof result.name] : "NA"
+	const currDescription = result.description ? result.description.text["en-gb" as keyof typeof result.description.text] : "NA"
+	const currPhoto = result.photos ? (result.photos.length > 0 ? result.photos[0].url.thumbnail : "NA") : "NA"
+	const additionRatingInfo = result.rating.additional_info
+	const rating = result.rating ? { score: result.rating.review_score, reviews: result.rating.number_of_reviews, average: additionRatingInfo.average_review_score } : { score: 0, reviews: 0, average: 0 }
+	const price = result.price ? (result.price?.price ? { total: result.price.price.total, book: result.price.price.book, currency: result.price.currency } : null) : null
+	const accommodationType = accommodationTypes.filter((x) => x.id === result.accommodation_type).map((x) => x.name)[0]
 
-const ResultItem = ({ index, name, description, photoUrl, rating, priceObj, url }: T_ResultItem) => {
-	const [currentDescription, setCurrentDescription] = useState<string>(description)
+	const [currentDescription, setCurrentDescription] = useState<string>(currDescription)
 	const [descLoading, setDescLoading] = useState<boolean>(false)
 
 	let total: number | undefined,
 		book: string | undefined,
 		currency: string | undefined = undefined
 
-	if (priceObj !== null && priceObj !== undefined) {
-		total = priceObj["total" as keyof typeof priceObj]
-		book = priceObj["book" as keyof typeof priceObj]
-		currency = priceObj["currency" as keyof typeof priceObj]
+	if (price !== null && price !== undefined) {
+		total = price["total" as keyof typeof price]
+		book = price["book" as keyof typeof price]
+		currency = price["currency" as keyof typeof price]
 	}
 
 	const _regenerateHandler = () => {
@@ -45,13 +40,13 @@ const ResultItem = ({ index, name, description, photoUrl, rating, priceObj, url 
 			<div className="border border-black rounded-md flex flex-col w-full mt-2">
 				<div className="grid grid-cols-6 gap-1">
 					<div className="p-2 flex items-center align-middle">
-						<Image src={photoUrl} width={200} height={200} alt="Image of hotel" />
+						<Image src={currPhoto} width={200} height={200} alt="Image of hotel" />
 					</div>
 					<div className="p-2 col-span-5 items-center">
 						<div className="flex flex-col">
 							<div className="flex flex-row">
-								<h1 className="font-bold text-lg">{`${index + 1}: ${name}`}</h1>
-								<button type="button" className="pl-2 text-[12px] hover:underline text-black-100" onClick={() => window.open(url, "_blank")}>
+								<h1 className="font-bold text-lg">{`${index + 1}: ${name} (${accommodationType})`}</h1>
+								<button type="button" className="pl-2 text-[12px] hover:underline text-black-100" onClick={() => window.open(result.url, "_blank")}>
 									Link to Hotel
 								</button>
 							</div>
