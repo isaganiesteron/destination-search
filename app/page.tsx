@@ -117,11 +117,7 @@ const Page = () => {
 	const prepareHotelResults = (allAccommodations: any[] | null) => {
 		if (allAccommodations === null) return
 
-		const allHotels = allAccommodations.filter((x) => settings.hoteltypes.includes(x.accommodation_type))
-
-		// console.log("allHotels")
-		// console.log(allHotels)
-
+		const allHotels = allAccommodations.filter((x) => settings.hoteltypes.includes(String(x.accommodation_type)))
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
@@ -282,7 +278,7 @@ const Page = () => {
 							? currentAllHotels.map((x, i) => {
 									const name = x.name ? x.name["en-gb" as keyof typeof x.name] : "NA"
 									const currDescription = x.description ? x.description.text["en-gb" as keyof typeof x.description.text] : "NA"
-									const currPhoto = x.photos ? x.photos[0].url.thumbnail : "NA"
+									const currPhoto = x.photos ? (x.photos.length > 0 ? x.photos[0].url.thumbnail : "NA") : "NA"
 									const additionRatingInfo = x.rating.additional_info
 									const rating = x.rating ? { score: x.rating.review_score, reviews: x.rating.number_of_reviews, average: additionRatingInfo.average_review_score } : { score: 0, reviews: 0, average: 0 }
 									const price = x.price ? (x.price?.price ? { total: x.price.price.total, book: x.price.price.book, currency: x.price.currency } : null) : null

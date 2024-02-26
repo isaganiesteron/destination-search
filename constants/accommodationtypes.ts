@@ -63,10 +63,6 @@ export const accommodationTypes = [
 		name: "Guest house",
 	},
 	{
-		id: 217,
-		name: null,
-	},
-	{
 		id: 218,
 		name: "Inn",
 	},

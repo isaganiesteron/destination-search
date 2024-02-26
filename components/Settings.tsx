@@ -79,27 +79,29 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
 
 			<div className="pt-4">
 				<p className="font-bold text-sm">Hotel Types</p>
-				{accommodationTypes.map((type) => {
-					const isChecked = curhotelTypes?.find((x) => x["id" as keyof typeof x] === type.id) ? true : false
-					return (
-						<div key={type.id} className="flex flex-row">
-							<input
-								type="checkbox"
-								checked={isChecked}
-								onChange={(e) => {
-									if (e.target.checked) {
-										if (curhotelTypes) setCurhotelTypes([...curhotelTypes, type])
-										else setCurhotelTypes([type])
-									} else {
-										const newTypes = curhotelTypes?.filter((x) => x["id" as keyof typeof x] !== type.id)
-										setCurhotelTypes(newTypes)
-									}
-								}}
-							/>
-							<p className="font-bold text-sm ml-2">{type.name}</p>
-						</div>
-					)
-				})}
+				<div className="grid grid-cols-4 gap-1">
+					{accommodationTypes.map((type) => {
+						const isChecked = curhotelTypes?.find((x) => x["id" as keyof typeof x] === type.id) ? true : false
+						return (
+							<div key={type.id} className="flex flex-row items-center">
+								<input
+									type="checkbox"
+									checked={isChecked}
+									onChange={(e) => {
+										if (e.target.checked) {
+											if (curhotelTypes) setCurhotelTypes([...curhotelTypes, type])
+											else setCurhotelTypes([type])
+										} else {
+											const newTypes = curhotelTypes?.filter((x) => x["id" as keyof typeof x] !== type.id)
+											setCurhotelTypes(newTypes)
+										}
+									}}
+								/>
+								<p className="text-sm ml-1">{type.name}</p>
+							</div>
+						)
+					})}
+				</div>
 			</div>
 
 			<div className="pt-4">
