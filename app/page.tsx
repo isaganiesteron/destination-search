@@ -9,6 +9,8 @@ import { apartmentTypes, hotelTypes } from "@/constants/accommodationtypes"
 
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a destination." })
+	const [hotelStatus, setHotelStatus] = useState<object>({ loading: false, message: "" })
+	const [flatStatus, setFlatStatus] = useState<object>({ loading: false, message: "" })
 
 	const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([])
 	const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([])
@@ -61,7 +63,7 @@ const Page = () => {
 		}
 	}
 
-	const fetchHotels = async () => {
+	const fetchAccommodations = async () => {
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
@@ -73,7 +75,7 @@ const Page = () => {
 
 		setSuggestions([])
 		setCurrentAllHotels([])
-		setStatus({ loading: true, message: `Fetch all hotels in ${destinationId} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
+		setStatus({ loading: true, message: `Fetch all accommodations in ${destinationId} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 
 		let allAccommodationsFetched: any[] = []
 		let morePages = true
@@ -102,40 +104,30 @@ const Page = () => {
 				morePages = false
 			}
 		}
+
+		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetched.length} accommodations in ${destinationId} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 		console.log("----Done Fetching Hotels----")
-		const preparedHotels = prepareResults(allAccommodationsFetched, settings.hoteltypes)
-		const prepareFlats = prepareResults(allAccommodationsFetched, settings.apartmenttypes)
+		const preparedHotels = prepareResults(allAccommodationsFetched, "hotels")
+		const prepareFlats = prepareResults(allAccommodationsFetched, "flats")
 
 		setCurrentAllHotels(preparedHotels || [])
 		setCurrentAllFlats(prepareFlats || [])
-
-		// prepareApartmentsResults(allAccommodationsFetched)
 	}
 
-	// const prepareApartmentsResults = (allAccommodations: any[] | null) => {
-	// 	if (allAccommodations === null) return
-
-	// 	const allApartments = allAccommodations.filter((x) => apartmentTypes.includes(String(x.accommodation_type)))
-	// 	console.log("allApartments")
-	// 	console.log(allApartments)
-
-	// 	allApartments.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
-	// 		return b.rating.review_score - a.rating.review_score
-	// 	})
-
-	// 	setCurrentAllFlats(allApartments.slice(0, 10))
-	// }
-
-	const prepareResults = (allAccommodations: any[] | null, accommodation_type: string[]) => {
+	const prepareResults = (allAccommodations: any[] | null, accommodation_type: string) => {
 		if (allAccommodations === null) return
-
-		const allHotels = allAccommodations.filter((x) => accommodation_type.includes(String(x.accommodation_type)))
-		// const tierSettings = settings[settings.tier as keyof typeof settings]
-		// const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
-		// const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
+		let currentStatusText = ""
+		const accommodationsIncluded = accommodation_type == "hotels" ? settings.apartmenttypes : settings.hoteltypes
+		const allHotels = allAccommodations.filter((x) => accommodationsIncluded.includes(String(x.accommodation_type)))
+		const tierSettings = settings[settings.tier as keyof typeof settings]
+		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
+		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
 		if (allHotels.length === 0) {
-			// setStatus({ loading: false, message: `Result: Found 0 hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
+			currentStatusText = `Result: No ${accommodation_type} found in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
+
+			if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
+			else setFlatStatus({ loading: false, message: currentStatusText })
 			return []
 		}
 
@@ -153,9 +145,11 @@ const Page = () => {
 				return b.rating.review_score - a.rating.review_score
 			})
 		}
-		// setStatus({ loading: false, message: `Result: Found ${allHotelsFiltered.length} hotels in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.` })
 
-		// setCurrentAllHotels(allHotelsFiltered.slice(0, 10))
+		currentStatusText = `Result: Found ${allHotelsFiltered.length} ${accommodation_type} in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
+		if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
+		else setFlatStatus({ loading: false, message: currentStatusText })
+
 		return allHotelsFiltered.slice(0, 10)
 	}
 
@@ -194,13 +188,8 @@ const Page = () => {
 
 	useEffect(() => {
 		if (showSettings) setShowSettings(false)
-		fetchHotels()
+		fetchAccommodations()
 	}, [currentDestination, settings])
-
-	// useEffect(() => {
-	//   // trigger also when Price Tier Changes
-	// 	fetchHotels()
-	// }, [currentDestination])
 
 	// ***This isn't working well, it's not getting the data in realtime. TODO
 	// useEffect(() => {
@@ -287,11 +276,20 @@ const Page = () => {
 
 				<div>
 					<p className="font-bold text-xl">Top 10 Hotels:</p>
+					<div className="flex flex-row">
+						<div>{hotelStatus["loading" as keyof typeof hotelStatus] ? <Spinner /> : ""}</div>
+						<p className="text-sm">{hotelStatus["message" as keyof typeof hotelStatus]}</p>
+					</div>
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllHotels.length > 0 ? currentAllHotels.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>
 				</div>
 
 				<div>
 					<p className="font-bold text-xl">Top 10 Flats:</p>
+
+					<div className="flex flex-row">
+						<div>{flatStatus["loading" as keyof typeof flatStatus] ? <Spinner /> : ""}</div>
+						<p className="text-sm">{flatStatus["message" as keyof typeof flatStatus]}</p>
+					</div>
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">{currentAllFlats.length > 0 ? currentAllFlats.map((x, i) => <ResultItem key={`result_${i}`} index={i} result={x} />) : null}</div>
 				</div>
 
