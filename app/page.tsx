@@ -21,6 +21,7 @@ const Page = () => {
 	const [currentDestination, setCurrentDestination] = useState<object>({
 		type: "null",
 		id: "null",
+		label: "null",
 	})
 
 	const [currentTier, setCurrentTier] = useState<string>("budget")
@@ -51,10 +52,6 @@ const Page = () => {
 	// const [inputValue, setInputValue] = useState("")
 	// const [typingTimeout, setTypingTimeout] = useState<any>(0)
 
-	const getDestinationLabel = (destination: any) => {
-		return destination
-	}
-
 	const fetchSuggestions = async (query: string) => {
 		const response = await fetch("/api/autosuggest/" + query)
 		if (response.status === 200) {
@@ -70,12 +67,13 @@ const Page = () => {
 		const review = settings.review
 		const destinationType = currentDestination["type" as keyof typeof currentDestination]
 		const destinationId = currentDestination["id" as keyof typeof currentDestination]
+		const destinationLabel = currentDestination["label" as keyof typeof currentDestination]
 
 		if (destinationType === "null" || destinationId === "null") return
 
 		setSuggestions([])
 		setCurrentAllHotels([])
-		setStatus({ loading: true, message: `Fetch all accommodations in ${destinationId} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
+		setStatus({ loading: true, message: `Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 
 		let allAccommodationsFetched: any[] = []
 		let morePages = true
@@ -105,7 +103,7 @@ const Page = () => {
 			}
 		}
 
-		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetched.length} accommodations in ${destinationId} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
+		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetched.length} accommodations in ${destinationLabel} that is a ${destinationType} with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 		console.log("----Done Fetching Hotels----")
 		const preparedHotels = prepareResults(allAccommodationsFetched, "hotels")
 		const prepareFlats = prepareResults(allAccommodationsFetched, "flats")
@@ -124,7 +122,7 @@ const Page = () => {
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
 		if (allHotels.length === 0) {
-			currentStatusText = `Result: No ${accommodation_type} found in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
+			currentStatusText = `Result: No ${accommodation_type} found in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
 
 			if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
 			else setFlatStatus({ loading: false, message: currentStatusText })
@@ -146,7 +144,7 @@ const Page = () => {
 			})
 		}
 
-		currentStatusText = `Result: Found ${allHotelsFiltered.length} ${accommodation_type} in ${getDestinationLabel(currentDestination["id" as keyof typeof currentDestination])}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
+		currentStatusText = `Result: Found ${allHotelsFiltered.length} ${accommodation_type} in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
 		if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
 		else setFlatStatus({ loading: false, message: currentStatusText })
 
@@ -174,7 +172,7 @@ const Page = () => {
 	}
 
 	const handleReset = () => {
-		setCurrentDestination({ type: "null", id: "null" })
+		setCurrentDestination({ type: "null", id: "null", label: "null" })
 		setDestination("")
 		setSuggestions([])
 		setCurrentAllHotels([])
