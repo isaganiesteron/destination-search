@@ -1,6 +1,8 @@
 export interface Settings {
 	review: number
 	consider_review_quantity: boolean
+	hoteltypes: string[]
+	apartmenttypes: string[]
 	tier: string
 	budget: Budget
 	midrange: Midrange

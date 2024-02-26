@@ -25,6 +25,8 @@ const Page = () => {
 		review: 8.3,
 		consider_review_quantity: true,
 		tier: "budget",
+		hoteltypes: hotelTypes,
+		apartmenttypes: ["201"],
 		budget: {
 			min_price: 0,
 			max_price: 100,
@@ -101,24 +103,24 @@ const Page = () => {
 		}
 		console.log("----Done Fetching Hotels----")
 		prepareHotelResults(allAccommodationsFetched)
-		prepareApartmentsResults(allAccommodationsFetched)
+		// prepareApartmentsResults(allAccommodationsFetched)
 	}
 
-	const prepareApartmentsResults = (allAccommodations: any[] | null) => {
-		if (allAccommodations === null) return
+	// const prepareApartmentsResults = (allAccommodations: any[] | null) => {
+	// 	if (allAccommodations === null) return
 
-		const allApartments = allAccommodations.filter((x) => apartmentTypes.includes(x.accommodation_type))
-		console.log("allApartments")
-		console.log(allApartments)
-	}
+	// 	const allApartments = allAccommodations.filter((x) => apartmentTypes.includes(x.accommodation_type))
+	// 	console.log("allApartments")
+	// 	console.log(allApartments)
+	// }
 
 	const prepareHotelResults = (allAccommodations: any[] | null) => {
 		if (allAccommodations === null) return
 
-		const allHotels = allAccommodations.filter((x) => hotelTypes.includes(x.accommodation_type))
+		const allHotels = allAccommodations.filter((x) => settings.hoteltypes.includes(x.accommodation_type))
 
-		console.log("allHotels")
-		console.log(allHotels)
+		// console.log("allHotels")
+		// console.log(allHotels)
 
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
@@ -198,6 +200,11 @@ const Page = () => {
 	// 	}
 	// }, [typingTimeout])
 
+	useEffect(() => {
+		console.log("settings changed")
+		console.log(settings)
+	}, [settings])
+
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
 		setDestination(event.target.value)
 		if (event.target.value.length > 3) fetchSuggestions(event.target.value)
@@ -273,7 +280,6 @@ const Page = () => {
 					<div className="border border-black rounded-md h-auto p-2 flex flex-col">
 						{currentAllHotels.length > 0
 							? currentAllHotels.map((x, i) => {
-									console.log(x)
 									const name = x.name ? x.name["en-gb" as keyof typeof x.name] : "NA"
 									const currDescription = x.description ? x.description.text["en-gb" as keyof typeof x.description.text] : "NA"
 									const currPhoto = x.photos ? x.photos[0].url.thumbnail : "NA"

@@ -46,7 +46,7 @@ const _fetchHotelPrices = async (type: string, id: string, price: string, review
 	let max_price = price.split("_")[1]
 
 	let requestBody = {
-		accommodation_types: [201, 204], // as of now it will ony search for hotels and apartments.
+		// accommodation_types: [201, 204], // as of now it will ony search for hotels and apartments.
 		booker: {
 			country: "nl",
 			platform: "desktop",
