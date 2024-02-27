@@ -68,12 +68,12 @@ const ResultItem = ({ index, result }: { index: number; result: any }) => {
 									</p>
 								</div>
 								<div className="w-[30%]">
-										<span className="font-bold">Prices:
-										</span>
+									<span className="font-bold">Prices:</span>
 									{result.price &&
 										result.price.map((x: any, i: number) => {
 											const curCheckin = moment(x.checkin)
-											return <p key={i}>{`${curCheckin.format("MMMM")} ${curCheckin.format("YYYY")}: ${x.price.total}${x.currency}`}</p>
+											if (x.price.total) return <p key={i}>{`${curCheckin.format("MMMM")} ${curCheckin.format("YYYY")}: ${x.price.total}${x.currency}`}</p>
+											else return null
 										})}
 								</div>
 							</div>
