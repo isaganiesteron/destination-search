@@ -105,6 +105,9 @@ const Page = () => {
 
 		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetched.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 		console.log("----Done Fetching Hotels----")
+
+		console.log("allAccommodationsFetched")
+		console.log(JSON.stringify(allAccommodationsFetched.map((x) => x.id)))
 		const preparedHotels = prepareResults(allAccommodationsFetched, "hotels")
 		const prepareFlats = prepareResults(allAccommodationsFetched, "flats")
 
@@ -151,9 +154,9 @@ const Page = () => {
 		return allHotelsFiltered.slice(0, 10)
 	}
 
-	const addRatingInfo = (allHotels: any[]) => {
-		let highestReviewQuantity = allHotels.map((x) => x.rating.number_of_reviews).reduce((a, b) => Math.max(a, b))
-		let allHotelsWithReviewQuantity = allHotels.map((x) => {
+	const addRatingInfo = (accommodations: any[]) => {
+		let highestReviewQuantity = accommodations.map((x) => x.rating.number_of_reviews).reduce((a, b) => Math.max(a, b))
+		let allAccommodationsWithReviewQuantity = accommodations.map((x) => {
 			const currentReviewQuantity = x.rating.number_of_reviews
 			const percentage = (currentReviewQuantity / highestReviewQuantity) * 10
 
@@ -168,7 +171,12 @@ const Page = () => {
 			newRating.rating.additional_info = additionalRatingInfo
 			return newRating
 		})
-		return allHotelsWithReviewQuantity
+		return allAccommodationsWithReviewQuantity
+	}
+
+	const addMultiplePrices = (accommodations: any[], accommodationPrices: any[] | null) => {
+		// if accommodationPrices is null then just adjust the price to an array with the current price having a date of today
+		// if accommodationPrices exists, loop through each one and match with accommodations then just add the new price to the array
 	}
 
 	const handleReset = () => {
@@ -198,11 +206,6 @@ const Page = () => {
 	// 		clearTimeout(typingTimeout)
 	// 	}
 	// }, [typingTimeout])
-
-	useEffect(() => {
-		console.log("settings changed")
-		console.log(settings)
-	}, [settings])
 
 	const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
 		setDestination(event.target.value)
