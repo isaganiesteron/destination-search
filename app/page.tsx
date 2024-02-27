@@ -119,12 +119,12 @@ const Page = () => {
 		if (allAccommodations === null) return
 		let currentStatusText = ""
 		const accommodationsIncluded = accommodation_type == "hotels" ? settings.hoteltypes : settings.apartmenttypes
-		const allHotels = allAccommodations.filter((x) => accommodationsIncluded.includes(String(x.accommodation_type)))
+		const specificAccommodations = allAccommodations.filter((x) => accommodationsIncluded.includes(String(x.accommodation_type)))
 		const tierSettings = settings[settings.tier as keyof typeof settings]
 		const minPrice = tierSettings["min_price" as keyof typeof tierSettings]
 		const maxPrice = tierSettings["max_price" as keyof typeof tierSettings]
 
-		if (allHotels.length === 0) {
+		if (specificAccommodations.length === 0) {
 			currentStatusText = `No ${accommodation_type} found in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
 
 			if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
@@ -132,26 +132,27 @@ const Page = () => {
 			return []
 		}
 
-		const allHotelsRatingInfoAdded = addRatingInfo(allHotels)
+		const accommodationsWithRating = addRatingInfo(specificAccommodations)
 
 		// filter hotels by review
-		const allHotelsFiltered = allHotelsRatingInfoAdded.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
+		// this should exists since it's already getting results based on reviews
+		const accommodationsFilteredByReview = accommodationsWithRating.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
 		// sort based on review score
 		if (settings.consider_review_quantity) {
-			allHotelsFiltered.sort((a: { rating: { additional_info: { average_review_score: number } } }, b: { rating: { additional_info: { average_review_score: number } } }) => {
+			accommodationsFilteredByReview.sort((a: { rating: { additional_info: { average_review_score: number } } }, b: { rating: { additional_info: { average_review_score: number } } }) => {
 				return b.rating.additional_info.average_review_score - a.rating.additional_info.average_review_score
 			})
 		} else {
-			allHotelsFiltered.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
+			accommodationsFilteredByReview.sort((a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
 				return b.rating.review_score - a.rating.review_score
 			})
 		}
 
-		currentStatusText = `Found ${allHotelsFiltered.length} ${accommodation_type} in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
+		currentStatusText = `Found ${accommodationsFilteredByReview.length} ${accommodation_type} in ${currentDestination["label" as keyof typeof currentDestination]}. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`
 		if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
 		else setFlatStatus({ loading: false, message: currentStatusText })
 
-		return allHotelsFiltered.slice(0, 10)
+		return specificAccommodations.slice(0, 10)
 	}
 
 	const addRatingInfo = (accommodations: any[]) => {
