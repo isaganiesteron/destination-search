@@ -177,17 +177,28 @@ const Page = () => {
 		return allAccommodationsWithReviewQuantity
 	}
 
-	const addMultiplePrices = (accommodations: any[], accommodationPrices: any[] | null) => {
-		// if accommodationPrices is null then just adjust the price to an array with the current price having a date of today
-		// if accommodationPrices exists, loop through each one and match with accommodations then just add the new price to the array
+	const addMultiplePrices = (accommodations: any[], accommodationPrices: { data: object[]; checkin: string; checkout: string } | null) => {
 		if (accommodationPrices === null) {
+			// if accommodationPrices is null then just adjust the price to an array with the current price having a date of today
 			let currentDate: string = moment().format("YYYY-MM-DD")
 			let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
 			return accommodations.map((x) => {
 				return { ...x, price: [{ ...x.price, checkin: currentDate, checkout: tomorrowDate }] }
 			})
+		} else {
+			// if accommodationPrices exists, loop through each one and match with accommodations then just add the new price to the array
+			const updatedAccommodations = accommodations.map((x) => {
+				const currentPrice = accommodationPrices.data.filter((price: object) => {
+					return price["id" as keyof typeof price] === x.id
+				})
+				if (currentPrice.length === 1) {
+					return { ...x, price: [...x.price, { ...currentPrice[0], checkin: accommodationPrices.checkin, checkout: accommodationPrices.checkout }] }
+				} else {
+					return { ...x, price: [...x.price, { price: {}, checkin: accommodationPrices.checkin, checkout: accommodationPrices.checkout }] }
+				}
+			})
+			return updatedAccommodations
 		}
-		return accommodations
 	}
 
 	const handleReset = () => {
