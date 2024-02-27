@@ -103,14 +103,16 @@ const Page = () => {
 				morePages = false
 			}
 		}
+		//add multiple prices here
+		const allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(allAccommodationsFetched, null)
 
-		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetched.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}` })
+		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 		console.log("----Done Fetching Hotels----")
 
-		console.log("allAccommodationsFetched")
-		console.log(JSON.stringify(allAccommodationsFetched.map((x) => x.id)))
-		const preparedHotels = prepareResults(allAccommodationsFetched, "hotels")
-		const prepareFlats = prepareResults(allAccommodationsFetched, "flats")
+		console.log("allAccommodationsFetchedWithMultiplePrice")
+		console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice.map((x) => x.id)))
+		const preparedHotels = prepareResults(allAccommodationsFetchedWithMultiplePrice, "hotels")
+		const prepareFlats = prepareResults(allAccommodationsFetchedWithMultiplePrice, "flats")
 
 		setCurrentAllHotels(preparedHotels || [])
 		setCurrentAllFlats(prepareFlats || [])
@@ -134,11 +136,10 @@ const Page = () => {
 		}
 
 		const accommodationsWithRating = addRatingInfo(specificAccommodations)
-		const accommodationsWithMultiplePrice = addMultiplePrices(accommodationsWithRating, null)
 
 		// filter hotels by review
 		// this should exists since it's already getting results based on reviews
-		const accommodationsFilteredByReview = accommodationsWithMultiplePrice.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
+		const accommodationsFilteredByReview = accommodationsWithRating.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
 		// sort based on review score
 		if (settings.consider_review_quantity) {
 			accommodationsFilteredByReview.sort((a: { rating: { additional_info: { average_review_score: number } } }, b: { rating: { additional_info: { average_review_score: number } } }) => {
