@@ -104,13 +104,40 @@ const Page = () => {
 			}
 		}
 		//add multiple prices here
-		const allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(allAccommodationsFetched, null)
+		let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(allAccommodationsFetched, null)
+
+		// this is the ideal place to fetch multiple prices
+		console.log("----Fetching Multiple Prices---")
+		const accommodationExtraPrices = []
+		const monthsToFetchPrices = ["February", "May", "July", "October", "December"]
+		let monthCounter = 0
+		while (monthCounter < monthsToFetchPrices.length) {
+			console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`)
+			const checkin = moment().month(monthsToFetchPrices[monthCounter]).startOf("month")
+			const checkout = moment().month(monthsToFetchPrices[monthCounter]).startOf("month").add(1, "days")
+
+			// see first if allAccommodationsFetched is less than 100
+			const allIdsParam = allAccommodationsFetched.map((x) => x.id).join(",")
+			const response = await fetch(`/api/prices/${allIdsParam}/${checkin.format("YYYY-MM-DD")}/${checkout.format("YYYY-MM-DD")}`)
+			const responseJson = await response.json()
+			accommodationExtraPrices.push(responseJson.data)
+			console.log(`Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`)
+			monthCounter++
+		}
+
+		console.log("accommodationExtraPrices")
+		console.log(JSON.stringify(accommodationExtraPrices))
+
+		accommodationExtraPrices.forEach((month) => {
+			allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(allAccommodationsFetchedWithMultiplePrice, month)
+		})
+
+		console.log("allAccommodationsFetchedWithMultiplePrice")
+		console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice))
 
 		setStatus({ loading: false, message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 		console.log("----Done Fetching Hotels----")
 
-		console.log("allAccommodationsFetchedWithMultiplePrice")
-		console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice.map((x) => x.id)))
 		const preparedHotels = prepareResults(allAccommodationsFetchedWithMultiplePrice, "hotels")
 		const prepareFlats = prepareResults(allAccommodationsFetchedWithMultiplePrice, "flats")
 
