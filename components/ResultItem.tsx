@@ -2,8 +2,10 @@ import React, { useState } from "react"
 import Image from "next/image"
 import Spinner from "@/components/Spinner"
 import { accommodationTypes } from "@/constants/accommodationtypes"
+import moment from "moment"
 
 const ResultItem = ({ index, result }: { index: number; result: any }) => {
+	console.log(result.price)
 	const name = result.name ? result.name["en-gb" as keyof typeof result.name] : "NA"
 	const currDescription = result.description ? result.description.text["en-gb" as keyof typeof result.description.text] : "NA"
 	const currPhoto = result.photos ? (result.photos.length > 0 ? result.photos[0].url.thumbnail : "NA") : "NA"
@@ -50,22 +52,31 @@ const ResultItem = ({ index, result }: { index: number; result: any }) => {
 									{`Link to ${accommodationType}`}
 								</button>
 							</div>
-
-							<p>
-								<span className="font-bold">Rating:</span> {rating.score}
-							</p>
-							<p>
-								<span className="font-bold">
-									Adjusted Rating <span className="text-xs">(considering # of reviews)</span>:
-								</span>{" "}
-								{rating.average.toFixed(2)}
-							</p>
-							<p>
-								<span className="font-bold">Number of Reviews:</span> {rating.reviews}
-							</p>
-							<p>
-								<span className="font-bold">Price:</span> {total ? `${total}${currency}` : "NA"}
-							</p>
+							<div className="flex flex-row justify-between ">
+								<div className="w-[70%]">
+									<p>
+										<span className="font-bold">Rating:</span> {rating.score}
+									</p>
+									<p>
+										<span className="font-bold">
+											Adjusted Rating <span className="text-xs">(considering # of reviews)</span>:
+										</span>
+										{rating.average.toFixed(2)}
+									</p>
+									<p>
+										<span className="font-bold">Number of Reviews:</span> {rating.reviews}
+									</p>
+								</div>
+								<div className="w-[30%]">
+										<span className="font-bold">Prices:
+										</span>
+									{result.price &&
+										result.price.map((x: any, i: number) => {
+											const curCheckin = moment(x.checkin)
+											return <p key={i}>{`${curCheckin.format("MMMM")} ${curCheckin.format("YYYY")}: ${x.price.total}${x.currency}`}</p>
+										})}
+								</div>
+							</div>
 							<p>
 								<span className="font-bold">Description:</span>
 							</p>

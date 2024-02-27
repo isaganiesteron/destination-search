@@ -6,6 +6,7 @@ import Settings from "@/components/Settings"
 import Spinner from "@/components/Spinner"
 import SuggestedItem from "@/components/SuggestedItem"
 import { apartmentTypes, hotelTypes } from "@/constants/accommodationtypes"
+import moment from "moment"
 
 const Page = () => {
 	const [status, setStatus] = useState<object>({ loading: false, message: "Search for a destination." })
@@ -133,10 +134,11 @@ const Page = () => {
 		}
 
 		const accommodationsWithRating = addRatingInfo(specificAccommodations)
+		const accommodationsWithMultiplePrice = addMultiplePrices(accommodationsWithRating, null)
 
 		// filter hotels by review
 		// this should exists since it's already getting results based on reviews
-		const accommodationsFilteredByReview = accommodationsWithRating.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
+		const accommodationsFilteredByReview = accommodationsWithMultiplePrice.filter((x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review)
 		// sort based on review score
 		if (settings.consider_review_quantity) {
 			accommodationsFilteredByReview.sort((a: { rating: { additional_info: { average_review_score: number } } }, b: { rating: { additional_info: { average_review_score: number } } }) => {
@@ -152,7 +154,7 @@ const Page = () => {
 		if (accommodation_type === "hotels") setHotelStatus({ loading: false, message: currentStatusText })
 		else setFlatStatus({ loading: false, message: currentStatusText })
 
-		return specificAccommodations.slice(0, 10)
+		return accommodationsFilteredByReview.slice(0, 10)
 	}
 
 	const addRatingInfo = (accommodations: any[]) => {
@@ -178,6 +180,14 @@ const Page = () => {
 	const addMultiplePrices = (accommodations: any[], accommodationPrices: any[] | null) => {
 		// if accommodationPrices is null then just adjust the price to an array with the current price having a date of today
 		// if accommodationPrices exists, loop through each one and match with accommodations then just add the new price to the array
+		if (accommodationPrices === null) {
+			let currentDate: string = moment().format("YYYY-MM-DD")
+			let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
+			return accommodations.map((x) => {
+				return { ...x, price: [{ ...x.price, checkin: currentDate, checkout: tomorrowDate }] }
+			})
+		}
+		return accommodations
 	}
 
 	const handleReset = () => {
