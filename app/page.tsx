@@ -498,9 +498,11 @@ const Page = () => {
                 <p className="font-bold text-md">When do you want to go?</p>
                 <div className="flex flex-row flex-wrap">
                   {months
-                    .filter((month) => {
-                      return moment(month, "MMM").isAfter(moment());
-                    })
+                    .filter((month) =>
+                      moment(month, "MMM").isSameOrAfter(
+                        moment().startOf("month")
+                      )
+                    )
                     .map((month, i) => (
                       <button
                         key={i}
