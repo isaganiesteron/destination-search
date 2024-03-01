@@ -63,6 +63,21 @@ const Page = () => {
     },
   });
 
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
   // ***This isn't working well, it's not getting the data in realtime. TODO
   // const [inputValue, setInputValue] = useState("")
   // const [typingTimeout, setTypingTimeout] = useState<any>(0)
@@ -439,8 +454,8 @@ const Page = () => {
                 type="text"
                 value=""
                 className="border border-black rounded-md w-full p-[5.5px]"
-                onFocus={() => console.log("FAYA!")}
-                onBlur={() => console.log("BLUR")}
+                onFocus={() => setOpenDatePicker(true)}
+                // onBlur={() => setOpenDatePicker(false)}
               />
             </div>
             <div>
@@ -460,11 +475,57 @@ const Page = () => {
             </div>
           </div>
 
-          <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-            <p>Something</p>
-            <p>Something</p>
-            <p>Something</p>
-          </div>
+          {openDatePicker && (
+            <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
+              <div className="flex flex-col">
+                <p className="font-bold text-md">
+                  How long do you want to stay?
+                </p>
+                <div className="flex flex-row">
+                  <div className="flex flex-row gap-2 px-4 p-1">
+                    <input type="radio" name="duration" value="A" />
+                    <p>A weekend</p>
+                  </div>
+                  <div className="flex flex-row gap-2 px-4 p-1">
+                    <input type="radio" name="duration" value="B" />
+                    <p>A week</p>
+                  </div>
+                  <div className="flex flex-row gap-2 px-4 p-1">
+                    <input type="radio" name="duration" value="C" />
+                    <p>A month</p>
+                  </div>
+                </div>
+                <p className="font-bold text-md">When do you want to go?</p>
+                <div className="flex flex-row flex-wrap">
+                  {months
+                    .filter((month) => {
+                      return moment(month, "MMM").isAfter(moment());
+                    })
+                    .map((month, i) => (
+                      <button
+                        key={i}
+                        className="p-4 m-2 border border-gray-500 rounded-md hover:bg-gray-200"
+                      >
+                        <p className="font-bold">{month}</p>
+                        <p>{moment(month, "MMM").format("YYYY")}</p>
+                      </button>
+                    ))}
+                </div>
+              </div>
+              <div className="border-b-2 border-gray-200"></div>
+              <div className="flex flex-row gap-3 justify-end">
+                <button
+                  className="p-1 px-4  hover:text-blue-400"
+                  onClick={() => setOpenDatePicker(false)}
+                >
+                  Close
+                </button>
+                <button className="p-1 px-4  hover:text-blue-400">
+                  Select Dates
+                </button>
+              </div>
+            </div>
+          )}
 
           {suggestions.length > 0 && (
             <div className="flex flex-col w-full gap-3 bg-white">
