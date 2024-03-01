@@ -38,15 +38,13 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
 	return detailsAndPrices
 }
 
-const _fetchHotelPrices = async (type: string, id: string, price: string, review: string, page: string) => {
-	let currentDate: string = moment().format("YYYY-MM-DD")
-	let tomorrowDate: string = moment().add(1, "days").format("YYYY-MM-DD")
+const _fetchHotelPrices = async (type: string, id: string, price: string, review: string, dates: string, page: string) => {
+	const checkin = dates.split("_")[0]
+	const checkout = dates.split("_")[1]
+	const min_price = price.split("_")[0]
+	const max_price = price.split("_")[1]
 
-	let min_price = price.split("_")[0]
-	let max_price = price.split("_")[1]
-
-	let requestBody = {
-		// accommodation_types: [201, 204], // as of now it will ony search for hotels and apartments.
+	const requestBody = {
 		booker: {
 			country: "nl",
 			platform: "desktop",
@@ -59,8 +57,8 @@ const _fetchHotelPrices = async (type: string, id: string, price: string, review
 		rating: {
 			minimum_review_score: parseInt(review),
 		},
-		checkin: currentDate,
-		checkout: tomorrowDate,
+		checkin: moment(checkin).format("YYYY-MM-DD"),
+		checkout: moment(checkout).format("YYYY-MM-DD"),
 		guests: {
 			number_of_adults: 2,
 			number_of_rooms: 1,
@@ -110,12 +108,13 @@ const _fetchHotelDetails = async (hotelIds: number[]) => {
 }
 
 export async function GET(request: Request, params: any) {
-	const { dest_type, dest_id, price, review } = params.params
+	const { dest_type, dest_id, price, review, dates } = params.params
 	// If next_page exists then that means remove all params and just use next_page
+
 	let next_page = dest_type && dest_id === "null" && price === "null" ? dest_type : "null"
 
 	try {
-		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price, review, next_page)
+		const hotelPrices = await _fetchHotelPrices(dest_type, dest_id, price, review, dates, next_page)
 		const hotelDetails = await _fetchHotelDetails(hotelPrices?.data.map((x: { id: number }) => x.id))
 		const hotelPricesAndDetails = await _combinePricesAndDetails(hotelDetails, hotelPrices?.data)
 		const currentNextPage = hotelPrices.next_page ? hotelPrices.next_page : null
