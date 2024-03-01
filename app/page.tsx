@@ -24,6 +24,7 @@ const Page = () => {
 		id: "null",
 		label: "null",
 	})
+	const [currentDates, setCurrentDates] = useState<object>({ checkin: "null", checkout: "null" })
 
 	const [currentTier, setCurrentTier] = useState<string>("budget")
 	const [settings, setSettings] = useState<I_Settings>({
@@ -70,10 +71,18 @@ const Page = () => {
 		const destinationId = currentDestination["id" as keyof typeof currentDestination]
 		const destinationLabel = currentDestination["label" as keyof typeof currentDestination]
 
+		const dateCheckin = currentDates["checkin" as keyof typeof currentDates]
+		const dateCheckout = currentDates["checkout" as keyof typeof currentDates]
+
+		const checkin = dateCheckin === "null" ? moment().format("YYYY-MM-DD") : moment(dateCheckin).format("YYYY-MM-DD")
+		const checkout = dateCheckout === "null" ? moment().add(1, "days").format("YYYY-MM-DD") : moment(dateCheckout).format("YYYY-MM-DD")
+
 		if (destinationType === "null" || destinationId === "null") return
 
 		setSuggestions([])
 		setCurrentAllHotels([])
+		setHotelStatus({ loading: false, message: "" })
+		setFlatStatus({ loading: false, message: "" })
 		setStatus({ loading: true, message: `Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}` })
 
 		let allAccommodationsFetched: any[] = []
@@ -86,7 +95,7 @@ const Page = () => {
 			const currentDestinationId = nextPage === "" ? destinationId : "null"
 			const currentPriceRange = nextPage === "" ? `${minPrice}_${maxPrice}` : "null"
 
-			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}`) // maxPrice is in USD
+			const response = await fetch(`/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`) // maxPrice is in USD
 			const responseJson = await response.json()
 
 			if (responseJson.data) allAccommodationsFetched.push(...responseJson.data)

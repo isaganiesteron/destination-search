@@ -28,8 +28,6 @@ export async function GET(request: Request, params: any) {
 
 	try {
 		const hotelSearch = await fetchApi("/accommodations/search", requestBody)
-		console.log("hotelSearch")
-		console.log(hotelSearch)
 		return NextResponse.json({ data: { ...hotelSearch, checkin, checkout } })
 	} catch (error) {
 		console.log(error)
