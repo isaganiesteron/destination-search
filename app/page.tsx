@@ -33,6 +33,7 @@ const Page = () => {
     id: "null",
     label: "null",
   });
+  const [dateOptions, setDateOptions] = useState<object[]>();
   const [openDatePicker, setOpenDatePicker] = useState<boolean>(false);
   const [currentDates, setCurrentDates] = useState<object>({
     checkin: "null",
@@ -62,21 +63,6 @@ const Page = () => {
       conditions: {},
     },
   });
-
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
 
   // ***This isn't working well, it's not getting the data in realtime. TODO
   // const [inputValue, setInputValue] = useState("")
@@ -409,6 +395,32 @@ const Page = () => {
     fetchAccommodations();
   }, [currentDestination, settings]);
 
+  useEffect(() => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    let currentMonthIndex = moment().month(); // get the current month as a zero-based index
+    setDateOptions([
+      ...months.slice(currentMonthIndex).map((x) => {
+        return { month: x, year: moment().year() };
+      }),
+      ...months.slice(0, currentMonthIndex).map((x) => {
+        return { month: x, year: moment().add(1, "year").year() };
+      }),
+    ]);
+  }, []);
+
   // ***This isn't working well, it's not getting the data in realtime. TODO
   // useEffect(() => {
   // 	return () => {
@@ -452,7 +464,6 @@ const Page = () => {
               <p className="font-bold text-md">Dates</p>
               <input
                 type="text"
-                value=""
                 className="border border-black rounded-md w-full p-[5.5px]"
                 onFocus={() => setOpenDatePicker(true)}
                 // onBlur={() => setOpenDatePicker(false)}
@@ -497,21 +508,20 @@ const Page = () => {
                 </div>
                 <p className="font-bold text-md">When do you want to go?</p>
                 <div className="flex flex-row flex-wrap">
-                  {months
-                    .filter((month) =>
-                      moment(month, "MMM").isSameOrAfter(
-                        moment().startOf("month")
-                      )
-                    )
-                    .map((month, i) => (
-                      <button
-                        key={i}
-                        className="p-4 m-2 border border-gray-500 rounded-md hover:bg-gray-200"
-                      >
-                        <p className="font-bold">{month}</p>
-                        <p>{moment(month, "MMM").format("YYYY")}</p>
-                      </button>
-                    ))}
+                  {dateOptions &&
+                    dateOptions.map((month, i) => {
+                      return (
+                        <button
+                          key={i}
+                          className="p-4 m-2 border border-gray-500 rounded-md hover:bg-gray-200"
+                        >
+                          <p className="font-bold">
+                            {month["month" as keyof typeof month]}
+                          </p>
+                          <p>{month["year" as keyof typeof month]}</p>
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
               <div className="border-b-2 border-gray-200"></div>
