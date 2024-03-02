@@ -2,6 +2,8 @@ import moment from "moment";
 import React, { useEffect, useState } from "react";
 
 type DateDialogProps = {
+  dateDialogValues: { duration: string; monthYear: string };
+  setDialogValues: Function;
   setCurrentDates: Function;
   closeDialog: Function;
 };
@@ -21,11 +23,18 @@ const months = [
   "Dec",
 ];
 
-const DateDialog = ({ setCurrentDates, closeDialog }: DateDialogProps) => {
+const DateDialog = ({
+  dateDialogValues,
+  setDialogValues,
+  setCurrentDates,
+  closeDialog,
+}: DateDialogProps) => {
   const [dateOptions, setDateOptions] = useState<object[]>();
-  const [currentDuration, setCurrentDuration] = useState<string>("day");
+  const [currentDuration, setCurrentDuration] = useState<string>(
+    dateDialogValues.duration
+  );
   const [currentMonthYear, setCurrentMonthYear] = useState<string>(
-    `${moment().format("MMM")}${moment().format("YYYY")}`
+    dateDialogValues.monthYear
   );
 
   useEffect(() => {
@@ -41,12 +50,32 @@ const DateDialog = ({ setCurrentDates, closeDialog }: DateDialogProps) => {
   }, []);
 
   useEffect(() => {
+    setDialogValues({ duration: currentDuration, monthYear: currentMonthYear });
     if (currentDuration !== "" && currentMonthYear !== "") {
-      console.log("Duration and month/year selected");
-      console.log(currentDuration, currentMonthYear);
-      if (currentMonthYear === "") {
-        // make month and year current
+      // Day is default
+      let curCheckin = moment(currentMonthYear).startOf("month");
+      let curCheckout = moment(currentMonthYear).add(1, "days");
+
+      if (currentDuration === "week") {
+        curCheckout = moment(currentMonthYear).add(7, "days");
+      } else if (currentDuration === "month") {
+        curCheckout = moment(currentMonthYear).add(1, "month");
+      } else if (currentDuration === "weekend") {
+        const dayOfWeek = curCheckin.day();
+        if (dayOfWeek === 0) {
+          // Sunday
+          curCheckin = curCheckin.subtract(1, "day");
+        } else if (dayOfWeek !== 6) {
+          // Any other day other than Saturday
+          curCheckin = curCheckin.add(6 - dayOfWeek, "days");
+        }
+        curCheckout = moment(curCheckin).add(1, "day");
       }
+
+      setCurrentDates({
+        checkin: curCheckin.format("YYYY-MM-DD"),
+        checkout: curCheckout.format("YYYY-MM-DD"),
+      });
     }
 
     // setCurrentDates({ checkin: "2022-01-01", checkout: "2022-01-02" });
@@ -59,6 +88,7 @@ const DateDialog = ({ setCurrentDates, closeDialog }: DateDialogProps) => {
         <div className="flex flex-row">
           <div className="flex flex-row gap-2 px-4 p-1">
             <input
+              readOnly
               checked={currentDuration === "day"}
               type="radio"
               name="duration"
@@ -68,6 +98,7 @@ const DateDialog = ({ setCurrentDates, closeDialog }: DateDialogProps) => {
           </div>
           <div className="flex flex-row gap-2 px-4 p-1">
             <input
+              readOnly
               checked={currentDuration === "weekend"}
               type="radio"
               name="duration"
@@ -77,6 +108,7 @@ const DateDialog = ({ setCurrentDates, closeDialog }: DateDialogProps) => {
           </div>
           <div className="flex flex-row gap-2 px-4 p-1">
             <input
+              readOnly
               checked={currentDuration === "week"}
               type="radio"
               name="duration"
@@ -86,6 +118,7 @@ const DateDialog = ({ setCurrentDates, closeDialog }: DateDialogProps) => {
           </div>
           <div className="flex flex-row gap-2 px-4 p-1">
             <input
+              readOnly
               checked={currentDuration === "month"}
               type="radio"
               name="duration"

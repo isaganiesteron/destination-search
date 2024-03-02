@@ -36,6 +36,10 @@ const Page = () => {
   });
   const [openDatePicker, setOpenDatePicker] = useState<boolean>(false);
   const [displayedDates, setDisplayedDates] = useState<string>("");
+  const [dateDialogValues, setDateDialogValues] = useState<object>({
+    duration: "day",
+    monthYear: `${moment().format("MMM")}${moment().format("YYYY")}`,
+  });
   const [currentDates, setCurrentDates] = useState<object>({
     checkin: "null",
     checkout: "null",
@@ -483,6 +487,15 @@ const Page = () => {
 
           {openDatePicker && (
             <DateDialog
+              dateDialogValues={{
+                duration:
+                  dateDialogValues["duration" as keyof typeof dateDialogValues],
+                monthYear:
+                  dateDialogValues[
+                    "monthYear" as keyof typeof dateDialogValues
+                  ],
+              }}
+              setDialogValues={setDateDialogValues}
               setCurrentDates={setCurrentDates}
               closeDialog={setOpenDatePicker}
             />
