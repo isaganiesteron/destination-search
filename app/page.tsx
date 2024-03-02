@@ -35,6 +35,7 @@ const Page = () => {
   });
   const [dateOptions, setDateOptions] = useState<object[]>();
   const [openDatePicker, setOpenDatePicker] = useState<boolean>(false);
+  const [displayedDates, setDisplayedDates] = useState<string>("");
   const [currentDates, setCurrentDates] = useState<object>({
     checkin: "null",
     checkout: "null",
@@ -421,6 +422,24 @@ const Page = () => {
     ]);
   }, []);
 
+  useEffect(() => {
+    const curCheckin = currentDates["checkin" as keyof typeof currentDates];
+    const curCheckout = currentDates["checkout" as keyof typeof currentDates];
+    if (curCheckin === "null" && curCheckout === "null") {
+      setDisplayedDates(
+        `${moment().format("MM/DD/YYYY")} to ${moment()
+          .add(1, "day")
+          .format("MM/DD/YYYY")}`
+      );
+    } else {
+      setDisplayedDates(
+        `${moment(curCheckin).format("MM/DD/YYYY")} to ${moment(
+          curCheckout
+        ).format("MM/DD/YYYY")}`
+      );
+    }
+  }, [currentDates]);
+
   // ***This isn't working well, it's not getting the data in realtime. TODO
   // useEffect(() => {
   // 	return () => {
@@ -463,10 +482,11 @@ const Page = () => {
             <div>
               <p className="font-bold text-md">Dates</p>
               <input
+                style={{ cursor: "default", caretColor: "transparent" }}
+                value={displayedDates}
                 type="text"
                 className="border border-black rounded-md w-full p-[5.5px]"
                 onFocus={() => setOpenDatePicker(true)}
-                // onBlur={() => setOpenDatePicker(false)}
               />
             </div>
             <div>
