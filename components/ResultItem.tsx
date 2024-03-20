@@ -5,7 +5,6 @@ import { accommodationTypes } from "@/constants/accommodationtypes";
 import moment from "moment";
 
 const ResultItem = ({ index, result }: { index: number; result: any }) => {
-  console.log(result.price);
   const name = result.name
     ? result.name["en-gb" as keyof typeof result.name]
     : "NA";

@@ -193,9 +193,6 @@ const Page = () => {
       monthCounter++;
     }
 
-    console.log("accommodationExtraPrices");
-    console.log(JSON.stringify(accommodationExtraPrices));
-
     accommodationExtraPrices.forEach((month) => {
       allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
         allAccommodationsFetchedWithMultiplePrice,
