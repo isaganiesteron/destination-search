@@ -539,7 +539,7 @@ const Page = () => {
           </div>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="p-1 text-xs"
+            className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
           >
             {!showSettings ? "+ open" : "- close"} settings
           </button>
