@@ -163,7 +163,6 @@ const Page = () => {
         return facilitiesAreIncluded.length === settings.facilities.length;
       });
 
-    console.log(allAccommodationsFetchedWithFacilities.length);
 
     if (allAccommodationsFetchedWithFacilities.length === 0) {
       setStatus({
@@ -223,8 +222,8 @@ const Page = () => {
       );
     });
 
-    console.log("allAccommodationsFetchedWithMultiplePrice");
-    console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
+    // console.log("allAccommodationsFetchedWithMultiplePrice");
+    // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
 
     setStatus({
       loading: false,
