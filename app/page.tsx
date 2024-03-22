@@ -51,7 +51,7 @@ const Page = () => {
     consider_review_quantity: true,
     tier: "budget",
     hoteltypes: hotelTypes,
-    facilities: [],
+    facilities: [8, 17, 28, 21, 56, 192, 15, 7, 149], // check all by default
     apartmenttypes: ["201"],
     budget: {
       min_price: 0,
@@ -153,10 +153,30 @@ const Page = () => {
       }
     }
     // filter results by saved facilities here
+    let allAccommodationsFetchedWithFacilities =
+      allAccommodationsFetched.filter((accommodation) => {
+        const facilitiesAreIncluded = accommodation.facilities.filter(
+          (x: any) => {
+            return settings.facilities.includes(x.id);
+          }
+        );
+        return facilitiesAreIncluded.length === settings.facilities.length;
+      });
+
+    console.log(allAccommodationsFetchedWithFacilities.length);
+
+    if (allAccommodationsFetchedWithFacilities.length === 0) {
+      setStatus({
+        loading: false,
+        message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
+      });
+      console.log("----Done Fetching Hotels----");
+      return;
+    }
 
     //add multiple prices here
     let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-      allAccommodationsFetched,
+      allAccommodationsFetchedWithFacilities,
       null
     );
 
