@@ -151,7 +151,7 @@ export const accommodationTypes = [
   },
 ];
 
-const accommodationFacilities = [
+export const accommodationFacilities = [
   {
     id: 2,
     name: "Parking",

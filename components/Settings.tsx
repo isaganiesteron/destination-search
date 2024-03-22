@@ -11,6 +11,9 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
   const [curConsiderReviewQuantity, setCurConsiderReviewQuantity] =
     useState<boolean>(settings.consider_review_quantity);
   const [curhotelTypes, setCurhotelTypes] = useState<object[]>();
+  const [curFacilities, setCurFacilities] = useState<number[]>(
+    settings.facilities
+  );
   const [curBudgetMinPrice, setCurBudgetMinPrice] = useState<number>(
     settings.budget.min_price
   );
@@ -30,6 +33,17 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
     settings.luxury.max_price
   );
 
+  const _facilityHandler = (isChecked: boolean, facilityId: number) => {
+    if (isChecked) {
+      const tempcurFacilities = [...curFacilities];
+      tempcurFacilities.push(facilityId);
+      setCurFacilities(tempcurFacilities);
+    } else {
+      const tempcurFacilities = curFacilities.filter((x) => x !== facilityId);
+      setCurFacilities(tempcurFacilities);
+    }
+  };
+
   const saveHandler = () => {
     saveSettings({
       ...settings,
@@ -38,6 +52,7 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
       hoteltypes: curhotelTypes
         ? curhotelTypes.map((x) => String(x["id" as keyof typeof x]))
         : settings.hoteltypes,
+      facilities: curFacilities,
       apartmenttypes: settings.apartmenttypes,
       budget: {
         min_price: curBudgetMinPrice,
@@ -171,21 +186,32 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              disabled
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 0);
+              }}
             />
-            <p className="text-sm ml-1">***1km away from an airport</p>
+            <p className="text-sm ml-1 line-through">
+              ***1km away from an airport
+            </p>
           </div>
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(8)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 8);
+              }}
             />
             <p className="text-sm ml-1">24-hour Front Desk</p>
           </div>
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(17)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 17);
+              }}
             />
             <p className="text-sm ml-1">Airport Shuttle</p>
           </div>
@@ -198,21 +224,30 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(28)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 28);
+              }}
             />
             <p className="text-sm ml-1">Family Rooms</p>
           </div>
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(21)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 21);
+              }}
             />
             <p className="text-sm ml-1">Baby Sitting Services</p>
           </div>
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(56)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 56);
+              }}
             />
             <p className="text-sm ml-1">Playgroud/Kids Play Area</p>
           </div>
@@ -226,28 +261,40 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(149)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 149);
+              }}
             />
             <p className="text-sm ml-1">Adults Only</p>
           </div>
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(7)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 7);
+              }}
             />
             <p className="text-sm ml-1">Bar</p>
           </div>
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(15)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 15);
+              }}
             />
             <p className="text-sm ml-1">Terraces</p>
           </div>
           <div className="flex flex-row items-center">
             <input
               type="checkbox"
-              // onChange={(e) => {}}
+              checked={curFacilities.includes(192)}
+              onChange={(e) => {
+                _facilityHandler(e.target.checked, 192);
+              }}
             />
             <p className="text-sm ml-1">Rooftop Pool</p>
           </div>

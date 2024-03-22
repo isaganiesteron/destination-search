@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Spinner from "@/components/Spinner";
-import { accommodationTypes } from "@/constants/accommodationtypes";
+import {
+  accommodationTypes,
+  accommodationFacilities,
+} from "@/constants/accommodationtypes";
 import moment from "moment";
 
 const ResultItem = ({ index, result }: { index: number; result: any }) => {
@@ -36,6 +39,15 @@ const ResultItem = ({ index, result }: { index: number; result: any }) => {
   const accommodationType = accommodationTypes
     .filter((x) => x.id === result.accommodation_type)
     .map((x) => x.name)[0];
+
+  const facilities = result.facilities
+    ? result.facilities.map((x: { id: number }) => {
+        const singleItem = accommodationFacilities
+          .filter((y: any) => y.id === x.id)
+          .map((x: any) => x.name);
+        return singleItem[0];
+      })
+    : [];
 
   const [currentDescription, setCurrentDescription] =
     useState<string>(currDescription);
@@ -126,6 +138,10 @@ const ResultItem = ({ index, result }: { index: number; result: any }) => {
                     })}
                 </div>
               </div>
+              <p>
+                <span className="font-bold">Facilities:</span>
+              </p>
+              {facilities.join(", ")}
               <p>
                 <span className="font-bold">Description:</span>
               </p>

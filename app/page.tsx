@@ -51,6 +51,7 @@ const Page = () => {
     consider_review_quantity: true,
     tier: "budget",
     hoteltypes: hotelTypes,
+    facilities: [],
     apartmenttypes: ["201"],
     budget: {
       min_price: 0,
@@ -151,6 +152,8 @@ const Page = () => {
         morePages = false;
       }
     }
+    // filter results by saved facilities here
+
     //add multiple prices here
     let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
       allAccommodationsFetched,
@@ -391,6 +394,11 @@ const Page = () => {
     setSettings({ ...settings, tier: currentTier });
     // reload results based on the new tier
   }, [currentTier]);
+
+  useEffect(() => {
+    console.log("Save Settings");
+    console.log(settings);
+  }, [settings]);
 
   useEffect(() => {
     if (showSettings) setShowSettings(false);
