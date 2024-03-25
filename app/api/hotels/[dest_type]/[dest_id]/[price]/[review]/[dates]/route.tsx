@@ -68,6 +68,7 @@ const _fetchHotelPrices = async (
     },
     checkin: moment(checkin).format("YYYY-MM-DD"),
     checkout: moment(checkout).format("YYYY-MM-DD"),
+    extras: ["extra_charges", "products"],
     guests: {
       number_of_adults: 2,
       number_of_rooms: 1,

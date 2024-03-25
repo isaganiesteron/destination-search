@@ -51,7 +51,7 @@ const Page = () => {
     consider_review_quantity: true,
     tier: "budget",
     hoteltypes: hotelTypes,
-    facilities: [8, 17, 28, 21, 56, 192, 15, 7, 149], // check all by default
+    facilities: [], // check none by default
     apartmenttypes: ["201"],
     budget: {
       min_price: 0,
@@ -138,7 +138,7 @@ const Page = () => {
         allAccommodationsFetched.push(...responseJson.data);
 
       if (responseJson.next_page) {
-        console.log("Fetching next page...");
+        // console.log("Fetching next page...");
         nextPage = responseJson.next_page;
         setStatus({
           loading: true,
@@ -147,7 +147,7 @@ const Page = () => {
         // pause for 1 second before next request
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } else {
-        console.log("All pages fetched.");
+        // console.log("All pages fetched.");
         nextPage = "";
         morePages = false;
       }
@@ -162,7 +162,6 @@ const Page = () => {
         );
         return facilitiesAreIncluded.length === settings.facilities.length;
       });
-
 
     if (allAccommodationsFetchedWithFacilities.length === 0) {
       setStatus({
@@ -179,8 +178,7 @@ const Page = () => {
       null
     );
 
-    // this is the ideal place to fetch multiple prices
-    console.log("----Fetching Multiple Prices---");
+    // console.log("----Fetching Multiple Prices---");
     const accommodationExtraPrices = [];
     const monthsToFetchPrices = [
       "February",
@@ -191,7 +189,7 @@ const Page = () => {
     ];
     let monthCounter = 0;
     while (monthCounter < monthsToFetchPrices.length) {
-      console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
+      // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
       const checkin = moment()
         .month(monthsToFetchPrices[monthCounter])
         .startOf("month");
@@ -200,7 +198,7 @@ const Page = () => {
         .startOf("month")
         .add(1, "days");
 
-      // see first if allAccommodationsFetched is less than 100
+      // see first if allAccommodationsFetched is less than 100f
       const allIdsParam = allAccommodationsFetched.map((x) => x.id).join(",");
       const response = await fetch(
         `/api/prices/${allIdsParam}/${checkin.format(
@@ -209,9 +207,9 @@ const Page = () => {
       );
       const responseJson = await response.json();
       accommodationExtraPrices.push(responseJson.data);
-      console.log(
-        `Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`
-      );
+      // console.log(
+      //   `Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`
+      // );
       monthCounter++;
     }
 
@@ -224,6 +222,18 @@ const Page = () => {
 
     // console.log("allAccommodationsFetchedWithMultiplePrice");
     // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
+
+    let allCities: number[] = [];
+    allAccommodationsFetchedWithMultiplePrice.forEach(
+      (x: { [x: string]: any }) => {
+        const location = x["location" as keyof typeof x];
+        const cityId = location["city" as keyof typeof location];
+        if (!allCities.includes(cityId)) allCities.push(cityId);
+      }
+    );
+
+    // get districts for all the cities here
+    console.log(allCities);
 
     setStatus({
       loading: false,
