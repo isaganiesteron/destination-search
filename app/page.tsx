@@ -25,6 +25,7 @@ const Page = () => {
 
   const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([]);
   const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([]);
+  const [currentDistricts, setCurrentDistricts] = useState<any[]>([]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const [destination, setDestination] = useState<string>("");
@@ -78,7 +79,7 @@ const Page = () => {
     const response = await fetch("/api/autosuggest/" + query);
     if (response.status === 200) {
       const data = await response.json();
-      setSuggestions(data);
+      setSuggestions(data.filter((x: any) => x.dest_type !== "district"));
     }
   };
 
@@ -231,9 +232,16 @@ const Page = () => {
         if (!allCities.includes(cityId)) allCities.push(cityId);
       }
     );
-
     // get districts for all the cities here
-    console.log(allCities);
+    let allDistricts = [];
+    let cityCounter = 0;
+    while (cityCounter < allCities.length) {
+      const response = await fetch(`/api/district/${allCities[cityCounter]}`);
+      const responseJson = await response.json();
+      allDistricts.push(responseJson);
+      cityCounter++;
+    }
+    setCurrentDistricts(allDistricts);
 
     setStatus({
       loading: false,
@@ -580,6 +588,8 @@ const Page = () => {
           {showSettings && (
             <Settings settings={settings} saveSettings={setSettings} />
           )}
+
+          {currentDistricts.length > 0 && currentDistricts.join(", ")}
         </div>
 
         <div>
