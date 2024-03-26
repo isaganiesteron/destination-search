@@ -8,6 +8,7 @@ import SuggestedItem from "@/components/SuggestedItem";
 import { apartmentTypes, hotelTypes } from "@/constants/accommodationtypes";
 import moment from "moment";
 import DateDialog from "@/components/DateDialog";
+import Districts from "@/components/Districts";
 
 const Page = () => {
   const [status, setStatus] = useState<object>({
@@ -25,7 +26,8 @@ const Page = () => {
 
   const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([]);
   const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([]);
-  const [currentDistricts, setCurrentDistricts] = useState<any[]>([]);
+  const [currentDistricts, setCurrentDistricts] = useState<object[]>([]);
+  const [selectedDistricts, setSelectedDistricts] = useState<number[]>([]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const [destination, setDestination] = useState<string>("");
@@ -81,10 +83,29 @@ const Page = () => {
       const data = await response.json();
       setSuggestions(
         data.filter(
-          (x: any) => x.dest_type !== "district" && x.dest_type !== "hotel"
+          (x: any) =>
+            x.dest_type !== "district" &&
+            x.dest_type !== "hotel" &&
+            x.dest_type !== "airport"
         )
       );
     }
+  };
+  const fetchDistricts = async () => {
+    const destinationType =
+      currentDestination["type" as keyof typeof currentDestination];
+    const destinationId =
+      currentDestination["id" as keyof typeof currentDestination];
+
+    const fetchString = `/api/district/${destinationType}/${destinationId}`;
+    // console.log("fetchString", fetchString);
+    const response = await fetch(fetchString);
+    const responseJson = await response.json();
+    console.log(JSON.stringify(responseJson));
+    setCurrentDistricts(responseJson);
+
+    // // use mock data
+    // setCurrentDistricts(require("@/mock_data/districts").default);
   };
 
   const fetchAccommodations = async () => {
@@ -99,6 +120,7 @@ const Page = () => {
     const destinationLabel =
       currentDestination["label" as keyof typeof currentDestination];
 
+    ``;
     const dateCheckin = currentDates["checkin" as keyof typeof currentDates];
     const dateCheckout = currentDates["checkout" as keyof typeof currentDates];
 
@@ -225,27 +247,13 @@ const Page = () => {
       );
     });
 
-    // console.log("allAccommodationsFetchedWithMultiplePrice");
-    // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
+    fetchDistricts();
 
-    let allCities: number[] = [];
-    allAccommodationsFetchedWithMultiplePrice.forEach(
-      (x: { [x: string]: any }) => {
-        const location = x["location" as keyof typeof x];
-        const cityId = location["city" as keyof typeof location];
-        if (!allCities.includes(cityId)) allCities.push(cityId);
-      }
-    );
-    // get districts for all the cities here
-    let allDistricts = [];
-    let cityCounter = 0;
-    while (cityCounter < allCities.length) {
-      const response = await fetch(`/api/district/${allCities[cityCounter]}`);
-      const responseJson = await response.json();
-      allDistricts.push(responseJson);
-      cityCounter++;
-    }
-    setCurrentDistricts(allDistricts);
+    // // mock data
+    // const allAccommodationsFetchedWithMultiplePrice =
+    //   require("@/mock_data/accommodations").default;
+
+    console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
 
     setStatus({
       loading: false,
@@ -339,7 +347,21 @@ const Page = () => {
       setHotelStatus({ loading: false, message: currentStatusText });
     else setFlatStatus({ loading: false, message: currentStatusText });
 
-    return accommodationsFilteredByReview.slice(0, 10);
+    const topTenAccommodations = accommodationsFilteredByReview.slice(0, 10);
+
+    let tempSelectedDistricts: number[] = [...selectedDistricts];
+    topTenAccommodations.forEach((x) => {
+      const currentDiscrict = x.location.districts;
+      if (currentDiscrict.length > 0) {
+        currentDiscrict.forEach((district: number) => {
+          if (tempSelectedDistricts.includes(district) === false)
+            tempSelectedDistricts.push(district);
+        });
+      }
+    });
+    setSelectedDistricts(tempSelectedDistricts);
+
+    return topTenAccommodations;
   };
 
   const addRatingInfo = (accommodations: any[]) => {
@@ -437,11 +459,6 @@ const Page = () => {
   }, [currentTier]);
 
   useEffect(() => {
-    console.log("Save Settings");
-    console.log(settings);
-  }, [settings]);
-
-  useEffect(() => {
     if (showSettings) setShowSettings(false);
     fetchAccommodations();
   }, [currentDestination, settings]);
@@ -463,6 +480,10 @@ const Page = () => {
       );
     }
   }, [currentDates]);
+
+  useEffect(() => {
+    console.log(selectedDistricts);
+  }, [selectedDistricts]);
 
   // ***This isn't working well, it's not getting the data in realtime. TODO
   // useEffect(() => {
@@ -572,6 +593,16 @@ const Page = () => {
               </div>
             </div>
           )}
+
+          {currentDistricts.length > 0 && (
+            <div className="border border-black rounded-md w-full p-2">
+              <p className="font-bold text-sm">Disctricts</p>
+              <Districts
+                currentDistricts={currentDistricts}
+                selectedDistricts={selectedDistricts}
+              />
+            </div>
+          )}
         </div>
 
         <div>
@@ -592,8 +623,6 @@ const Page = () => {
           {showSettings && (
             <Settings settings={settings} saveSettings={setSettings} />
           )}
-
-          {currentDistricts.length > 0 && currentDistricts.join(", ")}
         </div>
 
         <div>
