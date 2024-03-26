@@ -101,10 +101,8 @@ const Page = () => {
       currentDestination["id" as keyof typeof currentDestination];
 
     const fetchString = `/api/district/${destinationType}/${destinationId}`;
-    // console.log("fetchString", fetchString);
     const response = await fetch(fetchString);
     const responseJson = await response.json();
-    console.log(JSON.stringify(responseJson));
     setCurrentDistricts(responseJson);
 
     // // use mock data
@@ -659,7 +657,12 @@ const Page = () => {
             <div className="border border-black rounded-md h-auto p-2 flex flex-col">
               {currentAllHotels.length > 0
                 ? currentAllHotels.map((x, i) => (
-                    <ResultItem key={`result_${i}`} index={i} result={x} />
+                    <ResultItem
+                      key={`result_${i}`}
+                      index={i}
+                      result={x}
+                      districts={currentDistricts}
+                    />
                   ))
                 : null}
             </div>
@@ -686,7 +689,12 @@ const Page = () => {
             <div className="border border-black rounded-md h-auto p-2 flex flex-col">
               {currentAllFlats.length > 0
                 ? currentAllFlats.map((x, i) => (
-                    <ResultItem key={`result_${i}`} index={i} result={x} />
+                    <ResultItem
+                      key={`result_${i}`}
+                      index={i}
+                      result={x}
+                      districts={currentDistricts}
+                    />
                   ))
                 : null}
             </div>

@@ -7,7 +7,15 @@ import {
 } from "@/constants/accommodationtypes";
 import moment from "moment";
 
-const ResultItem = ({ index, result }: { index: number; result: any }) => {
+const ResultItem = ({
+  index,
+  result,
+  districts,
+}: {
+  index: number;
+  result: any;
+  districts: object[];
+}) => {
   const name = result.name
     ? result.name["en-gb" as keyof typeof result.name]
     : "NA";
@@ -138,6 +146,21 @@ const ResultItem = ({ index, result }: { index: number; result: any }) => {
                     })}
                 </div>
               </div>
+              <p>
+                <span className="font-bold">Districts: </span>
+                {result.location.districts
+                  .map((x: number, i: number) => {
+                    const districtName: object[] = districts.filter(
+                      (y: any) => y.id === x
+                    );
+                    return districtName.length > 0
+                      ? districtName[0][
+                          "name" as keyof (typeof districtName)[0]
+                        ]
+                      : `(${x} *not found)`;
+                  })
+                  .join(", ")}
+              </p>
               <p>
                 <span className="font-bold">Facilities:</span>
               </p>
