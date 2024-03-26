@@ -24,6 +24,9 @@ const Page = () => {
     message: "",
   });
 
+  const [allFetchedAccommodations, setAllFetchedAccommodations] = useState<
+    any[]
+  >([]);
   const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([]);
   const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([]);
   const [currentDistricts, setCurrentDistricts] = useState<object[]>([]);
@@ -136,6 +139,7 @@ const Page = () => {
     if (destinationType === "null" || destinationId === "null") return;
 
     setSuggestions([]);
+    setAllFetchedAccommodations([]);
     setCurrentAllHotels([]);
     setHotelStatus({ loading: false, message: "" });
     setFlatStatus({ loading: false, message: "" });
@@ -253,7 +257,27 @@ const Page = () => {
     // const allAccommodationsFetchedWithMultiplePrice =
     //   require("@/mock_data/accommodations").default;
 
-    console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
+    // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
+
+    // this is used to update the results based on district
+    setAllFetchedAccommodations(allAccommodationsFetchedWithMultiplePrice);
+
+    // get all districts from all fetched accommodations here
+
+    // initially set the selected districtss
+    let tempSelectedDistricts: number[] = [...selectedDistricts];
+    allAccommodationsFetchedWithMultiplePrice.forEach(
+      (x: { location: { districts: any } }) => {
+        const currentDiscrict = x.location.districts;
+        if (currentDiscrict.length > 0) {
+          currentDiscrict.forEach((district: number) => {
+            if (tempSelectedDistricts.includes(district) === false)
+              tempSelectedDistricts.push(district);
+          });
+        }
+      }
+    );
+    setSelectedDistricts(tempSelectedDistricts);
 
     setStatus({
       loading: false,
@@ -280,6 +304,8 @@ const Page = () => {
   ) => {
     if (allAccommodations === null) return;
     let currentStatusText = "";
+
+    // Categorize the accommodations based on the type
     const accommodationsIncluded =
       accommodation_type == "hotels"
         ? settings.hoteltypes
@@ -287,10 +313,11 @@ const Page = () => {
     const specificAccommodations = allAccommodations.filter((x) =>
       accommodationsIncluded.includes(String(x.accommodation_type))
     );
+
+    // Set the status
     const tierSettings = settings[settings.tier as keyof typeof settings];
     const minPrice = tierSettings["min_price" as keyof typeof tierSettings];
     const maxPrice = tierSettings["max_price" as keyof typeof tierSettings];
-
     if (specificAccommodations.length === 0) {
       currentStatusText = `No ${accommodation_type} found in ${
         currentDestination["label" as keyof typeof currentDestination]
@@ -304,15 +331,28 @@ const Page = () => {
       return [];
     }
 
+    // Add rating info (just extra data in the the rating object)
     const accommodationsWithRating = addRatingInfo(specificAccommodations);
 
-    // filter hotels by review
-    // this should exists since it's already getting results based on reviews
-    const accommodationsFilteredByReview = accommodationsWithRating.filter(
-      (x: { rating: { review_score: number } }) =>
-        x.rating?.review_score >= settings.review
+    // Filter by selected districts HERE
+    const accommodationsFilteredByDistrict = accommodationsWithRating.filter(
+      (x: { location: { districts: number[] } }) => {
+        if (selectedDistricts.length === 0) return true;
+        return x.location.districts.some((district) =>
+          selectedDistricts.includes(district)
+        );
+      }
     );
-    // sort based on review score
+
+    // Filter hotels by review (This might not be necessary because we are already filtering by review in the API call)
+    // TODO: try and not include this part
+    const accommodationsFilteredByReview =
+      accommodationsFilteredByDistrict.filter(
+        (x: { rating: { review_score: number } }) =>
+          x.rating?.review_score >= settings.review
+      );
+
+    // Sort based on review score
     if (settings.consider_review_quantity) {
       accommodationsFilteredByReview.sort(
         (
@@ -347,19 +387,8 @@ const Page = () => {
       setHotelStatus({ loading: false, message: currentStatusText });
     else setFlatStatus({ loading: false, message: currentStatusText });
 
+    // Get the top 10 accommodations
     const topTenAccommodations = accommodationsFilteredByReview.slice(0, 10);
-
-    let tempSelectedDistricts: number[] = [...selectedDistricts];
-    topTenAccommodations.forEach((x) => {
-      const currentDiscrict = x.location.districts;
-      if (currentDiscrict.length > 0) {
-        currentDiscrict.forEach((district: number) => {
-          if (tempSelectedDistricts.includes(district) === false)
-            tempSelectedDistricts.push(district);
-        });
-      }
-    });
-    setSelectedDistricts(tempSelectedDistricts);
 
     return topTenAccommodations;
   };
@@ -482,32 +511,16 @@ const Page = () => {
   }, [currentDates]);
 
   useEffect(() => {
-    console.log(selectedDistricts);
+    const preparedHotels = prepareResults(allFetchedAccommodations, "hotels");
+    const prepareFlats = prepareResults(allFetchedAccommodations, "flats");
+    setCurrentAllHotels(preparedHotels || []);
+    setCurrentAllFlats(prepareFlats || []);
   }, [selectedDistricts]);
-
-  // ***This isn't working well, it's not getting the data in realtime. TODO
-  // useEffect(() => {
-  // 	return () => {
-  // 		clearTimeout(typingTimeout)
-  // 	}
-  // }, [typingTimeout])
 
   const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
     setDestination(event.target.value);
     if (event.target.value.length > 3) fetchSuggestions(event.target.value);
     else setSuggestions([]);
-
-    // ***This isn't working well, it's not getting the data in realtime. TODO
-    // if (typingTimeout) clearTimeout(typingTimeout)
-    // // will wait half a second before user finishes typing before fetching suggestions
-    // setInputValue(event.target.value)
-    // setTypingTimeout(
-    // 	setTimeout(() => {
-    // 		console.log("User has finished typing:", inputValue)
-    // 		if (inputValue.length > 3) fetchSuggestions(inputValue)
-    // 		else setSuggestions([])
-    // 	}, 300)
-    // )
   };
 
   return (
@@ -600,6 +613,7 @@ const Page = () => {
               <Districts
                 currentDistricts={currentDistricts}
                 selectedDistricts={selectedDistricts}
+                setSelectedDistricts={setSelectedDistricts}
               />
             </div>
           )}
