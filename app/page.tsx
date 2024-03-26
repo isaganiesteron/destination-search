@@ -79,7 +79,11 @@ const Page = () => {
     const response = await fetch("/api/autosuggest/" + query);
     if (response.status === 200) {
       const data = await response.json();
-      setSuggestions(data.filter((x: any) => x.dest_type !== "district"));
+      setSuggestions(
+        data.filter(
+          (x: any) => x.dest_type !== "district" && x.dest_type !== "hotel"
+        )
+      );
     }
   };
 
