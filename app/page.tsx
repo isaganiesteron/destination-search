@@ -139,6 +139,8 @@ const Page = () => {
     setSuggestions([]);
     setAllFetchedAccommodations([]);
     setCurrentAllHotels([]);
+    setCurrentDistricts([]);
+    setSelectedDistricts([]);
     setHotelStatus({ loading: false, message: "" });
     setFlatStatus({ loading: false, message: "" });
     setStatus({
@@ -335,7 +337,7 @@ const Page = () => {
     // Filter by selected districts HERE
     const accommodationsFilteredByDistrict = accommodationsWithRating.filter(
       (x: { location: { districts: number[] } }) => {
-        if (selectedDistricts.length === 0) return true;
+        if (selectedDistricts.length === 0) return false;
         return x.location.districts.some((district) =>
           selectedDistricts.includes(district)
         );
@@ -475,6 +477,8 @@ const Page = () => {
     setSuggestions([]);
     setCurrentAllHotels([]);
     setCurrentAllFlats([]);
+    setCurrentDistricts([]);
+    setSelectedDistricts([]);
     setStatus({ loading: false, message: "Search for a destination." });
     setHotelStatus({ loading: false, message: "" });
     setFlatStatus({ loading: false, message: "" });
