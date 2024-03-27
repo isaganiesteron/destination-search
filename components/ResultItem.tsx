@@ -28,6 +28,7 @@ const ResultItem = ({
       : "NA"
     : "NA";
   const additionRatingInfo = result.rating.additional_info;
+  const stars = result.rating.stars;
   const rating = result.rating
     ? {
         score: result.rating.review_score,
@@ -111,6 +112,10 @@ const ResultItem = ({
               </div>
               <div className="flex flex-row justify-between ">
                 <div className="w-[70%]">
+                  <p>
+                    <span className="font-bold">Stars:</span>{" "}
+                    {stars ? stars : "Unrated"}
+                  </p>
                   <p>
                     <span className="font-bold">Rating:</span> {rating.score}
                   </p>
