@@ -94,8 +94,8 @@ const _fetchHotelPrices = async (
     }
   }
 
-  console.log("updatedRequestBody");
-  console.log(updatedRequestBody);
+  // console.log("updatedRequestBody");
+  // console.log(updatedRequestBody);
 
   const hotelSearch = await fetchApi(
     "/accommodations/search",
