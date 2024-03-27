@@ -31,6 +31,9 @@ const Page = () => {
   const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([]);
   const [currentDistricts, setCurrentDistricts] = useState<object[]>([]);
   const [selectedDistricts, setSelectedDistricts] = useState<number[]>([]);
+  const [selectedStars, setSelectedStars] = useState<number[]>([
+    0, 1, 2, 3, 4, 5,
+  ]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const [destination, setDestination] = useState<string>("");
@@ -95,18 +98,18 @@ const Page = () => {
     }
   };
   const fetchDistricts = async () => {
-    const destinationType =
-      currentDestination["type" as keyof typeof currentDestination];
-    const destinationId =
-      currentDestination["id" as keyof typeof currentDestination];
+    // const destinationType =
+    //   currentDestination["type" as keyof typeof currentDestination];
+    // const destinationId =
+    //   currentDestination["id" as keyof typeof currentDestination];
 
-    const fetchString = `/api/district/${destinationType}/${destinationId}`;
-    const response = await fetch(fetchString);
-    const responseJson = await response.json();
-    setCurrentDistricts(responseJson);
+    // const fetchString = `/api/district/${destinationType}/${destinationId}`;
+    // const response = await fetch(fetchString);
+    // const responseJson = await response.json();
+    // setCurrentDistricts(responseJson);
 
-    // // use mock data
-    // setCurrentDistricts(require("@/mock_data/districts").default);
+    // use mock data
+    setCurrentDistricts(require("@/mock_data/districts").default);
   };
 
   const fetchAccommodations = async () => {
@@ -148,114 +151,114 @@ const Page = () => {
       message: `Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
     });
 
-    let allAccommodationsFetched: any[] = [];
-    let morePages = true;
-    let nextPage = "";
+    // let allAccommodationsFetched: any[] = [];
+    // let morePages = true;
+    // let nextPage = "";
 
-    // fetch all pages
-    while (morePages) {
-      const currentDestinationType =
-        nextPage === "" ? destinationType : nextPage;
-      const currentDestinationId = nextPage === "" ? destinationId : "null";
-      const currentPriceRange =
-        nextPage === "" ? `${minPrice}_${maxPrice}` : "null";
+    // // fetch all pages
+    // while (morePages) {
+    //   const currentDestinationType =
+    //     nextPage === "" ? destinationType : nextPage;
+    //   const currentDestinationId = nextPage === "" ? destinationId : "null";
+    //   const currentPriceRange =
+    //     nextPage === "" ? `${minPrice}_${maxPrice}` : "null";
 
-      const response = await fetch(
-        `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`
-      ); // maxPrice is in USD
-      const responseJson = await response.json();
+    //   const response = await fetch(
+    //     `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`
+    //   ); // maxPrice is in USD
+    //   const responseJson = await response.json();
 
-      if (responseJson.data)
-        allAccommodationsFetched.push(...responseJson.data);
+    //   if (responseJson.data)
+    //     allAccommodationsFetched.push(...responseJson.data);
 
-      if (responseJson.next_page) {
-        // console.log("Fetching next page...");
-        nextPage = responseJson.next_page;
-        setStatus({
-          loading: true,
-          message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...`,
-        });
-        // pause for 1 second before next request
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } else {
-        // console.log("All pages fetched.");
-        nextPage = "";
-        morePages = false;
-      }
-    }
-    // filter results by saved facilities here
-    let allAccommodationsFetchedWithFacilities =
-      allAccommodationsFetched.filter((accommodation) => {
-        const facilitiesAreIncluded = accommodation.facilities.filter(
-          (x: any) => {
-            return settings.facilities.includes(x.id);
-          }
-        );
-        return facilitiesAreIncluded.length === settings.facilities.length;
-      });
+    //   if (responseJson.next_page) {
+    //     // console.log("Fetching next page...");
+    //     nextPage = responseJson.next_page;
+    //     setStatus({
+    //       loading: true,
+    //       message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...`,
+    //     });
+    //     // pause for 1 second before next request
+    //     await new Promise((resolve) => setTimeout(resolve, 1000));
+    //   } else {
+    //     // console.log("All pages fetched.");
+    //     nextPage = "";
+    //     morePages = false;
+    //   }
+    // }
+    // // filter results by saved facilities here
+    // let allAccommodationsFetchedWithFacilities =
+    //   allAccommodationsFetched.filter((accommodation) => {
+    //     const facilitiesAreIncluded = accommodation.facilities.filter(
+    //       (x: any) => {
+    //         return settings.facilities.includes(x.id);
+    //       }
+    //     );
+    //     return facilitiesAreIncluded.length === settings.facilities.length;
+    //   });
 
-    if (allAccommodationsFetchedWithFacilities.length === 0) {
-      setStatus({
-        loading: false,
-        message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
-      });
-      console.log("----Done Fetching Hotels----");
-      return;
-    }
+    // if (allAccommodationsFetchedWithFacilities.length === 0) {
+    //   setStatus({
+    //     loading: false,
+    //     message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
+    //   });
+    //   console.log("----Done Fetching Hotels----");
+    //   return;
+    // }
 
-    //add multiple prices here
-    let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-      allAccommodationsFetchedWithFacilities,
-      null
-    );
+    // //add multiple prices here
+    // let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+    //   allAccommodationsFetchedWithFacilities,
+    //   null
+    // );
 
-    // console.log("----Fetching Multiple Prices---");
-    const accommodationExtraPrices = [];
-    const monthsToFetchPrices = [
-      "February",
-      "May",
-      "July",
-      "October",
-      "December",
-    ];
-    let monthCounter = 0;
-    while (monthCounter < monthsToFetchPrices.length) {
-      // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
-      const checkin = moment()
-        .month(monthsToFetchPrices[monthCounter])
-        .startOf("month");
-      const checkout = moment()
-        .month(monthsToFetchPrices[monthCounter])
-        .startOf("month")
-        .add(1, "days");
+    // // console.log("----Fetching Multiple Prices---");
+    // const accommodationExtraPrices = [];
+    // const monthsToFetchPrices = [
+    //   "February",
+    //   "May",
+    //   "July",
+    //   "October",
+    //   "December",
+    // ];
+    // let monthCounter = 0;
+    // while (monthCounter < monthsToFetchPrices.length) {
+    //   // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
+    //   const checkin = moment()
+    //     .month(monthsToFetchPrices[monthCounter])
+    //     .startOf("month");
+    //   const checkout = moment()
+    //     .month(monthsToFetchPrices[monthCounter])
+    //     .startOf("month")
+    //     .add(1, "days");
 
-      // see first if allAccommodationsFetched is less than 100f
-      const allIdsParam = allAccommodationsFetched.map((x) => x.id).join(",");
-      const response = await fetch(
-        `/api/prices/${allIdsParam}/${checkin.format(
-          "YYYY-MM-DD"
-        )}/${checkout.format("YYYY-MM-DD")}`
-      );
-      const responseJson = await response.json();
-      accommodationExtraPrices.push(responseJson.data);
-      // console.log(
-      //   `Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`
-      // );
-      monthCounter++;
-    }
+    //   // see first if allAccommodationsFetched is less than 100f
+    //   const allIdsParam = allAccommodationsFetched.map((x) => x.id).join(",");
+    //   const response = await fetch(
+    //     `/api/prices/${allIdsParam}/${checkin.format(
+    //       "YYYY-MM-DD"
+    //     )}/${checkout.format("YYYY-MM-DD")}`
+    //   );
+    //   const responseJson = await response.json();
+    //   accommodationExtraPrices.push(responseJson.data);
+    //   // console.log(
+    //   //   `Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`
+    //   // );
+    //   monthCounter++;
+    // }
 
-    accommodationExtraPrices.forEach((month) => {
-      allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-        allAccommodationsFetchedWithMultiplePrice,
-        month
-      );
-    });
+    // accommodationExtraPrices.forEach((month) => {
+    //   allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+    //     allAccommodationsFetchedWithMultiplePrice,
+    //     month
+    //   );
+    // });
 
     fetchDistricts();
 
-    // // mock data
-    // const allAccommodationsFetchedWithMultiplePrice =
-    //   require("@/mock_data/accommodations").default;
+    // mock data
+    const allAccommodationsFetchedWithMultiplePrice =
+      require("@/mock_data/accommodations").default;
 
     // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
 
@@ -334,7 +337,7 @@ const Page = () => {
     // Add rating info (just extra data in the the rating object)
     const accommodationsWithRating = addRatingInfo(specificAccommodations);
 
-    // Filter by selected districts HERE
+    // Filter by selected districts
     const accommodationsFilteredByDistrict = accommodationsWithRating.filter(
       (x: { location: { districts: number[] } }) => {
         if (selectedDistricts.length === 0) return false;
@@ -344,13 +347,21 @@ const Page = () => {
       }
     );
 
+    // Filter by selected stars
+    const accommodationsFilteredByStars =
+      accommodationsFilteredByDistrict.filter(
+        (x: { rating: { stars: number } }) => {
+          if (x.rating.stars === null) return selectedStars.includes(0);
+          return selectedStars.includes(x.rating.stars);
+        }
+      );
+
     // Filter hotels by review (This might not be necessary because we are already filtering by review in the API call)
     // TODO: try and not include this part
-    const accommodationsFilteredByReview =
-      accommodationsFilteredByDistrict.filter(
-        (x: { rating: { review_score: number } }) =>
-          x.rating?.review_score >= settings.review
-      );
+    const accommodationsFilteredByReview = accommodationsFilteredByStars.filter(
+      (x: { rating: { review_score: number } }) =>
+        x.rating?.review_score >= settings.review
+    );
 
     // Sort based on review score
     if (settings.consider_review_quantity) {
@@ -517,7 +528,7 @@ const Page = () => {
     const prepareFlats = prepareResults(allFetchedAccommodations, "flats");
     setCurrentAllHotels(preparedHotels || []);
     setCurrentAllFlats(prepareFlats || []);
-  }, [selectedDistricts]);
+  }, [selectedDistricts, selectedStars]);
 
   const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
     setDestination(event.target.value);
@@ -610,13 +621,106 @@ const Page = () => {
           )}
 
           {currentDistricts.length > 0 && (
-            <div className="border border-black rounded-md w-full p-2">
-              <p className="font-bold text-sm">Disctricts</p>
+            <div className="border border-black rounded-md w-full p-2 mt-2">
+              <p className="font-bold text-sm">Filter by District</p>
               <Districts
                 currentDistricts={currentDistricts}
                 selectedDistricts={selectedDistricts}
                 setSelectedDistricts={setSelectedDistricts}
               />
+            </div>
+          )}
+
+          {allFetchedAccommodations.length > 0 && (
+            <div className="border border-black rounded-md w-full p-2 mt-2">
+              <p className="font-bold text-sm">Filter by Stars</p>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStars.includes(1)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStars([...selectedStars, 1]);
+                      } else {
+                        setSelectedStars(selectedStars.filter((x) => x !== 1));
+                      }
+                    }}
+                  />
+                  <p className="text-sm ml-1">1 Star</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStars.includes(2)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStars([...selectedStars, 2]);
+                      } else {
+                        setSelectedStars(selectedStars.filter((x) => x !== 2));
+                      }
+                    }}
+                  />
+                  <p className="text-sm ml-1">2 Stars</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStars.includes(3)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStars([...selectedStars, 3]);
+                      } else {
+                        setSelectedStars(selectedStars.filter((x) => x !== 3));
+                      }
+                    }}
+                  />
+                  <p className="text-sm ml-1">3 Stars</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStars.includes(4)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStars([...selectedStars, 4]);
+                      } else {
+                        setSelectedStars(selectedStars.filter((x) => x !== 4));
+                      }
+                    }}
+                  />
+                  <p className="text-sm ml-1">4 Stars</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStars.includes(5)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStars([...selectedStars, 5]);
+                      } else {
+                        setSelectedStars(selectedStars.filter((x) => x !== 5));
+                      }
+                    }}
+                  />
+                  <p className="text-sm ml-1">5 Stars</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedStars.includes(0)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedStars([...selectedStars, 0]);
+                      } else {
+                        setSelectedStars(selectedStars.filter((x) => x !== 0));
+                      }
+                    }}
+                  />
+                  <p className="text-sm ml-1">Unrated</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
