@@ -615,6 +615,7 @@ const Page = () => {
                         type={dest_type}
                         id={dest_id}
                         suggestionClick={setCurrentDestination}
+                        setDestination={setDestination}
                       />
                     );
                   })}
