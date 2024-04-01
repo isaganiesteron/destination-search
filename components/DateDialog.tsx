@@ -36,6 +36,16 @@ const DateDialog = ({
   const [currentMonthYear, setCurrentMonthYear] = useState<string>(
     dateDialogValues.monthYear
   );
+  const [currentCheckin, setCurrentCheckin] = useState<string>("");
+  const [checkinError, setCheckinError] = useState<object>({
+    status: false,
+    message: "",
+  });
+  const [currentCheckout, setCurrentCheckout] = useState<string>("");
+  const [checkoutError, setCheckoutError] = useState<object>({
+    status: false,
+    message: "",
+  });
 
   useEffect(() => {
     let currentMonthIndex = moment().month(); // get the current month as a zero-based index
@@ -76,14 +86,121 @@ const DateDialog = ({
         checkin: curCheckin.format("YYYY-MM-DD"),
         checkout: curCheckout.format("YYYY-MM-DD"),
       });
-    }
 
-    // setCurrentDates({ checkin: "2022-01-01", checkout: "2022-01-02" });
+      setCurrentCheckin(curCheckin.format("MM/DD/YYYY"));
+      setCurrentCheckout(curCheckout.format("MM/DD/YYYY"));
+    }
   }, [currentDuration, currentMonthYear]);
 
   return (
     <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
       <div className="flex flex-col">
+        <div className="flex flex-row gap-4 mb-4">
+          <div className="flex flex-col">
+            <p
+              className={`font-bold text-md ${
+                checkinError["status" as keyof typeof checkinError] &&
+                "text-red-500"
+              }`}
+            >
+              Check In
+            </p>
+            <input
+              type="text"
+              value={currentCheckin}
+              className={`${
+                checkinError["status" as keyof typeof checkinError]
+                  ? "border-2 border-red-500 focus:border-2 focus:border-red-500 focus:outline-none"
+                  : "border border-black"
+              } rounded-md p-[5.5px] w-min`}
+              onChange={(e) => {
+                const date = moment(e.target.value, "MM/DD/YYYY", true);
+                setCurrentCheckin(e.target.value);
+                if (!date.isValid()) {
+                  setCheckinError({
+                    status: !date.isValid(),
+                    message: "Invalid date",
+                  });
+                } else {
+                  // check if checkin is before checkout
+                  const checkout = moment(currentCheckout, "MM/DD/YYYY", true);
+                  if (
+                    checkout.isValid() &&
+                    (date.isAfter(checkout) || date.isSame(checkout))
+                  ) {
+                    setCheckinError({
+                      status: true,
+                      message:
+                        "Checkin date is after or the same as checkout date",
+                    });
+                  } else {
+                    setCheckinError({
+                      status: false,
+                      message: "",
+                    });
+                  }
+                }
+              }}
+            />
+            {checkinError["status" as keyof typeof checkinError] && (
+              <p className="text-sm text-red-500 w-48">
+                {checkinError["message" as keyof typeof checkinError]}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col">
+            <p
+              className={`font-bold text-md ${
+                checkoutError["status" as keyof typeof checkoutError] &&
+                "text-red-500"
+              }`}
+            >
+              Check Out
+            </p>
+            <input
+              type="text"
+              value={currentCheckout}
+              className={`${
+                checkoutError["status" as keyof typeof checkoutError]
+                  ? "border-2 border-red-500 focus:border-2 focus:border-red-500 focus:outline-none"
+                  : "border border-black"
+              } rounded-md p-[5.5px] w-min`}
+              onChange={(e) => {
+                const date = moment(e.target.value, "MM/DD/YYYY", true);
+                setCurrentCheckout(e.target.value);
+                if (!date.isValid()) {
+                  setCheckoutError({
+                    status: !date.isValid(),
+                    message: "Invalid date",
+                  });
+                } else {
+                  // check if checkout is after checkout
+                  const checkin = moment(currentCheckin, "MM/DD/YYYY", true);
+                  if (
+                    checkin.isValid() &&
+                    (date.isBefore(checkin) || date.isSame(checkin))
+                  ) {
+                    setCheckoutError({
+                      status: true,
+                      message:
+                        "Checkout date is before or the same as checkin date",
+                    });
+                  } else {
+                    setCheckoutError({
+                      status: false,
+                      message: "",
+                    });
+                  }
+                }
+              }}
+            />
+            {checkoutError["status" as keyof typeof checkoutError] && (
+              <p className="text-sm text-red-500 w-48">
+                {checkoutError["message" as keyof typeof checkoutError]}
+              </p>
+            )}
+          </div>
+        </div>
         <p className="font-bold text-md">How long do you want to stay?</p>
         <div className="flex flex-row">
           <div className="flex flex-row gap-2 px-4 p-1">
