@@ -47,6 +47,72 @@ const DateDialog = ({
     message: "",
   });
 
+  const _handleCheckinValidation = (value: string) => {
+    const date = moment(value, "MM/DD/YYYY", true);
+    setCurrentCheckin(value);
+    if (!date.isValid()) {
+      setCheckinError({
+        status: !date.isValid(),
+        message: "Invalid date",
+      });
+    } else if (date.startOf("day").isBefore(moment().startOf("day"))) {
+      setCheckinError({
+        status: true,
+        message: "Checkin date is in the past",
+      });
+    } else {
+      // check if checkin is before checkout
+      const checkout = moment(currentCheckout, "MM/DD/YYYY", true);
+      if (
+        checkout.isValid() &&
+        (date.isAfter(checkout) || date.isSame(checkout))
+      ) {
+        setCheckinError({
+          status: true,
+          message: "Checkin date is after or the same as checkout date",
+        });
+      } else {
+        setCheckinError({
+          status: false,
+          message: "",
+        });
+      }
+    }
+  };
+
+  const _handleCheckoutValidation = (value: string) => {
+    const date = moment(value, "MM/DD/YYYY", true);
+    setCurrentCheckout(value);
+    if (!date.isValid()) {
+      setCheckoutError({
+        status: !date.isValid(),
+        message: "Invalid date",
+      });
+    } else if (date.startOf("day").isSameOrBefore(moment().startOf("day"))) {
+      setCheckinError({
+        status: true,
+        message: "Checkout date is today or in the past",
+      });
+    } else {
+      // check if checkout is after checkout
+      const checkin = moment(currentCheckin, "MM/DD/YYYY", true);
+      if (
+        checkin.isValid() &&
+        (date.isBefore(checkin) || date.isSame(checkin))
+      ) {
+        setCheckoutError({
+          status: true,
+          message: "Checkout date is before or the same as checkin date",
+        });
+      } else {
+        setCheckoutError({
+          status: false,
+          message: "",
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     let currentMonthIndex = moment().month(); // get the current month as a zero-based index
     setDateOptions([
@@ -63,13 +129,14 @@ const DateDialog = ({
     setDialogValues({ duration: currentDuration, monthYear: currentMonthYear });
     if (currentDuration !== "" && currentMonthYear !== "") {
       // Day is default
-      let curCheckin = moment(currentMonthYear).startOf("month");
-      let curCheckout = moment(currentMonthYear).add(1, "days");
+      let curCheckin = moment(currentMonthYear, "MMMYYYY").startOf("month");
+      if (curCheckin.isBefore(moment())) curCheckin = moment();
+      let curCheckout = moment(curCheckin).add(1, "day");
 
       if (currentDuration === "week") {
-        curCheckout = moment(currentMonthYear).add(7, "days");
+        curCheckout = moment(curCheckin).add(7, "days");
       } else if (currentDuration === "month") {
-        curCheckout = moment(currentMonthYear).add(1, "month");
+        curCheckout = moment(curCheckin).add(1, "month");
       } else if (currentDuration === "weekend") {
         const dayOfWeek = curCheckin.day();
         if (dayOfWeek === 0) {
@@ -81,7 +148,6 @@ const DateDialog = ({
         }
         curCheckout = moment(curCheckin).add(1, "day");
       }
-
       setCurrentDates({
         checkin: curCheckin.format("YYYY-MM-DD"),
         checkout: curCheckout.format("YYYY-MM-DD"),
@@ -113,34 +179,7 @@ const DateDialog = ({
                   ? "border-2 border-red-500 focus:border-2 focus:border-red-500 focus:outline-none"
                   : "border border-black"
               } rounded-md p-[5.5px] w-min`}
-              onChange={(e) => {
-                const date = moment(e.target.value, "MM/DD/YYYY", true);
-                setCurrentCheckin(e.target.value);
-                if (!date.isValid()) {
-                  setCheckinError({
-                    status: !date.isValid(),
-                    message: "Invalid date",
-                  });
-                } else {
-                  // check if checkin is before checkout
-                  const checkout = moment(currentCheckout, "MM/DD/YYYY", true);
-                  if (
-                    checkout.isValid() &&
-                    (date.isAfter(checkout) || date.isSame(checkout))
-                  ) {
-                    setCheckinError({
-                      status: true,
-                      message:
-                        "Checkin date is after or the same as checkout date",
-                    });
-                  } else {
-                    setCheckinError({
-                      status: false,
-                      message: "",
-                    });
-                  }
-                }
-              }}
+              onChange={(e) => _handleCheckinValidation(e.target.value)}
             />
             {checkinError["status" as keyof typeof checkinError] && (
               <p className="text-sm text-red-500 w-48">
@@ -165,34 +204,7 @@ const DateDialog = ({
                   ? "border-2 border-red-500 focus:border-2 focus:border-red-500 focus:outline-none"
                   : "border border-black"
               } rounded-md p-[5.5px] w-min`}
-              onChange={(e) => {
-                const date = moment(e.target.value, "MM/DD/YYYY", true);
-                setCurrentCheckout(e.target.value);
-                if (!date.isValid()) {
-                  setCheckoutError({
-                    status: !date.isValid(),
-                    message: "Invalid date",
-                  });
-                } else {
-                  // check if checkout is after checkout
-                  const checkin = moment(currentCheckin, "MM/DD/YYYY", true);
-                  if (
-                    checkin.isValid() &&
-                    (date.isBefore(checkin) || date.isSame(checkin))
-                  ) {
-                    setCheckoutError({
-                      status: true,
-                      message:
-                        "Checkout date is before or the same as checkin date",
-                    });
-                  } else {
-                    setCheckoutError({
-                      status: false,
-                      message: "",
-                    });
-                  }
-                }
-              }}
+              onChange={(e) => _handleCheckoutValidation(e.target.value)}
             />
             {checkoutError["status" as keyof typeof checkoutError] && (
               <p className="text-sm text-red-500 w-48">
@@ -286,7 +298,6 @@ const DateDialog = ({
         >
           Close
         </button>
-        <button className="p-1 px-4  hover:text-blue-400">Select Dates</button>
       </div>
     </div>
   );

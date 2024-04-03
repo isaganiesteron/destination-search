@@ -131,11 +131,11 @@ const Page = () => {
     const checkin =
       dateCheckin === "null"
         ? moment().format("YYYY-MM-DD")
-        : moment(dateCheckin).format("YYYY-MM-DD");
+        : moment(dateCheckin, "YYYY-MM-DD").format("YYYY-MM-DD");
     const checkout =
       dateCheckout === "null"
         ? moment().add(1, "days").format("YYYY-MM-DD")
-        : moment(dateCheckout).format("YYYY-MM-DD");
+        : moment(dateCheckout, "YYYY-MM-DD").format("YYYY-MM-DD");
 
     if (destinationType === "null" || destinationId === "null") return;
 
@@ -519,8 +519,9 @@ const Page = () => {
       );
     } else {
       setDisplayedDates(
-        `${moment(curCheckin).format("MM/DD/YYYY")} to ${moment(
-          curCheckout
+        `${moment(curCheckin, "YYYY-MM-DD").format("MM/DD/YYYY")} to ${moment(
+          curCheckout,
+          "YYYY-MM-DD"
         ).format("MM/DD/YYYY")}`
       );
     }
