@@ -72,6 +72,12 @@ const DateDialog = ({
           message: "Checkin date is after or the same as checkout date",
         });
       } else {
+        // checkin is valid so pass it to setCurrentDates
+        setCurrentDates({
+          checkin: date.format("YYYY-MM-DD"),
+          checkout: moment(currentCheckout, "MM/DD/YYYY").format("YYYY-MM-DD"),
+        });
+
         setCheckinError({
           status: false,
           message: "",
@@ -105,6 +111,12 @@ const DateDialog = ({
           message: "Checkout date is before or the same as checkin date",
         });
       } else {
+        // checkout is valid so pass it to setCurrentDates
+        setCurrentDates({
+          checkin: moment(currentCheckin, "MM/DD/YYYY").format("YYYY-MM-DD"),
+          checkout: date.format("YYYY-MM-DD"),
+        });
+
         setCheckoutError({
           status: false,
           message: "",
