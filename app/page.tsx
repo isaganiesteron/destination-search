@@ -27,6 +27,9 @@ const Page = () => {
   const [allFetchedAccommodations, setAllFetchedAccommodations] = useState<
     any[]
   >([]);
+  const [allFetchedGoogleHotels, setAllFetchedGoogleHotels] = useState<
+    object[]
+  >([]);
   const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([]);
   const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([]);
   const [currentDistricts, setCurrentDistricts] = useState<object[]>([]);
@@ -112,6 +115,74 @@ const Page = () => {
     // setCurrentDistricts(require("@/mock_data/districts").default);
   };
 
+  const fetchGoogleAccommodations = async () => {
+    const destinationLabel: string =
+      currentDestination["label" as keyof typeof currentDestination];
+    const city = destinationLabel ? destinationLabel.split(",")[0] : "null";
+    if (city === "null") return;
+
+    // 1. use api/autocomplete to get the place_id
+    const predictionsRaw: any = await fetch(
+      `/api/autocomplete/(cities)/${city}/null`
+    );
+    const predictionsData = await predictionsRaw.json();
+
+    if (predictionsData.predictions) {
+      const placeId =
+        predictionsData.predictions.length > 0
+          ? predictionsData.predictions[0].place_id
+          : "null";
+
+      // 2. use api/detail to get the location of the place_id
+      const detailRaw: any = await fetch(`/api/detail/${placeId}`);
+      const detailData = await detailRaw.json();
+
+      if (detailData.location) {
+        const hotelLocation = detailData.location;
+
+        const hotelLatLong = `${hotelLocation.latitude},${hotelLocation.longitude}`;
+
+        // 3. use api/nearby to get the hotels near the location
+
+        let fetchedHotels: any[] = [];
+        let nextPageToken = null;
+        let fetchingDone = false;
+
+        while (!fetchingDone) {
+          const response: any = await fetch(
+            nextPageToken
+              ? `/api/nearby/${nextPageToken}/null`
+              : `/api/nearby/null/${hotelLatLong}`
+          );
+          const data = await response.json();
+
+          if (data) {
+            if (data.next_page_token) {
+              nextPageToken = data.next_page_token;
+              console.log("Pausing for 2 seconds"); // Without a pause the next fetch will return INVALID_REQUEST
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            } else {
+              fetchingDone = true;
+            }
+            fetchedHotels = [...fetchedHotels, ...data.results];
+          } else {
+            console.log("ERROR: no places found");
+            console.log(data);
+            fetchingDone = true;
+          }
+        }
+        setAllFetchedGoogleHotels(fetchedHotels);
+        console.log("Done Fetching Google Hotel Data");
+      } else {
+        console.log("Hotel Location not found.");
+        return;
+      }
+    } else {
+      console.log("Hotel Predictions not found.");
+      return;
+    }
+  };
+
   const fetchAccommodations = async () => {
     const tierSettings = settings[settings.tier as keyof typeof settings];
     const minPrice = tierSettings["min_price" as keyof typeof tierSettings];
@@ -124,7 +195,6 @@ const Page = () => {
     const destinationLabel =
       currentDestination["label" as keyof typeof currentDestination];
 
-    ``;
     const dateCheckin = currentDates["checkin" as keyof typeof currentDates];
     const dateCheckout = currentDates["checkout" as keyof typeof currentDates];
 
@@ -505,6 +575,7 @@ const Page = () => {
 
   useEffect(() => {
     if (showSettings) setShowSettings(false);
+    fetchGoogleAccommodations();
     fetchAccommodations();
   }, [currentDestination, settings]);
 
@@ -533,6 +604,13 @@ const Page = () => {
     setCurrentAllHotels(preparedHotels || []);
     setCurrentAllFlats(prepareFlats || []);
   }, [selectedDistricts, selectedStars]);
+
+  useEffect(() => {
+    if (allFetchedGoogleHotels.length > 0) {
+      console.log("allFetchedGoogleHotels");
+      console.log(allFetchedGoogleHotels);
+    }
+  }, [allFetchedGoogleHotels]);
 
   const searchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
     setDestination(event.target.value);
