@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Booking.com Hotel Finder
 
-## Getting Started
+Booking.com Hotel Finder is an app designed to simplify the process of finding accommodations for your travel needs. Utilizing the Booking.com API, users can easily search for accommodations in their desired destination and customize their search based on various criteria.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Auto-suggest City Search**: Users can type in a destination, and the app will provide a dropdown of cities that match the input, making it easy to select the desired location.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Date Filtering**: Users can filter their search based on specific dates or choose from predefined options such as Day, Weekend, Week, or Month. Additionally, users can select a specific month for their travel.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Price Tier Filtering**: Accommodation search results can be filtered based on three price tiers: Budget, Midrange, and Luxury.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- **Settings Menu**: Users can further refine their search criteria through the settings menu, where they can set parameters such as Minimum Review Score, Price Tier, Hotel Types, and Hotel Facilities.
 
-## Learn More
+- **Accommodation Listings**: Accommodations matching the search criteria are listed out, including details such as Name, Star Rating, Number of Reviews, Districts, Facilities, Prices, and a link to the accommodation on Booking.com. Each listing also includes a picture of the accommodation.
 
-To learn more about Next.js, take a look at the following resources:
+- **Feature in Development**: A feature using the OpenAI API allows users to "Regenerate Description" for accommodations, although this feature is still under development.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Technologies Used
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- **Next.js**: The app is built using Next.js, providing server-side rendering and a great development experience.
 
-## Deploy on Vercel
+- **Typescript**: Typescript is used for static typing and enhanced code quality.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Tailwind CSS**: Tailwind CSS is used for styling, allowing for rapid development and customization.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- **Next-Auth**: Next-Auth library is used for authentication, with Google as the authentication provider.
+
+## Requirements
+
+To use the app, you'll need API keys from Booking.com and OpenAI.
+
+## Installation
+
+1. Clone the repository.
+2. Install dependencies using `npm install`.
+3. Set up environment variables for API keys.
+4. Run the development server using `npm run dev`.
+
+## Contributing
+
+Contributions are welcome! If you have any suggestions or want to contribute to the development of Booking.com Hotel Finder, please feel free to submit a pull request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
