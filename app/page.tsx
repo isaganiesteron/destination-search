@@ -171,29 +171,75 @@ const Page = () => {
             fetchingDone = true;
           }
         }
+
         setAllFetchedGoogleHotels(fetchedHotels);
         console.log("Done Fetching Google Hotel Data");
+        return fetchedHotels;
       } else {
         console.log("Hotel Location not found.");
-        return;
+        return [];
       }
     } else {
       console.log("Hotel Predictions not found.");
-      return;
+      return [];
     }
   };
 
+  const commonAccommodations = async (
+    googleHotels: any[] | undefined,
+    bookingHotels: any[] | undefined
+  ) => {
+    if (!googleHotels || !bookingHotels) return;
+
+
+    // filter through bookingHotels and return only the ones that are in googleHotels
+
+
+    const commonHotels = bookingHotels.filter((bookingHotel) => {
+      const bookingHotelName = bookingHotel.name["en-gb"];
+      return googleHotels.some((googleHotel) => {
+      const googleHotelName = googleHotel.name;
+      return googleHotelName === bookingHotelName;
+      });
+    });
+
+
+
+    console.log("Google Hotels: " + googleHotels.length);
+    console.log("Booking Hotels: " + bookingHotels.length);
+    console.log("Common Hotels: " + commonHotels.length);
+
+    console.log(commonHotels);
+
+    return commonHotels;
+  };
+
   const fetchAccommodations = async () => {
-    const tierSettings = settings[settings.tier as keyof typeof settings];
-    const minPrice = tierSettings["min_price" as keyof typeof tierSettings];
-    const maxPrice = tierSettings["max_price" as keyof typeof tierSettings];
-    const review = settings.review;
+    // first check if currentDestination is set, if not then just return
     const destinationType =
       currentDestination["type" as keyof typeof currentDestination];
     const destinationId =
       currentDestination["id" as keyof typeof currentDestination];
     const destinationLabel =
       currentDestination["label" as keyof typeof currentDestination];
+
+    if (destinationType === "null" || destinationId === "null") return;
+
+    // reset all values
+    setSuggestions([]);
+    setAllFetchedAccommodations([]);
+    setCurrentAllHotels([]);
+    setCurrentDistricts([]);
+    setSelectedDistricts([]);
+    setSelectedStars([0, 1, 2, 3, 4, 5]);
+    setHotelStatus({ loading: false, message: "" });
+    setFlatStatus({ loading: false, message: "" });
+
+    // decalre variables
+    const tierSettings = settings[settings.tier as keyof typeof settings];
+    const minPrice = tierSettings["min_price" as keyof typeof tierSettings];
+    const maxPrice = tierSettings["max_price" as keyof typeof tierSettings];
+    const review = settings.review;
 
     const dateCheckin = currentDates["checkin" as keyof typeof currentDates];
     const dateCheckout = currentDates["checkout" as keyof typeof currentDates];
@@ -207,26 +253,26 @@ const Page = () => {
         ? moment().add(1, "days").format("YYYY-MM-DD")
         : moment(dateCheckout, "YYYY-MM-DD").format("YYYY-MM-DD");
 
-    if (destinationType === "null" || destinationId === "null") return;
-
-    setSuggestions([]);
-    setAllFetchedAccommodations([]);
-    setCurrentAllHotels([]);
-    setCurrentDistricts([]);
-    setSelectedDistricts([]);
-    setSelectedStars([0, 1, 2, 3, 4, 5]);
-    setHotelStatus({ loading: false, message: "" });
-    setFlatStatus({ loading: false, message: "" });
+    // fetch all hotels in Google Maps API
     setStatus({
       loading: true,
-      message: `Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
+      message: `Google.com: Fetching all hotels in ${destinationLabel}`,
     });
 
+    const googleHotels = await fetchGoogleAccommodations();
+
+    setStatus({
+      loading: true,
+      message: `Google.com: Fetched all hotels in ${allFetchedGoogleHotels.length}
+
+      Booking.com: Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
+    });
+
+    // fetch all accommodations in Booking.com API
     let allAccommodationsFetched: any[] = [];
     let morePages = true;
     let nextPage = "";
 
-    // fetch all pages
     while (morePages) {
       const currentDestinationType =
         nextPage === "" ? destinationType : nextPage;
@@ -252,30 +298,40 @@ const Page = () => {
         // pause for 1 second before next request
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } else {
-        // console.log("All pages fetched.");
         nextPage = "";
         morePages = false;
       }
     }
-    // filter results by saved facilities here
-    let allAccommodationsFetchedWithFacilities =
-      allAccommodationsFetched.filter((accommodation) => {
-        const facilitiesAreIncluded = accommodation.facilities.filter(
-          (x: any) => {
-            return settings.facilities.includes(x.id);
-          }
-        );
-        return facilitiesAreIncluded.length === settings.facilities.length;
-      });
+    // Intersect all accommodations with google accommodations here
 
-    if (allAccommodationsFetchedWithFacilities.length === 0) {
-      setStatus({
-        loading: false,
-        message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
-      });
-      console.log("----Done Fetching Hotels----");
-      return;
-    }
+    console.log(allAccommodationsFetched);
+
+    const allCommonAccommodations: any = await commonAccommodations(
+      googleHotels,
+      allAccommodationsFetched
+    );
+
+    // ***DEV PURPOSES: DONT FILTER BASED ON FACITLITIES
+    const allAccommodationsFetchedWithFacilities = allCommonAccommodations;
+    // // filter results by saved facilities here
+    // const allAccommodationsFetchedWithFacilities =
+    //   allAccommodationsFetched.filter((accommodation) => {
+    //     const facilitiesAreIncluded = accommodation.facilities.filter(
+    //       (x: any) => {
+    //         return settings.facilities.includes(x.id);
+    //       }
+    //     );
+    //     return facilitiesAreIncluded.length === settings.facilities.length;
+    //   });
+
+    // if (allAccommodationsFetchedWithFacilities.length === 0) {
+    //   setStatus({
+    //     loading: false,
+    //     message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
+    //   });
+    //   console.log("----Done Fetching Hotels----");
+    //   return;
+    // }
 
     //add multiple prices here
     let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
@@ -283,47 +339,47 @@ const Page = () => {
       null
     );
 
-    // console.log("----Fetching Multiple Prices---");
-    const accommodationExtraPrices = [];
-    const monthsToFetchPrices = [
-      "February",
-      "May",
-      "July",
-      "October",
-      "December",
-    ];
-    let monthCounter = 0;
-    while (monthCounter < monthsToFetchPrices.length) {
-      // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
-      const checkin = moment()
-        .month(monthsToFetchPrices[monthCounter])
-        .startOf("month");
-      const checkout = moment()
-        .month(monthsToFetchPrices[monthCounter])
-        .startOf("month")
-        .add(1, "days");
+    // ***DEV PURPOSES: DONT FETCH PRICES
+    // const accommodationExtraPrices = [];
+    // const monthsToFetchPrices = [
+    //   "February",
+    //   "May",
+    //   "July",
+    //   "October",
+    //   "December",
+    // ];
+    // let monthCounter = 0;
+    // while (monthCounter < monthsToFetchPrices.length) {
+    //   // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
+    //   const checkin = moment()
+    //     .month(monthsToFetchPrices[monthCounter])
+    //     .startOf("month");
+    //   const checkout = moment()
+    //     .month(monthsToFetchPrices[monthCounter])
+    //     .startOf("month")
+    //     .add(1, "days");
 
-      // see first if allAccommodationsFetched is less than 100f
-      const allIdsParam = allAccommodationsFetched.map((x) => x.id).join(",");
-      const response = await fetch(
-        `/api/prices/${allIdsParam}/${checkin.format(
-          "YYYY-MM-DD"
-        )}/${checkout.format("YYYY-MM-DD")}`
-      );
-      const responseJson = await response.json();
-      accommodationExtraPrices.push(responseJson.data);
-      // console.log(
-      //   `Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`
-      // );
-      monthCounter++;
-    }
+    //   // see first if allAccommodationsFetched is less than 100f
+    //   const allIdsParam = allAccommodationsFetched.map((x) => x.id).join(",");
+    //   const response = await fetch(
+    //     `/api/prices/${allIdsParam}/${checkin.format(
+    //       "YYYY-MM-DD"
+    //     )}/${checkout.format("YYYY-MM-DD")}`
+    //   );
+    //   const responseJson = await response.json();
+    //   accommodationExtraPrices.push(responseJson.data);
+    //   // console.log(
+    //   //   `Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`
+    //   // );
+    //   monthCounter++;
+    // }
 
-    accommodationExtraPrices.forEach((month) => {
-      allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-        allAccommodationsFetchedWithMultiplePrice,
-        month
-      );
-    });
+    // accommodationExtraPrices.forEach((month) => {
+    //   allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+    //     allAccommodationsFetchedWithMultiplePrice,
+    //     month
+    //   );
+    // });
 
     fetchDistricts();
 
@@ -575,7 +631,7 @@ const Page = () => {
 
   useEffect(() => {
     if (showSettings) setShowSettings(false);
-    fetchGoogleAccommodations();
+
     fetchAccommodations();
   }, [currentDestination, settings]);
 
