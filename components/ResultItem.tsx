@@ -1,32 +1,29 @@
-import React, { useState } from "react";
-import Image from "next/image";
-import Spinner from "@/components/Spinner";
-import {
-  accommodationTypes,
-  accommodationFacilities,
-} from "@/constants/accommodationtypes";
-import moment from "moment";
+import React, { useState } from 'react';
+import Image from 'next/image';
+import Spinner from '@/components/Spinner';
+import { accommodationTypes, accommodationFacilities } from '@/constants/accommodationtypes';
+import moment from 'moment';
 
 const ResultItem = ({
   index,
   result,
   districts,
+  common,
 }: {
   index: number;
   result: any;
   districts: object[];
+  common: boolean;
 }) => {
-  const name = result.name
-    ? result.name["en-gb" as keyof typeof result.name]
-    : "NA";
+  const name = result.name ? result.name['en-gb' as keyof typeof result.name] : 'NA';
   const currDescription = result.description
-    ? result.description.text["en-gb" as keyof typeof result.description.text]
-    : "NA";
+    ? result.description.text['en-gb' as keyof typeof result.description.text]
+    : 'NA';
   const currPhoto = result.photos
     ? result.photos.length > 0
       ? result.photos[0].url.thumbnail
-      : "NA"
-    : "NA";
+      : 'NA'
+    : 'NA';
   const additionRatingInfo = result.rating.additional_info;
   const stars = result.rating.stars;
   const rating = result.rating
@@ -58,8 +55,7 @@ const ResultItem = ({
       })
     : [];
 
-  const [currentDescription, setCurrentDescription] =
-    useState<string>(currDescription);
+  const [currentDescription, setCurrentDescription] = useState<string>(currDescription);
   const [descLoading, setDescLoading] = useState<boolean>(false);
 
   let total: number | undefined,
@@ -67,9 +63,9 @@ const ResultItem = ({
     currency: string | undefined = undefined;
 
   if (price !== null && price !== undefined) {
-    total = price["total" as keyof typeof price];
-    book = price["book" as keyof typeof price];
-    currency = price["currency" as keyof typeof price];
+    total = price['total' as keyof typeof price];
+    book = price['book' as keyof typeof price];
+    currency = price['currency' as keyof typeof price];
   }
 
   const _regenerateHandler = () => {
@@ -77,35 +73,33 @@ const ResultItem = ({
     // fetch genereated description from openAi
     setTimeout(() => {
       setDescLoading(false);
-      setCurrentDescription(
-        `[Regenerated with openAI in developement]   ${currentDescription}`
-      );
+      setCurrentDescription(`[Regenerated with openAI in developement]   ${currentDescription}`);
     }, 1000);
-    setCurrentDescription("");
+    setCurrentDescription('');
   };
 
   return (
     <>
-      <div className="border border-black rounded-md flex flex-col w-full mt-2">
+      <div
+        className={`border${common ? '-4' : ''} ${
+          common ? 'border-red-500' : 'border-black'
+        } rounded-md flex flex-col w-full mt-2`}
+      >
         <div className="grid grid-cols-6 gap-1">
           <div className="p-2 flex items-center align-middle">
-            <Image
-              src={currPhoto}
-              width={200}
-              height={200}
-              alt="Image of hotel"
-            />
+            <Image src={currPhoto} width={200} height={200} alt="Image of hotel" />
           </div>
           <div className="p-2 col-span-5 items-center">
             <div className="flex flex-col">
+              {common && <small>(Found both in Booking.com and Google Maps)</small>}
               <div className="flex flex-row">
-                <h1 className="font-bold text-lg">{`${
-                  index + 1
-                }: ${name} (${accommodationType})`}</h1>
+                <h1 className="font-bold text-lg">
+                  {`${index + 1}: ${name} (${accommodationType})`}
+                </h1>
                 <button
                   type="button"
                   className="pl-2 text-[12px] text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
-                  onClick={() => window.open(result.url, "_blank")}
+                  onClick={() => window.open(result.url, '_blank')}
                 >
                   {`Link to ${accommodationType}`}
                 </button>
@@ -113,25 +107,19 @@ const ResultItem = ({
               <div className="flex flex-row justify-between ">
                 <div className="w-[70%]">
                   <p>
-                    <span className="font-bold">Stars:</span>{" "}
-                    {stars ? stars : "Unrated"}
+                    <span className="font-bold">Stars:</span> {stars ? stars : 'Unrated'}
                   </p>
                   <p>
                     <span className="font-bold">Rating:</span> {rating.score}
                   </p>
                   <p>
                     <span className="font-bold">
-                      Adjusted Rating{" "}
-                      <span className="text-xs">
-                        (considering # of reviews)
-                      </span>
-                      :
+                      Adjusted Rating <span className="text-xs">(considering # of reviews)</span>:
                     </span>
                     {rating.average.toFixed(2)}
                   </p>
                   <p>
-                    <span className="font-bold">Number of Reviews:</span>{" "}
-                    {rating.reviews}
+                    <span className="font-bold">Number of Reviews:</span> {rating.reviews}
                   </p>
                 </div>
                 <div className="w-[30%]">
@@ -141,11 +129,9 @@ const ResultItem = ({
                       const curCheckin = moment(x.checkin);
                       if (x.price.total)
                         return (
-                          <p key={i}>{`${curCheckin.format(
-                            "MMMM"
-                          )} ${curCheckin.format("YYYY")}: ${x.price.total}${
-                            x.currency
-                          }`}</p>
+                          <p key={i}>{`${curCheckin.format('MMMM')} ${curCheckin.format('YYYY')}: ${
+                            x.price.total
+                          }${x.currency}`}</p>
                         );
                       else return null;
                     })}
@@ -155,21 +141,17 @@ const ResultItem = ({
                 <span className="font-bold">Districts: </span>
                 {result.location.districts
                   .map((x: number, i: number) => {
-                    const districtName: object[] = districts.filter(
-                      (y: any) => y.id === x
-                    );
+                    const districtName: object[] = districts.filter((y: any) => y.id === x);
                     return districtName.length > 0
-                      ? districtName[0][
-                          "name" as keyof (typeof districtName)[0]
-                        ]
+                      ? districtName[0]['name' as keyof (typeof districtName)[0]]
                       : `(${x} *not found)`;
                   })
-                  .join(", ")}
+                  .join(', ')}
               </p>
               <p>
                 <span className="font-bold">Facilities:</span>
               </p>
-              {facilities.join(", ")}
+              {facilities.join(', ')}
               <p>
                 <span className="font-bold">Description:</span>
               </p>

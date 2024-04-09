@@ -29,6 +29,7 @@ const Page = () => {
   });
 
   const [allFetchedAccommodations, setAllFetchedAccommodations] = useState<any[]>([]);
+  const [allCommonAccommodations, setAllCommonAccommodations] = useState<any[]>([]);
   const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([]);
   const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([]);
   const [currentDistricts, setCurrentDistricts] = useState<object[]>([]);
@@ -221,15 +222,15 @@ const Page = () => {
     // fetch all hotels in Google Maps API
     setStatus({
       loading: true,
-      message: `Google.com: Fetching all hotels in ${destinationLabel}`,
+      message: `Google Maps: Fetching all hotels in ${destinationLabel}`,
     });
 
     const googleHotels = await fetchGoogleAccommodations();
 
+    // Google Maps: Fetched all hotels in ${googleHotels.length}
     setStatus({
       loading: true,
-      message: `Google.com: Fetched all hotels in ${googleHotels.length}\n\n
-      Booking.com: Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
+      message: `Booking.com: Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
     });
 
     // fetch all accommodations in Booking.com API
@@ -253,9 +254,7 @@ const Page = () => {
         nextPage = responseJson.next_page;
         setStatus({
           loading: true,
-          message: `Google.com: Fetched all hotels in ${googleHotels.length}\n\n
-          Booking.com: Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}\n\n
-          Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...
+          message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...
           `,
         });
 
@@ -271,9 +270,10 @@ const Page = () => {
       googleHotels,
       allAccommodationsFetched
     );
+    setAllCommonAccommodations(allCommonAccommodations.map((x: { id: any }) => x.id));
 
     // ***DEV PURPOSES: DONT FILTER BASED ON FACITLITIES
-    const allAccommodationsFetchedWithFacilities = allCommonAccommodations;
+    const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
     // // filter results by saved facilities here
     // const allAccommodationsFetchedWithFacilities =
     //   allAccommodationsFetched.filter((accommodation) => {
@@ -370,7 +370,7 @@ const Page = () => {
 
     setStatus({
       loading: false,
-      message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
+      message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}<br>Something extra`,
     });
     console.log('----Done Fetching Hotels----');
 
@@ -807,6 +807,7 @@ const Page = () => {
                       index={i}
                       result={x}
                       districts={currentDistricts}
+                      common={allCommonAccommodations.includes(x.id) ? true : false}
                     />
                   ))
                 : null}
@@ -829,6 +830,7 @@ const Page = () => {
                       index={i}
                       result={x}
                       districts={currentDistricts}
+                      common={false}
                     />
                   ))
                 : null}
