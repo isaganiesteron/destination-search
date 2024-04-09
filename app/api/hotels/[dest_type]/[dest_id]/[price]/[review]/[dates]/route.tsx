@@ -1,7 +1,7 @@
-import apiCall from "@/utils/apiCall";
-import fetchApi from "@/utils/fetchApi";
-import { NextResponse } from "next/server";
-import moment, { min } from "moment";
+import apiCall from '@/utils/apiCall';
+import fetchApi from '@/utils/fetchApi';
+import { NextResponse } from 'next/server';
+import moment, { min } from 'moment';
 // import tempHotelPricesAndDetails from "@/mock_data/hotels"
 
 const _chunkArray = (array: any[], chunkSize: number) => {
@@ -16,9 +16,7 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
   const detailsAndPrices = details.map((detail: object) => {
     let tempDetail = { ...detail };
     let currentPrice = prices.filter((price: object) => {
-      return (
-        price["id" as keyof typeof price] === detail["id" as keyof typeof price]
-      );
+      return price['id' as keyof typeof price] === detail['id' as keyof typeof price];
     });
     const priceObject = currentPrice.length === 1 ? currentPrice[0] : null;
     if (priceObject) {
@@ -26,13 +24,13 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
         ...tempDetail,
         price: priceObject
           ? {
-              currency: priceObject["currency" as keyof typeof priceObject],
-              price: priceObject["price" as keyof typeof priceObject],
+              currency: priceObject['currency' as keyof typeof priceObject],
+              price: priceObject['price' as keyof typeof priceObject],
             }
-          : "NA",
+          : 'NA',
       };
     } else {
-      tempDetail = { ...tempDetail, price: "NA" };
+      tempDetail = { ...tempDetail, price: 'NA' };
     }
     return tempDetail;
   });
@@ -48,17 +46,17 @@ const _fetchHotelPrices = async (
   dates: string,
   page: string
 ) => {
-  const checkin = dates.split("_")[0];
-  const checkout = dates.split("_")[1];
-  const min_price = price.split("_")[0];
-  const max_price = price.split("_")[1];
+  const checkin = dates.split('_')[0];
+  const checkout = dates.split('_')[1];
+  const min_price = price.split('_')[0];
+  const max_price = price.split('_')[1];
 
   const requestBody = {
     booker: {
-      country: "nl",
-      platform: "desktop",
+      country: 'nl',
+      platform: 'desktop',
     },
-    currency: "USD",
+    currency: 'USD',
     price: {
       minimum: parseInt(min_price),
       maximum: parseInt(max_price),
@@ -66,9 +64,9 @@ const _fetchHotelPrices = async (
     rating: {
       minimum_review_score: parseInt(review),
     },
-    checkin: moment(checkin).format("YYYY-MM-DD"),
-    checkout: moment(checkout).format("YYYY-MM-DD"),
-    extras: ["extra_charges", "products"],
+    checkin: moment(checkin).format('YYYY-MM-DD'),
+    checkout: moment(checkout).format('YYYY-MM-DD'),
+    extras: ['extra_charges', 'products'],
     guests: {
       number_of_adults: 2,
       number_of_rooms: 1,
@@ -76,31 +74,24 @@ const _fetchHotelPrices = async (
   };
 
   let updatedRequestBody: object = {};
-  if (page !== "null") {
+  if (page !== 'null') {
     updatedRequestBody = { page };
   } else {
-    if (type === "airport") {
+    if (type === 'airport') {
       updatedRequestBody = { ...requestBody, airport: Number(id) };
-    } else if (type === "city") {
+    } else if (type === 'city') {
       updatedRequestBody = { ...requestBody, city: Number(id) };
-    } else if (type === "country") {
+    } else if (type === 'country') {
       updatedRequestBody = { ...requestBody, country: Number(id) };
-    } else if (type === "district") {
+    } else if (type === 'district') {
       updatedRequestBody = { ...requestBody, district: Number(id) };
-    } else if (type === "landmark") {
+    } else if (type === 'landmark') {
       updatedRequestBody = { ...requestBody, landmark: Number(id) };
-    } else if (type === "region") {
+    } else if (type === 'region') {
       updatedRequestBody = { ...requestBody, region: Number(id) };
     }
   }
-
-  // console.log("updatedRequestBody");
-  // console.log(updatedRequestBody);
-
-  const hotelSearch = await fetchApi(
-    "/accommodations/search",
-    updatedRequestBody
-  );
+  const hotelSearch = await fetchApi('/accommodations/search', updatedRequestBody);
   return hotelSearch;
 };
 
@@ -112,16 +103,9 @@ const _fetchHotelDetails = async (hotelIds: number[]) => {
     const requestBody = {
       accommodations: array,
       // extras: ["description", "photos"],
-      extras: [
-        "description",
-        "photos",
-        "facilities",
-        "payment",
-        "policies",
-        "rooms",
-      ],
+      extras: ['description', 'photos', 'facilities', 'payment', 'policies', 'rooms'],
     };
-    return apiCall("/accommodations/details", requestBody);
+    return apiCall('/accommodations/details', requestBody);
   });
   const allHotelDetails = await Promise.all(promises);
   const allHotelDetailsFlattened = ([] as object[]).concat(...allHotelDetails);
@@ -132,10 +116,10 @@ export async function GET(request: Request, params: any) {
   const { dest_type, dest_id, price, review, dates } = params.params;
   // If next_page exists then that means remove all params and just use next_page
 
-  let next_page =
-    dest_type && dest_id === "null" && price === "null" ? dest_type : "null";
+  let next_page = dest_type && dest_id === 'null' && price === 'null' ? dest_type : 'null';
 
   try {
+    console.log(`Fetching hotel prices...`);
     const hotelPrices = await _fetchHotelPrices(
       dest_type,
       dest_id,
@@ -144,21 +128,22 @@ export async function GET(request: Request, params: any) {
       dates,
       next_page
     );
+    console.log(`... DONE Fetching hotel prices.`);
+
+    console.log('Fetching hotel details...');
     const hotelDetails = await _fetchHotelDetails(
       hotelPrices?.data.map((x: { id: number }) => x.id)
     );
-    const hotelPricesAndDetails = await _combinePricesAndDetails(
-      hotelDetails,
-      hotelPrices?.data
-    );
-    const currentNextPage = hotelPrices.next_page
-      ? hotelPrices.next_page
-      : null;
+    console.log('... DONE Fetching hotel details.');
+
+    console.log('Combining prices and details...');
+    const hotelPricesAndDetails = await _combinePricesAndDetails(hotelDetails, hotelPrices?.data);
+    console.log('... DONE Combining prices and details.');
 
     console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`);
     return NextResponse.json({
       data: hotelPricesAndDetails,
-      next_page: currentNextPage,
+      next_page: hotelPrices.next_page ? hotelPrices.next_page : null,
     });
   } catch (error) {
     console.log(error);
