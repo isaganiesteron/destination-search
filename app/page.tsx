@@ -1,14 +1,18 @@
 'use client';
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import moment from 'moment';
+
+// coponents
 import ResultItem from '@/components/ResultItem';
-import { Settings as I_Settings } from '@/constants/interfaces';
 import Settings from '@/components/Settings';
 import Spinner from '@/components/Spinner';
 import SuggestedItem from '@/components/SuggestedItem';
-import { hotelTypes } from '@/constants/accommodationtypes';
-import moment from 'moment';
 import DateDialog from '@/components/DateDialog';
 import Districts from '@/components/Districts';
+
+// constants
+import { Settings as I_Settings } from '@/constants/interfaces';
+import { hotelTypes } from '@/constants/accommodationtypes';
 
 const Page = () => {
   const [status, setStatus] = useState<object>({
@@ -101,6 +105,29 @@ const Page = () => {
     // setCurrentDistricts(require("@/mock_data/districts").default);
   };
 
+  const commonAccommodations = async (
+    googleHotels: any[] | undefined,
+    bookingHotels: any[] | undefined
+  ) => {
+    if (!googleHotels || !bookingHotels) return;
+
+    const commonHotels = bookingHotels.filter((bookingHotel) => {
+      const bookingHotelName = bookingHotel.name['en-gb'];
+      return googleHotels.some((googleHotel) => {
+        const googleHotelName = googleHotel.name;
+        return googleHotelName === bookingHotelName;
+      });
+    });
+
+    console.log('Google Hotels: ' + googleHotels.length);
+    console.log('Booking Hotels: ' + bookingHotels.length);
+    console.log('Common Hotels: ' + commonHotels.length);
+
+    console.log(commonHotels);
+
+    return commonHotels;
+  };
+
   const fetchGoogleAccommodations = async () => {
     const destinationLabel: string = currentDestination['label' as keyof typeof currentDestination];
     const city = destinationLabel ? destinationLabel.split(',')[0] : 'null';
@@ -151,38 +178,17 @@ const Page = () => {
         console.log('Done Fetching Google Hotel Data');
         return fetchedHotels;
       } else {
-        console.log('Hotel Location not found.');
+        console.log('ERROR: Hotel Location not found.');
+        console.log('detailData');
+        console.log(detailData);
         return [];
       }
     } else {
-      console.log('Hotel Predictions not found.');
+      console.log('ERROR: Hotel Predictions not found.');
+      console.log('predictionsData');
+      console.log(predictionsData);
       return [];
     }
-  };
-
-  const commonAccommodations = async (
-    googleHotels: any[] | undefined,
-    bookingHotels: any[] | undefined
-  ) => {
-    if (!googleHotels || !bookingHotels) return;
-
-    // filter through bookingHotels and return only the ones that are in googleHotels
-
-    const commonHotels = bookingHotels.filter((bookingHotel) => {
-      const bookingHotelName = bookingHotel.name['en-gb'];
-      return googleHotels.some((googleHotel) => {
-        const googleHotelName = googleHotel.name;
-        return googleHotelName === bookingHotelName;
-      });
-    });
-
-    console.log('Google Hotels: ' + googleHotels.length);
-    console.log('Booking Hotels: ' + bookingHotels.length);
-    console.log('Common Hotels: ' + commonHotels.length);
-
-    console.log(commonHotels);
-
-    return commonHotels;
   };
 
   const fetchAccommodations = async () => {
@@ -192,7 +198,7 @@ const Page = () => {
     const destinationLabel = currentDestination['label' as keyof typeof currentDestination];
 
     if (destinationType === 'null' || destinationId === 'null') return;
-    resetAllValues();
+    resetVariablesAndStatus();
 
     // decalre variables
     const tierSettings = settings[settings.tier as keyof typeof settings];
@@ -536,14 +542,7 @@ const Page = () => {
     }
   };
 
-  const handleReset = () => {
-    setCurrentDestination({ type: 'null', id: 'null', label: 'null' });
-    setDestination('');
-
-    resetAllValues();
-  };
-
-  const resetAllValues = () => {
+  const resetVariablesAndStatus = () => {
     setSuggestions([]);
     setAllFetchedAccommodations([]);
     setCurrentAllHotels([]);
@@ -840,7 +839,11 @@ const Page = () => {
         <div className="flex flex-row-reverse">
           <button
             className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold"
-            onClick={handleReset}
+            onClick={() => {
+              setCurrentDestination({ type: 'null', id: 'null', label: 'null' });
+              setDestination('');
+              resetVariablesAndStatus();
+            }}
           >
             Reset
           </button>
