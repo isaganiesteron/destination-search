@@ -98,7 +98,7 @@ const _fetchHotelPrices = async (
 const _fetchHotelDetails = async (hotelIds: number[]) => {
   //  * Will split hotels into 100 because it can only take 100 hotels per request
   const splitArray = _chunkArray(hotelIds, 100); // Note: change 2 to 100 after testing
-  console.log(`There will be ${splitArray.length} requests.`);
+  console.log(`     There will be ${splitArray.length} requests.`);
   const promises = splitArray.map((array) => {
     const requestBody = {
       accommodations: array,
@@ -119,7 +119,7 @@ export async function GET(request: Request, params: any) {
   let next_page = dest_type && dest_id === 'null' && price === 'null' ? dest_type : 'null';
 
   try {
-    console.log(`Fetching hotel prices...`);
+    console.log(`****Fetching hotel prices...`);
     const hotelPrices = await _fetchHotelPrices(
       dest_type,
       dest_id,
@@ -136,11 +136,13 @@ export async function GET(request: Request, params: any) {
     );
     console.log('... DONE Fetching hotel details.');
 
-    console.log('Combining prices and details...');
+    console.log('****Combining prices and details...');
     const hotelPricesAndDetails = await _combinePricesAndDetails(hotelDetails, hotelPrices?.data);
     console.log('... DONE Combining prices and details.');
 
-    console.log(`Done fetching ${hotelPricesAndDetails.length} hotels...`);
+    console.log('');
+    console.log('');
+    console.log(`****Done fetching ${hotelPricesAndDetails.length} hotels****`);
     return NextResponse.json({
       data: hotelPricesAndDetails,
       next_page: hotelPrices.next_page ? hotelPrices.next_page : null,

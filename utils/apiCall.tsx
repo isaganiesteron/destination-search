@@ -1,5 +1,5 @@
 const apiCall = async (endpoint: string, fetchBody: object) => {
-  console.log('   --   multiple page fetch   --');
+  console.log('   ****multiple page fetch');
   let allData: any[] = [];
   let morePagesAvailable = true;
   let currentPage = 0;
@@ -51,13 +51,15 @@ const apiCall = async (endpoint: string, fetchBody: object) => {
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     } else {
-      console.log(`*****non 200 status response ==> ${response.status}`);
-      console.log(response);
+      console.log(`     ***Status ${response.status}`);
+      const res = await response.json();
+      console.log(res);
+
       morePagesAvailable = false;
       page = '';
     }
   }
-  console.log(`Done fetching ${allData.length} items.`);
+  console.log(`     Fetched ${allData.length} items.`);
   return allData;
 };
 

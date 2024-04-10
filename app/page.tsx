@@ -192,6 +192,16 @@ const Page = () => {
     }
   };
 
+  const chunkArray = (items: any[]): any[][] => {
+    const chunkSize = 100;
+    const chunks: any[][] = [];
+    for (let i = 0; i < items.length; i += chunkSize) {
+      const chunk = items.slice(i, i + chunkSize);
+      chunks.push(chunk);
+    }
+    return chunks;
+  };
+
   const fetchAccommodations = async () => {
     // first check if currentDestination is set, if not then just return
     const destinationType = currentDestination['type' as keyof typeof currentDestination];
@@ -273,26 +283,26 @@ const Page = () => {
     setAllCommonAccommodations(allCommonAccommodations.map((x: { id: any }) => x.id));
 
     // ***DEV PURPOSES: DONT FILTER BASED ON FACITLITIES
-    const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
-    // // filter results by saved facilities here
-    // const allAccommodationsFetchedWithFacilities =
-    //   allAccommodationsFetched.filter((accommodation) => {
-    //     const facilitiesAreIncluded = accommodation.facilities.filter(
-    //       (x: any) => {
-    //         return settings.facilities.includes(x.id);
-    //       }
-    //     );
-    //     return facilitiesAreIncluded.length === settings.facilities.length;
-    //   });
+    // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
 
-    // if (allAccommodationsFetchedWithFacilities.length === 0) {
-    //   setStatus({
-    //     loading: false,
-    //     message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
-    //   });
-    //   console.log("----Done Fetching Hotels----");
-    //   return;
-    // }
+    // filter results by saved facilities here
+    const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
+      (accommodation) => {
+        const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
+          return settings.facilities.includes(x.id);
+        });
+        return facilitiesAreIncluded.length === settings.facilities.length;
+      }
+    );
+
+    if (allAccommodationsFetchedWithFacilities.length === 0) {
+      setStatus({
+        loading: false,
+        message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
+      });
+      console.log('----Done Fetching Hotels----');
+      return;
+    }
 
     //add multiple prices here
     let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
@@ -301,46 +311,42 @@ const Page = () => {
     );
 
     // ***DEV PURPOSES: DONT FETCH PRICES
-    // const accommodationExtraPrices = [];
-    // const monthsToFetchPrices = [
-    //   "February",
-    //   "May",
-    //   "July",
-    //   "October",
-    //   "December",
-    // ];
-    // let monthCounter = 0;
-    // while (monthCounter < monthsToFetchPrices.length) {
-    //   // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
-    //   const checkin = moment()
-    //     .month(monthsToFetchPrices[monthCounter])
-    //     .startOf("month");
-    //   const checkout = moment()
-    //     .month(monthsToFetchPrices[monthCounter])
-    //     .startOf("month")
-    //     .add(1, "days");
+    const accommodationExtraPrices = [];
+    const monthsToFetchPrices = ['February', 'May', 'July', 'October', 'December'];
+    let monthCounter = 0;
+    while (monthCounter < monthsToFetchPrices.length) {
+      // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
+      const checkin = moment().month(monthsToFetchPrices[monthCounter]).startOf('month');
+      const checkout = moment()
+        .month(monthsToFetchPrices[monthCounter])
+        .startOf('month')
+        .add(1, 'days');
 
-    //   // see first if allAccommodationsFetched is less than 100f
-    //   const allIdsParam = allAccommodationsFetched.map((x) => x.id).join(",");
-    //   const response = await fetch(
-    //     `/api/prices/${allIdsParam}/${checkin.format(
-    //       "YYYY-MM-DD"
-    //     )}/${checkout.format("YYYY-MM-DD")}`
-    //   );
-    //   const responseJson = await response.json();
-    //   accommodationExtraPrices.push(responseJson.data);
-    //   // console.log(
-    //   //   `Found ${responseJson?.data.length} for ${monthsToFetchPrices[monthCounter]}`
-    //   // );
-    //   monthCounter++;
-    // }
+      // api only allows accommodations of 100 ids
+      let chunks = chunkArray(allAccommodationsFetched);
+      let chunkCount = 0;
+      console.log('   **Chunk Count is ' + chunks.length);
+      while (chunkCount < chunks.length) {
+        console.log('      **Fetching chunk ' + chunkCount);
+        const allIdsParam = chunks[chunkCount].map((x) => x.id).join(',');
+        const response = await fetch(
+          `/api/prices/${allIdsParam}/${checkin.format('YYYY-MM-DD')}/${checkout.format(
+            'YYYY-MM-DD'
+          )}`
+        );
+        const responseJson = await response.json();
+        accommodationExtraPrices.push(responseJson.data);
+        chunkCount++;
+      }
+      monthCounter++;
+    }
 
-    // accommodationExtraPrices.forEach((month) => {
-    //   allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-    //     allAccommodationsFetchedWithMultiplePrice,
-    //     month
-    //   );
-    // });
+    accommodationExtraPrices.forEach((month) => {
+      allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+        allAccommodationsFetchedWithMultiplePrice,
+        month
+      );
+    });
 
     fetchDistricts();
 
@@ -348,11 +354,8 @@ const Page = () => {
     // const allAccommodationsFetchedWithMultiplePrice =
     //   require("@/mock_data/accommodations").default;
 
-    // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
-
     // this is used to update the results based on district
     setAllFetchedAccommodations(allAccommodationsFetchedWithMultiplePrice);
-
     // get all districts from all fetched accommodations here
 
     // initially set the selected districtss

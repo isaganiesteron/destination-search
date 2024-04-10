@@ -1,5 +1,5 @@
 const apiCall = async (endpoint: string, fetchBody: object) => {
-  console.log('   --   single page fetch   --');
+  console.log('   ****single page fetch');
   let data: any[] = [];
 
   const token = `Bearer ${process.env.API_KEY}`;
@@ -36,11 +36,12 @@ const apiCall = async (endpoint: string, fetchBody: object) => {
       next_page = '';
     }
   } else {
-    console.log(`Status ${response.status}`);
-    console.log(response);
+    console.log(`     ***Status ${response.status}`);
+    const res = await response.json();
+    console.log(res);
     next_page = '';
   }
-  console.log(`Fetched ${data.length} items.`);
+  console.log(`     Fetched ${data.length} items.`);
 
   return { next_page, data };
 };
