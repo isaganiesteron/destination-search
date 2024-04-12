@@ -31,6 +31,7 @@ const Page = () => {
   const [neighborhoodInput, setNeighborhoodInput] = useState<string>('');
   const [allFetchedAccommodations, setAllFetchedAccommodations] = useState<any[]>([]);
   const [allCommonAccommodations, setAllCommonAccommodations] = useState<any[]>([]);
+  const [allGoogleAccommodations, setAllGoogleAccommodations] = useState<any[]>([]);
   const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([]);
   const [currentAllFlats, setCurrentAllFlats] = useState<any[]>([]);
   const [currentDistricts, setCurrentDistricts] = useState<object[]>([]);
@@ -131,68 +132,101 @@ const Page = () => {
     return commonHotels;
   };
 
-  const fetchGoogleAccommodations = async () => {
-    const destinationLabel: string = currentDestination['label' as keyof typeof currentDestination];
-    const city = destinationLabel ? destinationLabel.split(',')[0] : 'null';
-    if (city === 'null') return [];
+  const fetchGoogleAccommodations = async (neighborhood: string) => {
+    if (neighborhood === '') return;
+    let fetchedHotels: any[] = [];
+    let nextPageToken = null;
+    let fetchingDone = false;
 
-    // 1. use api/autocomplete to get the place_id
-    const predictionsRaw: any = await fetch(`/api/autocomplete/(cities)/${city}/null`);
-    const predictionsData = await predictionsRaw.json();
-
-    if (predictionsData.predictions) {
-      const placeId =
-        predictionsData.predictions.length > 0 ? predictionsData.predictions[0].place_id : 'null';
-
-      // 2. use api/detail to get the location of the place_id
-      const detailRaw: any = await fetch(`/api/detail/${placeId}`);
-      const detailData = await detailRaw.json();
-
-      if (detailData.location) {
-        const hotelLocation = detailData.location;
-        const hotelLatLong = `${hotelLocation.latitude},${hotelLocation.longitude}`;
-
-        // 3. use api/nearby to get the hotels near the location
-        let fetchedHotels: any[] = [];
-        let nextPageToken = null;
-        let fetchingDone = false;
-
-        while (!fetchingDone) {
-          const response: any = await fetch(
-            nextPageToken ? `/api/nearby/${nextPageToken}/null` : `/api/nearby/null/${hotelLatLong}`
-          );
-          const data = await response.json();
-
-          if (data) {
-            if (data.next_page_token) {
-              nextPageToken = data.next_page_token;
-              console.log('Pausing for 2 seconds'); // Without a pause the next fetch will return INVALID_REQUEST
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-            } else {
-              fetchingDone = true;
-            }
-            fetchedHotels = [...fetchedHotels, ...data.results];
-          } else {
-            console.log('ERROR: no places found');
-            console.log(data);
-            fetchingDone = true;
-          }
+    while (!fetchingDone) {
+      console.log('ENTER');
+      const response: any = await fetch(
+        nextPageToken
+          ? `/api/googlehotels/${nextPageToken}/null`
+          : `/api/googlehotels/null/${neighborhood}`
+      );
+      const data = await response.json();
+      if (data) {
+        if (data.next_page_token) {
+          nextPageToken = data.next_page_token;
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
+        } else {
+          fetchingDone = true;
         }
-        console.log('Done Fetching Google Hotel Data');
-        return fetchedHotels;
+        fetchedHotels = [...fetchedHotels, ...data.results];
       } else {
-        console.log('ERROR: Hotel Location not found.');
-        console.log('detailData');
-        console.log(detailData);
-        return [];
+        console.log('ERROR: no places found');
+        console.log(data);
+        fetchingDone = true;
       }
-    } else {
-      console.log('ERROR: Hotel Predictions not found.');
-      console.log('predictionsData');
-      console.log(predictionsData);
-      return [];
     }
+    // sort fetchedHotels by name field
+    fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
+    setAllGoogleAccommodations(fetchedHotels);
   };
+
+  // const fetchGoogleAccommodations = async () => {
+  //   const destinationLabel: string = currentDestination['label' as keyof typeof currentDestination];
+  //   const city = destinationLabel ? destinationLabel.split(',')[0] : 'null';
+  //   if (city === 'null') return [];
+
+  //   // 1. use api/autocomplete to get the place_id
+  //   const predictionsRaw: any = await fetch(`/api/autocomplete/(cities)/${city}/null`);
+  //   const predictionsData = await predictionsRaw.json();
+
+  //   if (predictionsData.predictions) {
+  //     const placeId =
+  //       predictionsData.predictions.length > 0 ? predictionsData.predictions[0].place_id : 'null';
+
+  //     // 2. use api/detail to get the location of the place_id
+  //     const detailRaw: any = await fetch(`/api/detail/${placeId}`);
+  //     const detailData = await detailRaw.json();
+
+  //     if (detailData.location) {
+  //       const hotelLocation = detailData.location;
+  //       const hotelLatLong = `${hotelLocation.latitude},${hotelLocation.longitude}`;
+
+  //       // 3. use api/nearby to get the hotels near the location
+  //       let fetchedHotels: any[] = [];
+  //       let nextPageToken = null;
+  //       let fetchingDone = false;
+
+  //       while (!fetchingDone) {
+  //         const response: any = await fetch(
+  //           nextPageToken ? `/api/nearby/${nextPageToken}/null` : `/api/nearby/null/${hotelLatLong}`
+  //         );
+  //         const data = await response.json();
+
+  //         if (data) {
+  //           if (data.next_page_token) {
+  //             nextPageToken = data.next_page_token;
+  //             console.log('Pausing for 2 seconds'); // Without a pause the next fetch will return INVALID_REQUEST
+  //             await new Promise((resolve) => setTimeout(resolve, 2000));
+  //           } else {
+  //             fetchingDone = true;
+  //           }
+  //           fetchedHotels = [...fetchedHotels, ...data.results];
+  //         } else {
+  //           console.log('ERROR: no places found');
+  //           console.log(data);
+  //           fetchingDone = true;
+  //         }
+  //       }
+  //       console.log('Done Fetching Google Hotel Data');
+  //       return fetchedHotels;
+  //     } else {
+  //       console.log('ERROR: Hotel Location not found.');
+  //       console.log('detailData');
+  //       console.log(detailData);
+  //       return [];
+  //     }
+  //   } else {
+  //     console.log('ERROR: Hotel Predictions not found.');
+  //     console.log('predictionsData');
+  //     console.log(predictionsData);
+  //     return [];
+  //   }
+  // };
 
   const chunkArray = (items: any[]): any[][] => {
     const chunkSize = 100;
@@ -597,6 +631,15 @@ const Page = () => {
     setCurrentAllFlats(prepareFlats || []);
   }, [selectedDistricts, selectedStars]);
 
+  useEffect(() => {
+    console.log('allGoogleAccommodations');
+    console.log(allGoogleAccommodations);
+
+    return () => {
+      // second
+    };
+  }, [allGoogleAccommodations]);
+
   return (
     <main>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
@@ -690,7 +733,9 @@ const Page = () => {
                 setSelectedDistricts={setSelectedDistricts}
               />
               <div className="mt-4">
-                <p className="font-bold text-sm">Search Additional Hotels with Google Maps by District/Neighborhood</p>
+                <p className="font-bold text-sm">
+                  Search Additional Hotels with Google Maps by District/Neighborhood
+                </p>
                 <div className="flex flex-row gap-1 w-full justify-center">
                   <input
                     type="text"
@@ -701,9 +746,7 @@ const Page = () => {
                   />
                   <button
                     className="w-1/5 border border-black rounded-md p-2 hover:bg-gray-200"
-                    onClick={() =>
-                      console.log('Search for hotels in neighborhood: ' + neighborhoodInput)
-                    }
+                    onClick={() => fetchGoogleAccommodations(neighborhoodInput)}
                   >
                     Search Google Maps
                   </button>
