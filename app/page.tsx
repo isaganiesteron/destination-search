@@ -28,6 +28,7 @@ const Page = () => {
     message: '',
   });
 
+  const [neighborhoodInput, setNeighborhoodInput] = useState<string>('');
   const [allFetchedAccommodations, setAllFetchedAccommodations] = useState<any[]>([]);
   const [allCommonAccommodations, setAllCommonAccommodations] = useState<any[]>([]);
   const [currentAllHotels, setCurrentAllHotels] = useState<any[]>([]);
@@ -680,12 +681,34 @@ const Page = () => {
 
           {currentDistricts.length > 0 && (
             <div className="border border-black rounded-md w-full p-2 mt-2">
-              <p className="font-bold text-sm">Filter by District</p>
+              <p className="font-bold text-sm">
+                Filter Booking.com results by District/Neighborhood
+              </p>
               <Districts
                 currentDistricts={currentDistricts}
                 selectedDistricts={selectedDistricts}
                 setSelectedDistricts={setSelectedDistricts}
               />
+              <div className="mt-4">
+                <p className="font-bold text-sm">Search Additional Hotels with Google Maps by District/Neighborhood</p>
+                <div className="flex flex-row gap-1 w-full justify-center">
+                  <input
+                    type="text"
+                    placeholder="Enter a nieghborhood/district"
+                    value={neighborhoodInput}
+                    className="w-4/5 border border-black rounded-md p-[5.5px]"
+                    onChange={(event) => setNeighborhoodInput(event.target.value)}
+                  />
+                  <button
+                    className="w-1/5 border border-black rounded-md p-2 hover:bg-gray-200"
+                    onClick={() =>
+                      console.log('Search for hotels in neighborhood: ' + neighborhoodInput)
+                    }
+                  >
+                    Search Google Maps
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
