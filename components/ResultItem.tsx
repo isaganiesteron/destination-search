@@ -15,11 +15,20 @@ const ResultItem = ({
   districts: object[];
   common: boolean;
 }) => {
-  const name = result.name ? result.name['en-gb' as keyof typeof result.name] : 'NA';
+  const isGoogle = result.place_id ? true : false;
+  if (isGoogle) console.log(result);
+
+  const name = result.name
+    ? isGoogle
+      ? result.name
+      : result.name['en-gb' as keyof typeof result.name]
+    : 'NA';
   const currDescription = result.description
     ? result.description.text['en-gb' as keyof typeof result.description.text]
-    : 'NA';
-  const currPhoto = result.photos
+    : 'Not Available';
+  const currPhoto = result.place_id
+    ? result.icon
+    : result.photos
     ? result.photos.length > 0
       ? result.photos[0].url.thumbnail
       : 'NA'
@@ -42,9 +51,11 @@ const ResultItem = ({
         }
       : null
     : null;
-  const accommodationType = accommodationTypes
-    .filter((x) => x.id === result.accommodation_type)
-    .map((x) => x.name)[0];
+  const accommodationType = isGoogle
+    ? result.length > 0
+      ? result.types[0]
+      : 'Google Result'
+    : accommodationTypes.filter((x) => x.id === result.accommodation_type).map((x) => x.name)[0];
 
   const facilities = result.facilities
     ? result.facilities.map((x: { id: number }) => {
@@ -109,22 +120,28 @@ const ResultItem = ({
                   <p>
                     <span className="font-bold">Stars:</span> {stars ? stars : 'Unrated'}
                   </p>
-                  <p>
-                    <span className="font-bold">Rating:</span> {rating.score}
-                  </p>
-                  <p>
-                    <span className="font-bold">
-                      Adjusted Rating <span className="text-xs">(considering # of reviews)</span>:
-                    </span>
-                    {rating.average.toFixed(2)}
-                  </p>
+                  {!isGoogle && (
+                    <>
+                      <p>
+                        <span className="font-bold">Rating:</span> {rating.score}
+                      </p>
+                      <p>
+                        <span className="font-bold">
+                          Adjusted Rating{' '}
+                          <span className="text-xs">(considering # of reviews)</span>:
+                        </span>
+                        {rating.average.toFixed(2)}
+                      </p>
+                    </>
+                  )}
                   <p>
                     <span className="font-bold">Number of Reviews:</span> {rating.reviews}
                   </p>
                 </div>
                 <div className="w-[30%]">
                   <span className="font-bold">Prices:</span>
-                  {result.price &&
+                  {!isGoogle ? (
+                    result.price &&
                     result.price.map((x: any, i: number) => {
                       const curCheckin = moment(x.checkin);
                       if (x.price.total)
@@ -134,45 +151,55 @@ const ResultItem = ({
                           }${x.currency}`}</p>
                         );
                       else return null;
-                    })}
+                    })
+                  ) : (
+                    <p>Not Available</p>
+                  )}
                 </div>
               </div>
-              <p>
-                <span className="font-bold">Districts: </span>
-                {result.location.districts
-                  .map((x: number, i: number) => {
-                    const districtName: object[] = districts.filter((y: any) => y.id === x);
-                    return districtName.length > 0
-                      ? districtName[0]['name' as keyof (typeof districtName)[0]]
-                      : `(${x} *not found)`;
-                  })
-                  .join(', ')}
-              </p>
-              <p>
-                <span className="font-bold">Facilities:</span>
-              </p>
-              {facilities.join(', ')}
-              <p>
-                <span className="font-bold">Description:</span>
-              </p>
-              {descLoading ? (
-                <div className="flex justify-center items-center min-h-20 align-middle transition-opacity ease-in-out duration-500">
-                  <Spinner />
-                </div>
-              ) : (
-                <div className="transition-opacity ease-in-out duration-500">
-                  <p className="text-sm">{currentDescription}</p>
-                </div>
+
+              {!isGoogle && (
+                <>
+                  <p>
+                    <span className="font-bold">Districts: </span>
+                    {result.location.districts
+                      .map((x: number, i: number) => {
+                        const districtName: object[] = districts.filter((y: any) => y.id === x);
+                        return districtName.length > 0
+                          ? districtName[0]['name' as keyof (typeof districtName)[0]]
+                          : `(${x} *not found)`;
+                      })
+                      .join(', ')}
+                  </p>
+                  <p>
+                    <span className="font-bold">Facilities:</span>
+                  </p>
+                  {facilities.join(', ')}
+                  <p>
+                    <span className="font-bold">Description:</span>
+                  </p>
+                  {descLoading ? (
+                    <div className="flex justify-center items-center min-h-20 align-middle transition-opacity ease-in-out duration-500">
+                      <Spinner />
+                    </div>
+                  ) : (
+                    <div className="transition-opacity ease-in-out duration-500">
+                      <p className="text-sm">{currentDescription}</p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
-            <div className="space-x-2 space-y-1">
-              <button
-                className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700"
-                onClick={_regenerateHandler}
-              >
-                Regenerate Description
-              </button>
-            </div>
+            {!isGoogle && (
+              <div className="space-x-2 space-y-1">
+                <button
+                  className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700"
+                  onClick={_regenerateHandler}
+                >
+                  Regenerate Description
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

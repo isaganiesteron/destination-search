@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import moment from 'moment';
 
 // coponents
@@ -15,6 +15,8 @@ import { Settings as I_Settings } from '@/constants/interfaces';
 import { hotelTypes } from '@/constants/accommodationtypes';
 
 const Page = () => {
+  const useMockAccommodationData = true;
+
   const [status, setStatus] = useState<object>({
     loading: false,
     message: '',
@@ -113,7 +115,18 @@ const Page = () => {
     googleHotels: any[] | undefined,
     bookingHotels: any[] | undefined
   ) => {
+    // // Was used like this
+    // // Intersect all accommodations with google accommodations here
+    // const allCommonAccommodations: any = await commonAccommodations(
+    //   googleHotels,
+    //   allAccommodationsFetched
+    // );
+    // setAllCommonAccommodations(allCommonAccommodations.map((x: { id: any }) => x.id));
+
     if (!googleHotels || !bookingHotels) return;
+
+    console.log(googleHotels[0]);
+    console.log(bookingHotels[0]);
 
     const commonHotels = bookingHotels.filter((bookingHotel) => {
       const bookingHotelName = bookingHotel.name['en-gb'];
@@ -135,98 +148,49 @@ const Page = () => {
   const fetchGoogleAccommodations = async (neighborhood: string) => {
     if (neighborhood === '') return;
     let fetchedHotels: any[] = [];
-    let nextPageToken = null;
-    let fetchingDone = false;
 
-    while (!fetchingDone) {
-      console.log('ENTER');
-      const response: any = await fetch(
-        nextPageToken
-          ? `/api/googlehotels/${nextPageToken}/null`
-          : `/api/googlehotels/null/${neighborhood}`
-      );
-      const data = await response.json();
-      if (data) {
-        if (data.next_page_token) {
-          nextPageToken = data.next_page_token;
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
+    if (useMockAccommodationData) {
+      console.log('****USING MOCK DATA****');
+      fetchedHotels = require('@/mock_data/googlehotels').default;
+    } else {
+      let nextPageToken = null;
+      let fetchingDone = false;
+
+      while (!fetchingDone) {
+        const response: any = await fetch(
+          nextPageToken
+            ? `/api/googlehotels/${nextPageToken}/null`
+            : `/api/googlehotels/null/${neighborhood}`
+        );
+        const data = await response.json();
+        if (data) {
+          if (data.next_page_token) {
+            nextPageToken = data.next_page_token;
+            await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
+          } else {
+            fetchingDone = true;
+          }
+          fetchedHotels = [...fetchedHotels, ...data.results];
         } else {
+          console.log('ERROR: no places found');
+          console.log(data);
           fetchingDone = true;
         }
-        fetchedHotels = [...fetchedHotels, ...data.results];
-      } else {
-        console.log('ERROR: no places found');
-        console.log(data);
-        fetchingDone = true;
       }
+      // sort fetchedHotels by name field
+      fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
     }
-    // sort fetchedHotels by name field
-    fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
-    setAllGoogleAccommodations(fetchedHotels);
+
+    // Intersect all accommodations with google accommodations here
+    const allCommonAccommodations: any = await commonAccommodations(
+      fetchedHotels,
+      allFetchedAccommodations
+    );
+    const convertedFetchedHotels = convertGoogleHotels(fetchedHotels);
+
+    setAllCommonAccommodations(allCommonAccommodations.map((x: { id: any }) => x.id));
+    setAllGoogleAccommodations(convertedFetchedHotels);
   };
-
-  // const fetchGoogleAccommodations = async () => {
-  //   const destinationLabel: string = currentDestination['label' as keyof typeof currentDestination];
-  //   const city = destinationLabel ? destinationLabel.split(',')[0] : 'null';
-  //   if (city === 'null') return [];
-
-  //   // 1. use api/autocomplete to get the place_id
-  //   const predictionsRaw: any = await fetch(`/api/autocomplete/(cities)/${city}/null`);
-  //   const predictionsData = await predictionsRaw.json();
-
-  //   if (predictionsData.predictions) {
-  //     const placeId =
-  //       predictionsData.predictions.length > 0 ? predictionsData.predictions[0].place_id : 'null';
-
-  //     // 2. use api/detail to get the location of the place_id
-  //     const detailRaw: any = await fetch(`/api/detail/${placeId}`);
-  //     const detailData = await detailRaw.json();
-
-  //     if (detailData.location) {
-  //       const hotelLocation = detailData.location;
-  //       const hotelLatLong = `${hotelLocation.latitude},${hotelLocation.longitude}`;
-
-  //       // 3. use api/nearby to get the hotels near the location
-  //       let fetchedHotels: any[] = [];
-  //       let nextPageToken = null;
-  //       let fetchingDone = false;
-
-  //       while (!fetchingDone) {
-  //         const response: any = await fetch(
-  //           nextPageToken ? `/api/nearby/${nextPageToken}/null` : `/api/nearby/null/${hotelLatLong}`
-  //         );
-  //         const data = await response.json();
-
-  //         if (data) {
-  //           if (data.next_page_token) {
-  //             nextPageToken = data.next_page_token;
-  //             console.log('Pausing for 2 seconds'); // Without a pause the next fetch will return INVALID_REQUEST
-  //             await new Promise((resolve) => setTimeout(resolve, 2000));
-  //           } else {
-  //             fetchingDone = true;
-  //           }
-  //           fetchedHotels = [...fetchedHotels, ...data.results];
-  //         } else {
-  //           console.log('ERROR: no places found');
-  //           console.log(data);
-  //           fetchingDone = true;
-  //         }
-  //       }
-  //       console.log('Done Fetching Google Hotel Data');
-  //       return fetchedHotels;
-  //     } else {
-  //       console.log('ERROR: Hotel Location not found.');
-  //       console.log('detailData');
-  //       console.log(detailData);
-  //       return [];
-  //     }
-  //   } else {
-  //     console.log('ERROR: Hotel Predictions not found.');
-  //     console.log('predictionsData');
-  //     console.log(predictionsData);
-  //     return [];
-  //   }
-  // };
 
   const chunkArray = (items: any[]): any[][] => {
     const chunkSize = 100;
@@ -265,21 +229,13 @@ const Page = () => {
         ? moment().add(1, 'days').format('YYYY-MM-DD')
         : moment(dateCheckout, 'YYYY-MM-DD').format('YYYY-MM-DD');
 
-    // determine to use mock data to save on api requests
-    const useMockAccommodationData = true;
+    // **********Determine to use mock data to save on api requests
+
     let allAccommodationsFetchedWithMultiplePrice: any[] = [];
     if (useMockAccommodationData) {
       // mock data
       allAccommodationsFetchedWithMultiplePrice = require('@/mock_data/accommodations').default;
     } else {
-      // // fetch all hotels in Google Maps API
-      // setStatus({
-      //   loading: true,
-      //   message: `Google Maps: Fetching all hotels in ${destinationLabel}`,
-      // });
-      // const googleHotels = await fetchGoogleAccommodations();
-      // Google Maps: Fetched all hotels in ${googleHotels.length}
-
       setStatus({
         loading: true,
         message: `${
@@ -315,12 +271,7 @@ const Page = () => {
           morePages = false;
         }
       }
-      // // Intersect all accommodations with google accommodations here
-      // const allCommonAccommodations: any = await commonAccommodations(
-      //   googleHotels,
-      //   allAccommodationsFetched
-      // );
-      // setAllCommonAccommodations(allCommonAccommodations.map((x: { id: any }) => x.id));
+
       // ***DEV PURPOSES: DONT FILTER BASED ON FACITLITIES
       // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
       // filter results by saved facilities here
@@ -582,6 +533,38 @@ const Page = () => {
     }
   };
 
+  const convertGoogleHotels = (googleHotels: any[]) => {
+    // convert google hotels to the same format as booking.com hotels
+    return googleHotels.map((x) => {
+      return {
+        ...x,
+        accommodation_type: 0,
+        location: {
+          address: x.formattedAddress,
+          districts: [],
+        },
+        rating: {
+          stars: x.rating,
+          review_score: null,
+          number_of_reviews: x.user_ratings_total,
+          additional_info: {
+            most_reviews: null,
+            review_percentage: null,
+            average_review_score: null,
+          },
+        },
+        price: [
+          {
+            price: {},
+            checkin: null,
+            checkout: null,
+          },
+        ],
+        facilities: [],
+      };
+    });
+  };
+
   const resetVariablesAndStatus = () => {
     setSuggestions([]);
     setAllFetchedAccommodations([]);
@@ -625,11 +608,16 @@ const Page = () => {
   useEffect(() => {
     if (allFetchedAccommodations.length === 0) return;
 
-    const preparedHotels = prepareResults(allFetchedAccommodations, 'hotels');
-    const prepareFlats = prepareResults(allFetchedAccommodations, 'flats');
-    setCurrentAllHotels(preparedHotels || []);
-    setCurrentAllFlats(prepareFlats || []);
-  }, [selectedDistricts, selectedStars]);
+    const preparedHotels = prepareResults(allFetchedAccommodations, 'hotels') || [];
+    const prepareFlats = prepareResults(allFetchedAccommodations, 'flats') || [];
+
+    // Add Search Google Maps Hotels to preparedHotels
+    const addedGoogleHotels = [...preparedHotels, ...allGoogleAccommodations];
+    console.log(addedGoogleHotels.length);
+
+    setCurrentAllHotels(addedGoogleHotels);
+    setCurrentAllFlats(prepareFlats);
+  }, [selectedDistricts, selectedStars, allGoogleAccommodations]);
 
   useEffect(() => {
     console.log('allGoogleAccommodations');
