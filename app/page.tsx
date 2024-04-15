@@ -15,8 +15,6 @@ import { Settings as I_Settings } from '@/constants/interfaces';
 import { hotelTypes } from '@/constants/accommodationtypes';
 
 const Page = () => {
-  const useMockAccommodationData = true;
-
   const [status, setStatus] = useState<object>({
     loading: false,
     message: '',
@@ -107,7 +105,9 @@ const Page = () => {
     const fetchString = `/api/district/${destinationType}/${destinationId}`;
     const response = await fetch(fetchString);
     const responseJson = await response.json();
-    setCurrentDistricts(responseJson);
+
+    if (Array.isArray(responseJson)) setCurrentDistricts(responseJson);
+    else setCurrentDistricts([]);
 
     // **use mock data
     // setCurrentDistricts(require("@/mock_data/districts").default);
@@ -230,6 +230,11 @@ const Page = () => {
         ? moment().add(1, 'days').format('YYYY-MM-DD')
         : moment(dateCheckout, 'YYYY-MM-DD').format('YYYY-MM-DD');
 
+    setStatus({
+      loading: true,
+      message: `Booking.com: Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
+    });
+
     /**
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
@@ -237,63 +242,59 @@ const Page = () => {
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
-    // setStatus({
-    //   loading: true,
-    //   message: `Booking.com: Fetch all accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
-    // });
-    // // fetch all accommodations in Booking.com API
-    // let allAccommodationsFetched: any[] = [];
-    // let morePages = true;
-    // let nextPage = '';
-    // while (morePages) {
-    //   const currentDestinationType = nextPage === '' ? destinationType : nextPage;
-    //   const currentDestinationId = nextPage === '' ? destinationId : 'null';
-    //   const currentPriceRange = nextPage === '' ? `${minPrice}_${maxPrice}` : 'null';
-    //   const response = await fetch(
-    //     `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`
-    //   ); // maxPrice is in USD
-    //   const responseJson = await response.json();
-    //   if (responseJson.data) allAccommodationsFetched.push(...responseJson.data);
-    //   if (responseJson.next_page) {
-    //     nextPage = responseJson.next_page;
-    //     setStatus({
-    //       loading: true,
-    //       message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...
-    //         `,
-    //     });
-    //     // pause for 1 second before next request
-    //     await new Promise((resolve) => setTimeout(resolve, 1000));
-    //   } else {
-    //     nextPage = '';
-    //     morePages = false;
-    //   }
-    // }
+    // fetch all accommodations in Booking.com API
+    let allAccommodationsFetched: any[] = [];
+    let morePages = true;
+    let nextPage = '';
+    while (morePages) {
+      const currentDestinationType = nextPage === '' ? destinationType : nextPage;
+      const currentDestinationId = nextPage === '' ? destinationId : 'null';
+      const currentPriceRange = nextPage === '' ? `${minPrice}_${maxPrice}` : 'null';
+      const response = await fetch(
+        `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`
+      ); // maxPrice is in USD
+      const responseJson = await response.json();
+      if (responseJson.data) allAccommodationsFetched.push(...responseJson.data);
+      if (responseJson.next_page) {
+        nextPage = responseJson.next_page;
+        setStatus({
+          loading: true,
+          message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...
+            `,
+        });
+        // pause for 1 second before next request
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } else {
+        nextPage = '';
+        morePages = false;
+      }
+    }
 
-    // // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
-    // // filter results by saved facilities here
-    // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
-    //   (accommodation) => {
-    //     const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
-    //       return settings.facilities.includes(x.id);
-    //     });
-    //     return facilitiesAreIncluded.length === settings.facilities.length;
-    //   }
-    // );
-    // if (allAccommodationsFetchedWithFacilities.length === 0) {
-    //   setStatus({
-    //     loading: false,
-    //     message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
-    //   });
-    //   console.log('----Done Fetching Hotels----');
-    //   return;
-    // }
-    // //add multiple prices here
-    // let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-    //   allAccommodationsFetchedWithFacilities,
-    //   null
-    // );
+    // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
+    // filter results by saved facilities here
+    const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
+      (accommodation) => {
+        const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
+          return settings.facilities.includes(x.id);
+        });
+        return facilitiesAreIncluded.length === settings.facilities.length;
+      }
+    );
+    if (allAccommodationsFetchedWithFacilities.length === 0) {
+      setStatus({
+        loading: false,
+        message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
+      });
+      console.log('----Done Fetching Hotels----');
+      return;
+    }
+    //add multiple prices here
+    let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+      allAccommodationsFetchedWithFacilities,
+      null
+    );
 
-    // // ***DEV PURPOSES: DONT FETCH PRICES
+    // ***DEV PURPOSES: DONT FETCH PRICES
     // const accommodationExtraPrices = [];
     // const monthsToFetchPrices = ['February', 'May', 'July', 'October', 'December'];
     // let monthCounter = 0;
@@ -334,14 +335,15 @@ const Page = () => {
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
-    // mock data
-    let allAccommodationsFetchedWithMultiplePrice: any[] = [];
-    allAccommodationsFetchedWithMultiplePrice = require('@/mock_data/accommodations').default;
+    // // mock data
+    // let allAccommodationsFetchedWithMultiplePrice: any[] = [];
+    // allAccommodationsFetchedWithMultiplePrice = require('@/mock_data/accommodations').default;
 
-    fetchDistricts();
+    // This errors out for some reason, I feel like it's because the addMultiplePrices function is still running and we're hitting a 429
+    await fetchDistricts();
 
-    console.log(allAccommodationsFetchedWithMultiplePrice.length);
-    console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
+    // console.log(allAccommodationsFetchedWithMultiplePrice.length);
+    // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
 
     // this is used to update the results based on district
     setAllFetchedAccommodations(allAccommodationsFetchedWithMultiplePrice);
@@ -360,21 +362,14 @@ const Page = () => {
     });
     setSelectedDistricts(tempSelectedDistricts); // this will fire the useEffect where hotels are prepared
 
-    console.log('allAccommodationsFetchedWithMultiplePrice');
-    console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
+    // console.log('allAccommodationsFetchedWithMultiplePrice');
+    // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
 
     setStatus({
       loading: false,
-      message: `${useMockAccommodationData && '****MOCK DATA**** '}Fetched ${
-        allAccommodationsFetchedWithMultiplePrice.length
-      } accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
+      message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
     });
     console.log('----Done Fetching Hotels----');
-
-    // const preparedHotels = prepareResults(allAccommodationsFetchedWithMultiplePrice, 'hotels');
-    // const prepareFlats = prepareResults(allAccommodationsFetchedWithMultiplePrice, 'flats');
-    // setCurrentAllHotels(preparedHotels || []);
-    // setCurrentAllFlats(prepareFlats || []);
   };
 
   const prepareResults = (allAccommodations: any[] | null, accommodation_type: string) => {
@@ -504,7 +499,6 @@ const Page = () => {
       checkout: string;
     } | null
   ) => {
-    console.log(accommodationPrices);
     if (accommodationPrices === null || accommodationPrices === undefined) {
       // if accommodationPrices is null then just adjust the price to an array with the current price having a date of today
       let currentDate: string = moment().format('YYYY-MM-DD');

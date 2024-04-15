@@ -1,10 +1,10 @@
 const apiCall = async (endpoint: string, fetchBody: object) => {
-  console.log('   ****single page fetch');
   let data: any[] = [];
 
   const token = `Bearer ${process.env.API_KEY}`;
   let next_page = '';
 
+  console.log(`   ****single page fetch => https://demandapi-sandbox.booking.com/3.1${endpoint}`);
   const response = await fetch(`https://demandapi-sandbox.booking.com/3.1${endpoint}`, {
     method: 'POST',
     headers: {

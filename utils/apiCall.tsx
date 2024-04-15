@@ -9,7 +9,9 @@ const apiCall = async (endpoint: string, fetchBody: object) => {
 
   while (morePagesAvailable) {
     currentPage++;
-    console.log('Fetching page ' + currentPage);
+    console.log(
+      `https://demandapi-sandbox.booking.com/3.1${endpoint} => Fetching page ${currentPage}`
+    );
     const response = await fetch(`https://demandapi-sandbox.booking.com/3.1${endpoint}`, {
       method: 'POST',
       headers: {
