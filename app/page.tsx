@@ -364,10 +364,10 @@ const Page = () => {
     console.log('----Done Fetching Hotels----');
 
     const preparedHotels = prepareResults(allAccommodationsFetchedWithMultiplePrice, 'hotels');
-    const prepareFlats = prepareResults(allAccommodationsFetchedWithMultiplePrice, 'flats');
+    // const prepareFlats = prepareResults(allAccommodationsFetchedWithMultiplePrice, 'flats');
 
     setCurrentAllHotels(preparedHotels || []);
-    setCurrentAllFlats(prepareFlats || []);
+    // setCurrentAllFlats(prepareFlats || []);
   };
 
   const prepareResults = (allAccommodations: any[] | null, accommodation_type: string) => {
@@ -377,9 +377,10 @@ const Page = () => {
     // Categorize the accommodations based on the type
     const accommodationsIncluded =
       accommodation_type == 'hotels' ? settings.hoteltypes : settings.apartmenttypes;
-    const specificAccommodations = allAccommodations.filter((x) =>
-      accommodationsIncluded.includes(String(x.accommodation_type))
-    );
+    const specificAccommodations = allAccommodations.filter((x) => {
+      if (x.place_id) return true; // automatically include google hotels
+      return accommodationsIncluded.includes(String(x.accommodation_type));
+    });
 
     // Set the status
     const tierSettings = settings[settings.tier as keyof typeof settings];
@@ -401,8 +402,10 @@ const Page = () => {
 
     // Filter by selected districts
     const accommodationsFilteredByDistrict = accommodationsWithRating.filter(
-      (x: { location: { districts: number[] } }) => {
+      (x: { place_id: any; location: { districts: number[] } }) => {
+        const isGoogle = x.place_id ? true : false;
         if (selectedDistricts.length === 0) return false;
+        if (isGoogle) return true;
         return x.location.districts.some((district) => selectedDistricts.includes(district));
       }
     );
@@ -410,23 +413,34 @@ const Page = () => {
     // Filter by selected stars
     const accommodationsFilteredByStars = accommodationsFilteredByDistrict.filter(
       (x: { rating: { stars: number } }) => {
+        // the following is for google hotels where it's possible to have stars that are not whole numbers
+        const roundedUpStars = Math.ceil(x.rating.stars);
+        const roundedDownStars = Math.floor(x.rating.stars);
+
         if (x.rating.stars === null) return selectedStars.includes(0);
-        return selectedStars.includes(x.rating.stars);
+        return selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
       }
     );
 
     // Filter hotels by review (This might not be necessary because we are already filtering by review in the API call)
     // TODO: try and not include this part
-    const accommodationsFilteredByReview = accommodationsFilteredByStars.filter(
-      (x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review
-    );
+    const accommodationsFilteredByReview = accommodationsFilteredByStars; //DON'T FILTER BY REVIEW ANYMORE BECAUSE THIS WILL INITIALLY HAVE BEEN DONE IN THE API CALL
+    // const accommodationsFilteredByReview = accommodationsFilteredByStars.filter(
+    //   (x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review
+    // );
 
     // Sort based on review score
     if (settings.consider_review_quantity) {
       accommodationsFilteredByReview.sort(
         (
-          a: { rating: { additional_info: { average_review_score: number } } },
-          b: { rating: { additional_info: { average_review_score: number } } }
+          a: {
+            rating: { additional_info: { average_review_score: number } };
+          },
+          b: {
+            rating: {
+              additional_info: { average_review_score: number };
+            };
+          }
         ) => {
           return (
             b.rating.additional_info.average_review_score -
@@ -449,10 +463,10 @@ const Page = () => {
       setHotelStatus({ loading: false, message: currentStatusText });
     else setFlatStatus({ loading: false, message: currentStatusText });
 
-    // Get the top 10 accommodations
-    const topTenAccommodations = accommodationsFilteredByReview.slice(0, 10);
-
-    return topTenAccommodations;
+    return accommodationsFilteredByReview; // ***DEV PURPOSES: RETURN ALL HOTELS
+    // // Get the top 10 accommodations
+    // const topTenAccommodations = accommodationsFilteredByReview.slice(0, 10);
+    // return topTenAccommodations;
   };
 
   const addRatingInfo = (accommodations: any[]) => {
@@ -545,12 +559,12 @@ const Page = () => {
         },
         rating: {
           stars: x.rating,
-          review_score: null,
+          review_score: x.rating * 2,
           number_of_reviews: x.user_ratings_total,
           additional_info: {
             most_reviews: null,
             review_percentage: null,
-            average_review_score: null,
+            average_review_score: x.rating * 2,
           },
         },
         price: [
@@ -608,25 +622,17 @@ const Page = () => {
   useEffect(() => {
     if (allFetchedAccommodations.length === 0) return;
 
-    const preparedHotels = prepareResults(allFetchedAccommodations, 'hotels') || [];
-    const prepareFlats = prepareResults(allFetchedAccommodations, 'flats') || [];
+    const combineGoogleAndBookingHotels = [...allFetchedAccommodations, ...allGoogleAccommodations];
 
-    // Add Search Google Maps Hotels to preparedHotels
-    const addedGoogleHotels = [...preparedHotels, ...allGoogleAccommodations];
-    console.log(addedGoogleHotels.length);
+    const preparedHotels = prepareResults(combineGoogleAndBookingHotels, 'hotels') || [];
+    // const prepareFlats = prepareResults(allFetchedAccommodations, 'flats') || [];
 
-    setCurrentAllHotels(addedGoogleHotels);
-    setCurrentAllFlats(prepareFlats);
+    // // Add Search Google Maps Hotels to preparedHotels
+    // const addedGoogleHotels = [...preparedHotels, ...allGoogleAccommodations];
+
+    setCurrentAllHotels(preparedHotels);
+    // setCurrentAllFlats(prepareFlats);
   }, [selectedDistricts, selectedStars, allGoogleAccommodations]);
-
-  useEffect(() => {
-    console.log('allGoogleAccommodations');
-    console.log(allGoogleAccommodations);
-
-    return () => {
-      // second
-    };
-  }, [allGoogleAccommodations]);
 
   return (
     <main>
@@ -874,7 +880,7 @@ const Page = () => {
           )}
         </div>
 
-        <div>
+        {/* <div>
           {currentAllFlats.length > 0 && <p className="font-bold text-xl">Top 10 Flats:</p>}
           <div className="flex flex-row">
             <div>{flatStatus['loading' as keyof typeof flatStatus] ? <Spinner /> : ''}</div>
@@ -895,7 +901,7 @@ const Page = () => {
                 : null}
             </div>
           )}
-        </div>
+        </div> */}
 
         <div className="flex flex-row-reverse">
           <button

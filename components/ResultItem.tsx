@@ -120,11 +120,11 @@ const ResultItem = ({
                   <p>
                     <span className="font-bold">Stars:</span> {stars ? stars : 'Unrated'}
                   </p>
+                  <p>
+                    <span className="font-bold">Rating:</span> {rating.score}
+                  </p>
                   {!isGoogle && (
                     <>
-                      <p>
-                        <span className="font-bold">Rating:</span> {rating.score}
-                      </p>
                       <p>
                         <span className="font-bold">
                           Adjusted Rating{' '}
