@@ -1,5 +1,5 @@
 'use client';
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import moment from 'moment';
 
 // coponents
@@ -125,9 +125,6 @@ const Page = () => {
 
     if (!googleHotels || !bookingHotels) return;
 
-    console.log(googleHotels[0]);
-    console.log(bookingHotels[0]);
-
     const commonHotels = bookingHotels.filter((bookingHotel) => {
       const bookingHotelName = bookingHotel.name['en-gb'];
       return googleHotels.some((googleHotel) => {
@@ -136,11 +133,11 @@ const Page = () => {
       });
     });
 
-    console.log('Google Hotels: ' + googleHotels.length);
-    console.log('Booking Hotels: ' + bookingHotels.length);
-    console.log('Common Hotels: ' + commonHotels.length);
+    // console.log('Google Hotels: ' + googleHotels.length);
+    // console.log('Booking Hotels: ' + bookingHotels.length);
+    // console.log('Common Hotels: ' + commonHotels.length);
 
-    console.log(commonHotels);
+    // console.log(commonHotels);
 
     return commonHotels;
   };
@@ -188,7 +185,7 @@ const Page = () => {
     );
     const convertedFetchedHotels = convertGoogleHotels(fetchedHotels);
 
-    setAllCommonAccommodations(allCommonAccommodations.map((x: { id: any }) => x.id));
+    setAllCommonAccommodations(allCommonAccommodations);
     setAllGoogleAccommodations(convertedFetchedHotels);
   };
 
@@ -622,7 +619,16 @@ const Page = () => {
   useEffect(() => {
     if (allFetchedAccommodations.length === 0) return;
 
-    const combineGoogleAndBookingHotels = [...allFetchedAccommodations, ...allGoogleAccommodations];
+    // remove common accommodations in allGoogleAccommodations
+    const allGoogleAccommodationsFiltered = allGoogleAccommodations.filter(
+      (x) =>
+        !allCommonAccommodations.map((x) => x.name['en-gb' as keyof typeof x.name]).includes(x.name)
+    );
+
+    const combineGoogleAndBookingHotels = [
+      ...allFetchedAccommodations,
+      ...allGoogleAccommodationsFiltered,
+    ];
 
     const preparedHotels = prepareResults(combineGoogleAndBookingHotels, 'hotels') || [];
     // const prepareFlats = prepareResults(allFetchedAccommodations, 'flats') || [];
@@ -872,7 +878,11 @@ const Page = () => {
                       index={i}
                       result={x}
                       districts={currentDistricts}
-                      common={allCommonAccommodations.includes(x.id) ? true : false}
+                      common={
+                        allCommonAccommodations.map((x: { id: any }) => x.id).includes(x.id)
+                          ? true
+                          : false
+                      }
                     />
                   ))
                 : null}
