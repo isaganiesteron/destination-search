@@ -183,7 +183,7 @@ const Page = () => {
       fetchedHotels,
       allFetchedAccommodations
     );
-    const convertedFetchedHotels = convertGoogleHotels(fetchedHotels);
+    const convertedFetchedHotels = convertGoogleHotels(fetchedHotels, neighborhood);
 
     setAllCommonAccommodations(allCommonAccommodations);
     setAllGoogleAccommodations(convertedFetchedHotels);
@@ -400,9 +400,7 @@ const Page = () => {
     // Filter by selected districts
     const accommodationsFilteredByDistrict = accommodationsWithRating.filter(
       (x: { place_id: any; location: { districts: number[] } }) => {
-        const isGoogle = x.place_id ? true : false;
-        if (selectedDistricts.length === 0) return false;
-        if (isGoogle) return true;
+        if (x.place_id) return true;
         return x.location.districts.some((district) => selectedDistricts.includes(district));
       }
     );
@@ -544,7 +542,7 @@ const Page = () => {
     }
   };
 
-  const convertGoogleHotels = (googleHotels: any[]) => {
+  const convertGoogleHotels = (googleHotels: any[], neighborhood: string) => {
     // convert google hotels to the same format as booking.com hotels
     return googleHotels.map((x) => {
       return {
@@ -552,7 +550,7 @@ const Page = () => {
         accommodation_type: 0,
         location: {
           address: x.formattedAddress,
-          districts: [],
+          districts: [neighborhood],
         },
         rating: {
           stars: x.rating,

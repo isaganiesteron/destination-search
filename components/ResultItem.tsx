@@ -16,8 +16,6 @@ const ResultItem = ({
   common: boolean;
 }) => {
   const isGoogle = result.place_id ? true : false;
-  if (isGoogle) console.log(result);
-
   const name = result.name
     ? isGoogle
       ? result.name
@@ -97,7 +95,7 @@ const ResultItem = ({
         } rounded-md flex flex-col w-full mt-2`}
       >
         <div className="grid grid-cols-6 gap-1">
-          <div className="p-2 flex items-center align-middle">
+          <div className="p-2 flex items-start align-middle">
             <Image src={currPhoto} width={200} height={200} alt="Image of hotel" />
           </div>
           <div className="p-2 col-span-5 items-center">
@@ -157,12 +155,11 @@ const ResultItem = ({
                   )}
                 </div>
               </div>
-
-              {!isGoogle && (
-                <>
-                  <p>
-                    <span className="font-bold">Districts: </span>
-                    {result.location.districts
+              <p>
+                <span className="font-bold">Districts: </span>
+                {result.place_id
+                  ? result.location.districts[0]
+                  : result.location.districts
                       .map((x: number, i: number) => {
                         const districtName: object[] = districts.filter((y: any) => y.id === x);
                         return districtName.length > 0
@@ -170,7 +167,10 @@ const ResultItem = ({
                           : `(${x} *not found)`;
                       })
                       .join(', ')}
-                  </p>
+              </p>
+
+              {!isGoogle && (
+                <>
                   <p>
                     <span className="font-bold">Facilities:</span>
                   </p>
