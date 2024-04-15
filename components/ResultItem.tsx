@@ -105,13 +105,15 @@ const ResultItem = ({
                 <h1 className="font-bold text-lg">
                   {`${index + 1}: ${name} (${accommodationType})`}
                 </h1>
-                <button
-                  type="button"
-                  className="pl-2 text-[12px] text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
-                  onClick={() => window.open(result.url, '_blank')}
-                >
-                  {`Link to ${accommodationType}`}
-                </button>
+                {!isGoogle && (
+                  <button
+                    type="button"
+                    className="pl-2 text-[12px] text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
+                    onClick={() => window.open(result.url, '_blank')}
+                  >
+                    {`Link to ${accommodationType}`}
+                  </button>
+                )}
               </div>
               <div className="flex flex-row justify-between ">
                 <div className="w-[70%]">
@@ -136,24 +138,22 @@ const ResultItem = ({
                     <span className="font-bold">Number of Reviews:</span> {rating.reviews}
                   </p>
                 </div>
-                <div className="w-[30%]">
-                  <span className="font-bold">Prices:</span>
-                  {!isGoogle ? (
-                    result.price &&
-                    result.price.map((x: any, i: number) => {
-                      const curCheckin = moment(x.checkin);
-                      if (x.price.total)
-                        return (
-                          <p key={i}>{`${curCheckin.format('MMMM')} ${curCheckin.format('YYYY')}: ${
-                            x.price.total
-                          }${x.currency}`}</p>
-                        );
-                      else return null;
-                    })
-                  ) : (
-                    <p>Not Available</p>
-                  )}
-                </div>
+                {!isGoogle && (
+                  <div className="w-[30%]">
+                    <span className="font-bold">Prices:</span>
+                    {result.price &&
+                      result.price.map((x: any, i: number) => {
+                        const curCheckin = moment(x.checkin);
+                        if (x.price.total)
+                          return (
+                            <p key={i}>{`${curCheckin.format('MMMM')} ${curCheckin.format(
+                              'YYYY'
+                            )}: ${x.price.total}${x.currency}`}</p>
+                          );
+                        else return null;
+                      })}
+                  </div>
+                )}
               </div>
               <p>
                 <span className="font-bold">Districts: </span>
