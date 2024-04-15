@@ -28,7 +28,9 @@ const ResultItem = ({
     ? result.icon
     : result.photos
     ? result.photos.length > 0
-      ? result.photos[0].url.thumbnail
+      ? result.photos[0]
+        ? result.photos[0].url.thumbnail
+        : 'NA'
       : 'NA'
     : 'NA';
   const additionRatingInfo = result.rating.additional_info;
@@ -95,9 +97,11 @@ const ResultItem = ({
         } rounded-md flex flex-col w-full mt-2`}
       >
         <div className="grid grid-cols-6 gap-1">
-          <div className="p-2 flex items-start align-middle">
-            <Image src={currPhoto} width={200} height={200} alt="Image of hotel" />
-          </div>
+          {currPhoto !== 'NA' && (
+            <div className="p-2 flex items-start align-middle">
+              <Image src={currPhoto} width={200} height={200} alt="Image of hotel" />
+            </div>
+          )}
           <div className="p-2 col-span-5 items-center">
             <div className="flex flex-col">
               {common && <small>(Found both in Booking.com and Google Maps)</small>}
@@ -144,6 +148,7 @@ const ResultItem = ({
                     {result.price &&
                       result.price.map((x: any, i: number) => {
                         const curCheckin = moment(x.checkin);
+                        if (!x.price) return null;
                         if (x.price.total)
                           return (
                             <p key={i}>{`${curCheckin.format('MMMM')} ${curCheckin.format(
