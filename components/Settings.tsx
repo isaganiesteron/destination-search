@@ -1,37 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { accommodationTypes } from "@/constants/accommodationtypes";
+import React, { useEffect, useState } from 'react';
+import { accommodationTypes } from '@/constants/accommodationtypes';
 
 type settingsProps = {
   settings: any;
+  showFlats: boolean;
+  showTopTen: boolean;
   saveSettings: Function;
+  setShowFlats: Function;
+  setShowTopTen: Function;
 };
 
-const Settings = ({ settings, saveSettings }: settingsProps) => {
+const Settings = ({
+  settings,
+  showFlats,
+  showTopTen,
+  saveSettings,
+  setShowFlats,
+  setShowTopTen,
+}: settingsProps) => {
   const [curReviewScore, setCurReviewScore] = useState<number>(settings.review);
-  const [curConsiderReviewQuantity, setCurConsiderReviewQuantity] =
-    useState<boolean>(settings.consider_review_quantity);
+  const [curConsiderReviewQuantity, setCurConsiderReviewQuantity] = useState<boolean>(
+    settings.consider_review_quantity
+  );
   const [curhotelTypes, setCurhotelTypes] = useState<object[]>();
-  const [curFacilities, setCurFacilities] = useState<number[]>(
-    settings.facilities
-  );
-  const [curBudgetMinPrice, setCurBudgetMinPrice] = useState<number>(
-    settings.budget.min_price
-  );
-  const [curBudgetMaxPrice, setCurBudgetMaxPrice] = useState<number>(
-    settings.budget.max_price
-  );
+  const [curFacilities, setCurFacilities] = useState<number[]>(settings.facilities);
+  const [curBudgetMinPrice, setCurBudgetMinPrice] = useState<number>(settings.budget.min_price);
+  const [curBudgetMaxPrice, setCurBudgetMaxPrice] = useState<number>(settings.budget.max_price);
   const [curMidrangeMinPrice, setCurMidrangeMinPrice] = useState<number>(
     settings.midrange.min_price
   );
   const [curMidrangeMaxPrice, setCurMidrangeMaxPrice] = useState<number>(
     settings.midrange.max_price
   );
-  const [curLuxuryMinPrice, setCurLuxuryMinPrice] = useState<number>(
-    settings.luxury.min_price
-  );
-  const [curLuxuryMaxPrice, setCurLuxuryMaxPrice] = useState<number>(
-    settings.luxury.max_price
-  );
+  const [curLuxuryMinPrice, setCurLuxuryMinPrice] = useState<number>(settings.luxury.min_price);
+  const [curLuxuryMaxPrice, setCurLuxuryMaxPrice] = useState<number>(settings.luxury.max_price);
 
   const _facilityHandler = (isChecked: boolean, facilityId: number) => {
     if (isChecked) {
@@ -50,7 +52,7 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
       review: curReviewScore,
       consider_review_quantity: curConsiderReviewQuantity,
       hoteltypes: curhotelTypes
-        ? curhotelTypes.map((x) => String(x["id" as keyof typeof x]))
+        ? curhotelTypes.map((x) => String(x['id' as keyof typeof x]))
         : settings.hoteltypes,
       facilities: curFacilities,
       apartmenttypes: settings.apartmenttypes,
@@ -82,20 +84,41 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
   return (
     <div className="m-4 p-2 border border-black rounded-md">
       <p className="font-bold text-md pb-2">Settings:</p>
-      <p className="font-bold text-sm ">Minimum Review Score</p>
-      <input
-        type="number"
-        value={curReviewScore}
-        className="w-full border border-black rounded-md text-black text-md px-1"
-        onChange={(e) => setCurReviewScore(Number(e.target.value))}
-      />
-      <div className="flex flex-row">
+      <div className="pt-1">
+        <p className="font-bold text-sm ">Limit Search Results</p>
+        <div className="flex flex-row">
+          <input
+            type="checkbox"
+            checked={showTopTen}
+            onChange={(e) => setShowTopTen(e.target.checked)}
+          />
+          <p className="text-sm ml-2">Show Top 10</p>
+        </div>
+        <div className="flex flex-row">
+          <input
+            type="checkbox"
+            checked={showFlats}
+            onChange={(e) => setShowFlats(e.target.checked)}
+          />
+          <p className="text-sm ml-2">Show Flats</p>
+        </div>
+      </div>
+      <div className="pt-4">
+        <p className="font-bold text-sm ">Minimum Review Score</p>
         <input
-          type="checkbox"
-          checked={curConsiderReviewQuantity}
-          onChange={(e) => setCurConsiderReviewQuantity(e.target.checked)}
+          type="number"
+          value={curReviewScore}
+          className="w-full border border-black rounded-md text-black text-md px-1"
+          onChange={(e) => setCurReviewScore(Number(e.target.value))}
         />
-        <p className="font-bold text-sm ml-2">Consider Review Quantity</p>
+        <div className="flex flex-row">
+          <input
+            type="checkbox"
+            checked={curConsiderReviewQuantity}
+            onChange={(e) => setCurConsiderReviewQuantity(e.target.checked)}
+          />
+          <p className="font-bold text-sm ml-2">Consider Review Quantity</p>
+        </div>
       </div>
       <div className="pt-4">
         <p className="font-bold text-sm">Min Budget Price</p>
@@ -150,9 +173,7 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
         <p className="font-bold text-sm">Hotel Types</p>
         <div className="grid grid-cols-4 gap-1">
           {accommodationTypes.map((type) => {
-            const isChecked = curhotelTypes?.find(
-              (x) => x["id" as keyof typeof x] === type.id
-            )
+            const isChecked = curhotelTypes?.find((x) => x['id' as keyof typeof x] === type.id)
               ? true
               : false;
             return (
@@ -162,12 +183,11 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
                   checked={isChecked}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      if (curhotelTypes)
-                        setCurhotelTypes([...curhotelTypes, type]);
+                      if (curhotelTypes) setCurhotelTypes([...curhotelTypes, type]);
                       else setCurhotelTypes([type]);
                     } else {
                       const newTypes = curhotelTypes?.filter(
-                        (x) => x["id" as keyof typeof x] !== type.id
+                        (x) => x['id' as keyof typeof x] !== type.id
                       );
                       setCurhotelTypes(newTypes);
                     }
@@ -191,9 +211,7 @@ const Settings = ({ settings, saveSettings }: settingsProps) => {
                 _facilityHandler(e.target.checked, 0);
               }}
             />
-            <p className="text-sm ml-1 line-through">
-              ***1km away from an airport
-            </p>
+            <p className="text-sm ml-1 line-through">***1km away from an airport</p>
           </div>
           <div className="flex flex-row items-center">
             <input
