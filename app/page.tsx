@@ -147,6 +147,8 @@ const Page = () => {
   const fetchGoogleAccommodations = async (neighborhood: string) => {
     if (neighborhood === '') return;
     setGoogleFetchingAccommodations(true);
+    setAllCommonAccommodations([]);
+    setAllGoogleAccommodations([]);
 
     let fetchedHotels: any[] = [];
 
@@ -188,7 +190,6 @@ const Page = () => {
     const convertedFetchedHotels = convertGoogleHotels(fetchedHotels, neighborhood);
 
     setGoogleFetchingAccommodations(false);
-
     setAllCommonAccommodations(allCommonAccommodations);
     setAllGoogleAccommodations(convertedFetchedHotels);
   };
@@ -579,12 +580,16 @@ const Page = () => {
 
   const resetVariablesAndStatus = () => {
     setSuggestions([]);
+    setGoogleFetchingAccommodations(false);
+    setAllCommonAccommodations([]);
+    setAllGoogleAccommodations([]);
     setAllFetchedAccommodations([]);
     setCurrentAllHotels([]);
     setCurrentDistricts([]);
     setSelectedDistricts([]);
     setCurrentAllFlats([]);
     setSelectedStars([0, 1, 2, 3, 4, 5]);
+    setNeighborhoodInput('');
     setStatus({ loading: false, message: '' });
     setHotelStatus({ loading: false, message: '' });
     setFlatStatus({ loading: false, message: '' });
