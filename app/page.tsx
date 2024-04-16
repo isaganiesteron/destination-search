@@ -661,7 +661,6 @@ const Page = () => {
     setCurrentAllHotels(preparedHotels);
 
     if (showFlats) {
-      console.log('show flats');
       const prepareFlats = prepareResults(combineGoogleAndBookingHotels, 'flats') || [];
       setCurrentAllFlats(prepareFlats);
     }
@@ -963,7 +962,9 @@ const Page = () => {
 
         {showFlats && (
           <div>
-            <p className="font-bold text-xl">{`${showTopTen ? 'Top 10' : 'All'} Flats:`}</p>
+            {currentAllFlats.length > 0 && (
+              <p className="font-bold text-xl">{`${showTopTen ? 'Top 10' : 'All'} Flats:`}</p>
+            )}
             <div className="flex flex-row">
               <div>{flatStatus['loading' as keyof typeof flatStatus] ? <Spinner /> : ''}</div>
               <p className="text-sm">{flatStatus['message' as keyof typeof flatStatus]}</p>
