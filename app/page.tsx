@@ -39,6 +39,7 @@ const Page = () => {
   const [currentDistricts, setCurrentDistricts] = useState<object[]>([]);
   const [selectedDistricts, setSelectedDistricts] = useState<number[]>([]);
   const [selectedStars, setSelectedStars] = useState<number[]>([0, 1, 2, 3, 4, 5]);
+  const [selectedSources, setSelectedSources] = useState<number[]>([0, 1, 2]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const [destination, setDestination] = useState<string>('');
@@ -243,91 +244,91 @@ const Page = () => {
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
-    // fetch all accommodations in Booking.com API
-    let allAccommodationsFetched: any[] = [];
-    let morePages = true;
-    let nextPage = '';
-    while (morePages) {
-      const currentDestinationType = nextPage === '' ? destinationType : nextPage;
-      const currentDestinationId = nextPage === '' ? destinationId : 'null';
-      const currentPriceRange = nextPage === '' ? `${minPrice}_${maxPrice}` : 'null';
-      const response = await fetch(
-        `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`
-      ); // maxPrice is in USD
-      const responseJson = await response.json();
-      if (responseJson.data) allAccommodationsFetched.push(...responseJson.data);
-      if (responseJson.next_page) {
-        nextPage = responseJson.next_page;
-        setStatus({
-          loading: true,
-          message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...
-            `,
-        });
-        // pause for 1 second before next request
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } else {
-        nextPage = '';
-        morePages = false;
-      }
-    }
-
-    // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
-    // filter results by saved facilities here
-    const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
-      (accommodation) => {
-        const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
-          return settings.facilities.includes(x.id);
-        });
-        return facilitiesAreIncluded.length === settings.facilities.length;
-      }
-    );
-    if (allAccommodationsFetchedWithFacilities.length === 0) {
-      setStatus({
-        loading: false,
-        message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
-      });
-      console.log('----Done Fetching Hotels----');
-      return;
-    }
-    //add multiple prices here
-    let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-      allAccommodationsFetchedWithFacilities,
-      null
-    );
-
-    // ***DEV PURPOSES: DONT FETCH PRICES
-    // const accommodationExtraPrices = [];
-    // const monthsToFetchPrices = ['February', 'May', 'July', 'October', 'December'];
-    // let monthCounter = 0;
-    // while (monthCounter < monthsToFetchPrices.length) {
-    //   // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
-    //   const checkin = moment().month(monthsToFetchPrices[monthCounter]).startOf('month');
-    //   const checkout = moment()
-    //     .month(monthsToFetchPrices[monthCounter])
-    //     .startOf('month')
-    //     .add(1, 'days');
-    //   // api only allows accommodations of 100 ids
-    //   let chunks = chunkArray(allAccommodationsFetched);
-    //   let chunkCount = 0;
-    //   while (chunkCount < chunks.length) {
-    //     const allIdsParam = chunks[chunkCount].map((x) => x.id).join(',');
-    //     const response = await fetch(
-    //       `/api/prices/${allIdsParam}/${checkin.format('YYYY-MM-DD')}/${checkout.format(
-    //         'YYYY-MM-DD'
-    //       )}`
-    //     );
-    //     const responseJson = await response.json();
-    //     accommodationExtraPrices.push(responseJson.data);
-    //     chunkCount++;
+    // // fetch all accommodations in Booking.com API
+    // let allAccommodationsFetched: any[] = [];
+    // let morePages = true;
+    // let nextPage = '';
+    // while (morePages) {
+    //   const currentDestinationType = nextPage === '' ? destinationType : nextPage;
+    //   const currentDestinationId = nextPage === '' ? destinationId : 'null';
+    //   const currentPriceRange = nextPage === '' ? `${minPrice}_${maxPrice}` : 'null';
+    //   const response = await fetch(
+    //     `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`
+    //   ); // maxPrice is in USD
+    //   const responseJson = await response.json();
+    //   if (responseJson.data) allAccommodationsFetched.push(...responseJson.data);
+    //   if (responseJson.next_page) {
+    //     nextPage = responseJson.next_page;
+    //     setStatus({
+    //       loading: true,
+    //       message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...
+    //         `,
+    //     });
+    //     // pause for 1 second before next request
+    //     await new Promise((resolve) => setTimeout(resolve, 1000));
+    //   } else {
+    //     nextPage = '';
+    //     morePages = false;
     //   }
-    //   monthCounter++;
     // }
-    // accommodationExtraPrices.forEach((month) => {
-    //   allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-    //     allAccommodationsFetchedWithMultiplePrice,
-    //     month
-    //   );
-    // });
+
+    // // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
+    // // filter results by saved facilities here
+    // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
+    //   (accommodation) => {
+    //     const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
+    //       return settings.facilities.includes(x.id);
+    //     });
+    //     return facilitiesAreIncluded.length === settings.facilities.length;
+    //   }
+    // );
+    // if (allAccommodationsFetchedWithFacilities.length === 0) {
+    //   setStatus({
+    //     loading: false,
+    //     message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
+    //   });
+    //   console.log('----Done Fetching Hotels----');
+    //   return;
+    // }
+    // //add multiple prices here
+    // let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+    //   allAccommodationsFetchedWithFacilities,
+    //   null
+    // );
+
+    // // ***DEV PURPOSES: DONT FETCH PRICES
+    // // const accommodationExtraPrices = [];
+    // // const monthsToFetchPrices = ['February', 'May', 'July', 'October', 'December'];
+    // // let monthCounter = 0;
+    // // while (monthCounter < monthsToFetchPrices.length) {
+    // //   // console.log(`Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
+    // //   const checkin = moment().month(monthsToFetchPrices[monthCounter]).startOf('month');
+    // //   const checkout = moment()
+    // //     .month(monthsToFetchPrices[monthCounter])
+    // //     .startOf('month')
+    // //     .add(1, 'days');
+    // //   // api only allows accommodations of 100 ids
+    // //   let chunks = chunkArray(allAccommodationsFetched);
+    // //   let chunkCount = 0;
+    // //   while (chunkCount < chunks.length) {
+    // //     const allIdsParam = chunks[chunkCount].map((x) => x.id).join(',');
+    // //     const response = await fetch(
+    // //       `/api/prices/${allIdsParam}/${checkin.format('YYYY-MM-DD')}/${checkout.format(
+    // //         'YYYY-MM-DD'
+    // //       )}`
+    // //     );
+    // //     const responseJson = await response.json();
+    // //     accommodationExtraPrices.push(responseJson.data);
+    // //     chunkCount++;
+    // //   }
+    // //   monthCounter++;
+    // // }
+    // // accommodationExtraPrices.forEach((month) => {
+    // //   allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+    // //     allAccommodationsFetchedWithMultiplePrice,
+    // //     month
+    // //   );
+    // // });
 
     /**
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
@@ -336,14 +337,14 @@ const Page = () => {
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
-    // // mock data
-    // let allAccommodationsFetchedWithMultiplePrice: any[] = [];
-    // allAccommodationsFetchedWithMultiplePrice = require('@/mock_data/accommodations').default;
+    // mock data
+    let allAccommodationsFetchedWithMultiplePrice: any[] = [];
+    allAccommodationsFetchedWithMultiplePrice = require('@/mock_data/accommodations').default;
 
     // This errors out for some reason, I feel like it's because the addMultiplePrices function is still running and we're hitting a 429
     await fetchDistricts();
 
-    // console.log(allAccommodationsFetchedWithMultiplePrice.length);
+    // console.log('allAccommodationsFetchedWithMultiplePrice');
     // console.log(JSON.stringify(allAccommodationsFetchedWithMultiplePrice));
 
     // this is used to update the results based on district
@@ -411,15 +412,29 @@ const Page = () => {
       }
     );
 
-    // Filter by selected stars
+    // Filter by selected stars and sources
     const accommodationsFilteredByStars = accommodationsFilteredByDistrict.filter(
-      (x: { rating: { stars: number } }) => {
+      (x: { name(name: any): any; id: number; place_id: number; rating: { stars: number } }) => {
         // the following is for google hotels where it's possible to have stars that are not whole numbers
         const roundedUpStars = Math.ceil(x.rating.stars);
         const roundedDownStars = Math.floor(x.rating.stars);
+        let starFilter = false;
+        let sourceFilter = false;
 
-        if (x.rating.stars === null) return selectedStars.includes(0);
-        return selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
+        if (x.rating.stars === null) starFilter = selectedStars.includes(0);
+        starFilter =
+          selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
+
+        const isCommonHotel = allCommonAccommodations.map((x: { id: any }) => x.id).includes(x.id)
+          ? true
+          : false;
+        const isGoogleHotel = x.place_id ? true : false;
+
+        if (!isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(0);
+        else if (isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(1);
+        else if (isCommonHotel) sourceFilter = selectedSources.includes(2);
+
+        return starFilter && sourceFilter;
       }
     );
 
@@ -589,6 +604,7 @@ const Page = () => {
     setSelectedDistricts([]);
     setCurrentAllFlats([]);
     setSelectedStars([0, 1, 2, 3, 4, 5]);
+    setSelectedSources([0, 1, 2]);
     setNeighborhoodInput('');
     setStatus({ loading: false, message: '' });
     setHotelStatus({ loading: false, message: '' });
@@ -644,7 +660,7 @@ const Page = () => {
 
     setCurrentAllHotels(preparedHotels);
     // setCurrentAllFlats(prepareFlats);
-  }, [selectedDistricts, selectedStars, allGoogleAccommodations]);
+  }, [selectedDistricts, selectedStars, selectedSources, allGoogleAccommodations]);
 
   return (
     <main>
@@ -765,10 +781,9 @@ const Page = () => {
           )}
 
           {allFetchedAccommodations.length > 0 && (
-            <div className="border border-black rounded-md w-full p-2 mt-2">
-              <p className="font-bold text-sm">Filter by Stars</p>
-
+            <div className="border border-black rounded-md w-full p-2 mt-2 flex gap-4">
               <div className="flex flex-col gap-1">
+                <p className="font-bold text-sm">Filter by Stars</p>
                 <div className="flex flex-row items-center">
                   <input
                     type="checkbox"
@@ -802,11 +817,8 @@ const Page = () => {
                     type="checkbox"
                     checked={selectedStars.includes(3)}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStars([...selectedStars, 3]);
-                      } else {
-                        setSelectedStars(selectedStars.filter((x) => x !== 3));
-                      }
+                      if (e.target.checked) setSelectedStars([...selectedStars, 3]);
+                      else setSelectedStars(selectedStars.filter((x) => x !== 3));
                     }}
                   />
                   <p className="text-sm ml-1">3 Stars</p>
@@ -816,11 +828,8 @@ const Page = () => {
                     type="checkbox"
                     checked={selectedStars.includes(4)}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStars([...selectedStars, 4]);
-                      } else {
-                        setSelectedStars(selectedStars.filter((x) => x !== 4));
-                      }
+                      if (e.target.checked) setSelectedStars([...selectedStars, 4]);
+                      else setSelectedStars(selectedStars.filter((x) => x !== 4));
                     }}
                   />
                   <p className="text-sm ml-1">4 Stars</p>
@@ -830,11 +839,8 @@ const Page = () => {
                     type="checkbox"
                     checked={selectedStars.includes(5)}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStars([...selectedStars, 5]);
-                      } else {
-                        setSelectedStars(selectedStars.filter((x) => x !== 5));
-                      }
+                      if (e.target.checked) setSelectedStars([...selectedStars, 5]);
+                      else setSelectedStars(selectedStars.filter((x) => x !== 5));
                     }}
                   />
                   <p className="text-sm ml-1">5 Stars</p>
@@ -844,14 +850,47 @@ const Page = () => {
                     type="checkbox"
                     checked={selectedStars.includes(0)}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStars([...selectedStars, 0]);
-                      } else {
-                        setSelectedStars(selectedStars.filter((x) => x !== 0));
-                      }
+                      if (e.target.checked) setSelectedStars([...selectedStars, 0]);
+                      else setSelectedStars(selectedStars.filter((x) => x !== 0));
                     }}
                   />
                   <p className="text-sm ml-1">Unrated</p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <p className="font-bold text-sm">Filter by Source</p>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedSources.includes(0)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedSources([...selectedSources, 0]);
+                      else setSelectedSources(selectedSources.filter((x) => x !== 0));
+                    }}
+                  />
+                  <p className="text-sm ml-1">Booking.com</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedSources.includes(1)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedSources([...selectedSources, 1]);
+                      else setSelectedSources(selectedSources.filter((x) => x !== 1));
+                    }}
+                  />
+                  <p className="text-sm ml-1">Google Maps</p>
+                </div>
+                <div className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedSources.includes(2)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedSources([...selectedSources, 2]);
+                      else setSelectedSources(selectedSources.filter((x) => x !== 2));
+                    }}
+                  />
+                  <p className="text-sm ml-1">Common Hotels</p>
                 </div>
               </div>
             </div>
