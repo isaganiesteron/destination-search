@@ -1,7 +1,7 @@
-import apiCall from '@/utils/apiCall';
 import fetchApi from '@/utils/fetchApi';
 import { NextResponse } from 'next/server';
-import moment, { min } from 'moment';
+import moment from 'moment';
+import chunkArray from '@/utils/chunkArray';
 // import tempHotelPricesAndDetails from "@/mock_data/hotels"
 
 const _chunkArray = (array: any[], chunkSize: number) => {
@@ -96,20 +96,42 @@ const _fetchHotelPrices = async (
 };
 
 const _fetchHotelDetails = async (hotelIds: number[]) => {
-  //  * Will split hotels into 100 because it can only take 100 hotels per request
-  const splitArray = _chunkArray(hotelIds, 100); // Note: change 2 to 100 after testing
-  console.log(`     There will be ${splitArray.length} requests.`);
-  const promises = splitArray.map((array) => {
-    const requestBody = {
-      accommodations: array,
-      // extras: ["description", "photos"],
-      extras: ['description', 'photos', 'facilities', 'payment', 'policies', 'rooms'],
-    };
-    return apiCall('/accommodations/details', requestBody);
-  });
-  const allHotelDetails = await Promise.all(promises);
-  const allHotelDetailsFlattened = ([] as object[]).concat(...allHotelDetails);
-  return allHotelDetailsFlattened;
+  /**
+   * Hotel hoteIds here will most probably be an array of 100 hotels already because
+   * _fetchHotelPrices is ran on a per page basis. BUT just in case it's split into
+   * 100 hotels per request.
+   *
+   * It's also unlikely BUT it's possible that this could have a next_page as well.
+   */
+
+  const splitArray = chunkArray(hotelIds); // Note: change 2 to 100 after testing
+  console.log(`     _fetchHotelDetails: There will be ${splitArray.length} requests.`);
+
+  let allHotelDetails: object[] = [];
+  let requestCount = 0;
+
+  while (requestCount < splitArray.length) {
+    let next_page = '';
+    let fetchingDone = false;
+    console.log(`     Fetching details for ${splitArray[requestCount].length} hotels.`);
+    while (!fetchingDone) {
+      const requestBody =
+        next_page === ''
+          ? {
+              accommodations: splitArray[requestCount],
+              extras: ['description', 'photos', 'facilities', 'payment', 'policies', 'rooms'],
+            }
+          : { next_page };
+      const rawData = await fetchApi('/accommodations/details', requestBody);
+      if (rawData.next_page) next_page = rawData.next_page;
+      else fetchingDone = true;
+
+      if (rawData.data) allHotelDetails.push(...rawData.data);
+      else console.log('Error fetching hotel details');
+    }
+    requestCount++;
+  }
+  return allHotelDetails;
 };
 
 export async function GET(request: Request, params: any) {
