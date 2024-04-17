@@ -37,11 +37,18 @@ const apiCall = async (endpoint: string, fetchBody: object) => {
     }
   } else {
     console.log(`     ***Status ${response.status}`);
-    const res = await response.json();
-    console.log(res);
+    try {
+      const res = await response.json();
+      console.log(res);
+    } catch (e) {
+      if (response.status !== 429) console.log(response);
+    }
     next_page = '';
   }
   console.log(`     Fetched ${data.length} items.`);
+
+  console.log('');
+  console.log('');
 
   return { next_page, data };
 };
