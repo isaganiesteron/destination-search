@@ -293,7 +293,6 @@ const Page = () => {
       ); // maxPrice is in USD
       const responseJson = await response.json();
       if (responseJson.data) {
-        console.log(responseJson.data);
         allAccommodationsFetched.push(...responseJson.data);
       }
       if (responseJson.next_page) {
@@ -316,7 +315,6 @@ const Page = () => {
     // filter results by saved facilities here
     const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
       (accommodation) => {
-        console.log(accommodation);
         const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
           return settings.facilities.includes(x.id);
         });
