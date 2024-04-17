@@ -5,6 +5,7 @@ export interface Settings {
   apartmenttypes: string[];
   facilities: number[];
   tier: string;
+  fetchMultiplePrices: boolean;
   budget: Budget;
   midrange: Midrange;
   luxury: Luxury;

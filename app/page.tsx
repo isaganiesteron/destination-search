@@ -69,6 +69,7 @@ const Page = () => {
     hoteltypes: hotelTypes,
     facilities: [], // check none by default
     apartmenttypes: ['201'],
+    fetchMultiplePrices: false,
     budget: {
       min_price: 0,
       max_price: 100,
@@ -242,6 +243,7 @@ const Page = () => {
   };
 
   const fetchAccommodations = async () => {
+    console.time('fetchAccommodations');
     // first check if currentDestination is set, if not then just return
     const destinationType = currentDestination['type' as keyof typeof currentDestination];
     const destinationId = currentDestination['id' as keyof typeof currentDestination];
@@ -300,8 +302,7 @@ const Page = () => {
         ``;
         setStatus({
           loading: true,
-          message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...
-            `,
+          message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...`,
         });
         // pause for 1 second before next request
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -335,56 +336,75 @@ const Page = () => {
       null
     );
 
-    // // ***DEV PURPOSES: DONT FETCH PRICES
-    // const accommodationExtraPrices: any[] = [];
-    // // This has to be 5 months ahead of the current month
-    // const monthsToFetchPrices = ['February', 'May', 'July', 'October', 'December'];
-    // let monthCounter = 0;
-    // let requestCounter = 0;
-    // while (monthCounter < monthsToFetchPrices.length) {
-    //   console.log(`   ***Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
-    //   const checkin = moment().month(monthsToFetchPrices[monthCounter]).startOf('month');
-    //   const checkout = moment()
-    //     .month(monthsToFetchPrices[monthCounter])
-    //     .startOf('month')
-    //     .add(1, 'days');
-    //   // api only allows accommodations of 100 ids
-    //   const chunks = chunkArray(allAccommodationsFetched);
+    if (settings.fetchMultiplePrices) {
+      // Fetch multiple prices for next 5 months
+      const accommodationExtraPrices: any[] = [];
+      // This has to be 4 months ahead of the current month
+      const monthsToFetchPrices = [];
+      const currentMonth = moment().format('MMMM');
+      monthsToFetchPrices.push(currentMonth);
+      for (let i = 1; i <= 4; i++) {
+        const nextMonth = moment().add(i, 'months').format('MMMM');
+        monthsToFetchPrices.push(nextMonth);
+      }
 
-    //   let chunkCount = 0;
-    //   console.log(`       Will fetch ${chunks.length} chunks`);
-    //   while (chunkCount < chunks.length) {
-    //     console.log(`         Fetching chunk ${chunkCount}`);
+      let monthCounter = 0;
+      let requestCounter = 0;
+      while (monthCounter < monthsToFetchPrices.length) {
+        console.log(`   ***Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
 
-    //     const allIdsParam = chunks[chunkCount].map((x) => x.id).join(',');
-    //     const response = await fetch(
-    //       `/api/prices/${allIdsParam}/${checkin.format('YYYY-MM-DD')}/${checkout.format(
-    //         'YYYY-MM-DD'
-    //       )}`
-    //     );
-    //     requestCounter++;
-    //     const responseJson = await response.json();
-    //     if (responseJson.data) accommodationExtraPrices.push(responseJson.data);
-    //     else {
-    //       console.log('         No Data Found for this chunk, moving on...');
-    //       console.log(responseJson);
-    //     }
-    //     // pause for 1 second before next request
-    //     await new Promise((resolve) => setTimeout(resolve, 1000));
-    //     if (requestCounter % 5 === 0) {
-    //       // pause an extra 5 seconds every 5 requests
-    //       await new Promise((resolve) => setTimeout(resolve, 5000));
-    //     }
-    //     chunkCount++;
-    //   }
-    //   monthCounter++;
-    // }
-    // accommodationExtraPrices.forEach((month) => {
-    //   allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-    //     allAccommodationsFetchedWithMultiplePrice,
-    //     month
-    //   );
-    // });
+        const isCurrentMonth = moment().format('MMMM') === monthsToFetchPrices[monthCounter];
+
+        const checkin = isCurrentMonth
+          ? moment()
+          : moment().month(monthsToFetchPrices[monthCounter]).startOf('month');
+        const checkout = isCurrentMonth
+          ? moment().add(1, 'days')
+          : moment().month(monthsToFetchPrices[monthCounter]).startOf('month').add(1, 'days');
+        // api only allows accommodations of 100 ids
+        const chunks = chunkArray(allAccommodationsFetched);
+
+        let chunkCount = 0;
+        console.log(`       Will fetch ${chunks.length} chunks`);
+
+        while (chunkCount < chunks.length) {
+          setStatus({
+            loading: true,
+            message: `Fetching Prices for ${monthsToFetchPrices[monthCounter]} (${monthCounter}/${monthsToFetchPrices.length} months). Processing ${chunkCount}/${chunks.length} requests.`,
+          });
+
+          const allIdsParam = chunks[chunkCount].map((x) => x.id).join(',');
+          const response = await fetch(
+            `/api/prices/${allIdsParam}/${checkin.format('YYYY-MM-DD')}/${checkout.format(
+              'YYYY-MM-DD'
+            )}`
+          );
+          requestCounter++;
+          const responseJson = await response.json();
+          if (responseJson.data) accommodationExtraPrices.push(responseJson.data);
+          else {
+            console.log('         No Data Found for this chunk, moving on...');
+            console.log(responseJson);
+          }
+          // pause for 1 second before next request
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          if (requestCounter % 5 === 0) {
+            // pause an extra 5 seconds every 5 requests
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+          }
+          chunkCount++;
+        }
+        monthCounter++;
+      }
+      accommodationExtraPrices.forEach((month) => {
+        allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+          allAccommodationsFetchedWithMultiplePrice,
+          month
+        );
+      });
+    } else {
+      console.log('*******skipping multiple prices********');
+    }
 
     /**
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
@@ -424,6 +444,8 @@ const Page = () => {
       message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
     });
     console.log('----Done Fetching Hotels----');
+
+    console.timeEnd('fetchAccommodations');
   };
 
   const prepareResults = (allAccommodations: any[] | null, accommodation_type: string) => {

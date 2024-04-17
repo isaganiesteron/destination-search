@@ -18,6 +18,9 @@ const Settings = ({
   setShowFlats,
   setShowTopTen,
 }: settingsProps) => {
+  const [curSearchMultiPrices, setCurSearchMultiPrices] = useState<boolean>(
+    settings.fetchMultiplePrices
+  );
   const [curReviewScore, setCurReviewScore] = useState<number>(settings.review);
   const [curConsiderReviewQuantity, setCurConsiderReviewQuantity] = useState<boolean>(
     settings.consider_review_quantity
@@ -56,6 +59,7 @@ const Settings = ({
         : settings.hoteltypes,
       facilities: curFacilities,
       apartmenttypes: settings.apartmenttypes,
+      fetchMultiplePrices: curSearchMultiPrices,
       budget: {
         min_price: curBudgetMinPrice,
         max_price: curBudgetMaxPrice,
@@ -84,7 +88,21 @@ const Settings = ({
   return (
     <div className="m-4 p-2 border border-black rounded-md">
       <p className="font-bold text-md pb-2">Settings:</p>
+
       <div className="pt-1">
+        <p className="font-bold text-sm ">
+          Search Multiple Prices **will take significanly more time to load
+        </p>
+        <div className="flex flex-row">
+          <input
+            type="checkbox"
+            checked={curSearchMultiPrices}
+            onChange={(e) => setCurSearchMultiPrices(e.target.checked)}
+          />
+          <p className="text-sm ml-2">Search prices for current month and the next 4 months</p>
+        </div>
+      </div>
+      <div className="pt-4">
         <p className="font-bold text-sm ">Limit Search Results</p>
         <div className="flex flex-row">
           <input
