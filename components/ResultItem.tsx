@@ -112,9 +112,7 @@ const ResultItem = ({
             <div className="flex flex-col">
               {isCommon && <small>(Found both in Booking.com and Google Maps)</small>}
               <div className="flex flex-row">
-                <h1 className="font-bold text-lg">
-                  {`${index + 1}: ${name} (${accommodationType})`}
-                </h1>
+                <h1 className="font-bold text-lg">{`${index + 1}: ${name}`}</h1>
                 {!isGoogle && (
                   <button
                     type="button"
