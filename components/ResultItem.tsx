@@ -8,19 +8,25 @@ const ResultItem = ({
   index,
   result,
   districts,
-  common,
+  commonData,
 }: {
   index: number;
   result: any;
   districts: object[];
-  common: boolean;
+  commonData: any;
 }) => {
   const isGoogle = result.place_id ? true : false;
+  const googleName = result.google_data ? result.google_data.name : '';
+  const googleRating = result.google_data ? result.google_data.rating : 0;
+  const googleRatingNumber = result.google_data ? result.google_data.user_ratings_total : 0;
+
+  const isCommon = commonData ? true : false;
   const name = result.name
     ? isGoogle
       ? result.name
       : result.name['en-gb' as keyof typeof result.name]
     : 'NA';
+
   const currDescription = result.description
     ? result.description.text['en-gb' as keyof typeof result.description.text]
     : 'Not Available';
@@ -92,8 +98,8 @@ const ResultItem = ({
   return (
     <>
       <div
-        className={`border${common ? '-4' : ''} ${
-          common ? 'border-red-500' : 'border-black'
+        className={`border${isCommon ? '-4' : ''} ${
+          isCommon ? 'border-red-500' : 'border-black'
         } rounded-md flex flex-col w-full mt-2`}
       >
         <div className="grid grid-cols-6 gap-1">
@@ -104,7 +110,7 @@ const ResultItem = ({
           )}
           <div className="p-2 col-span-5 items-center">
             <div className="flex flex-col">
-              {common && <small>(Found both in Booking.com and Google Maps)</small>}
+              {isCommon && <small>(Found both in Booking.com and Google Maps)</small>}
               <div className="flex flex-row">
                 <h1 className="font-bold text-lg">
                   {`${index + 1}: ${name} (${accommodationType})`}
@@ -121,6 +127,20 @@ const ResultItem = ({
               </div>
               <div className="flex flex-row justify-between ">
                 <div className="w-[70%]">
+                  {isCommon && (
+                    <>
+                      <p className="underline">
+                        <span className="font-bold">Google Maps Name:</span> {googleName}
+                      </p>
+                      <p className="underline">
+                        <span className="font-bold">Google Maps Rating:</span> {googleRating}
+                      </p>
+                      <p className="underline">
+                        <span className="font-bold">Google Maps Number of Reviews:</span>{' '}
+                        {googleRatingNumber}
+                      </p>
+                    </>
+                  )}
                   <p>
                     <span className="font-bold">Stars:</span> {stars ? stars : 'Unrated'}
                   </p>
