@@ -63,6 +63,7 @@ const ResultItem = ({
       : 'Google Result'
     : accommodationTypes.filter((x) => x.id === result.accommodation_type).map((x) => x.name)[0];
 
+  const [showAllFacilities, setShowAllFacilities] = useState<boolean>(false);
   const facilities = result.facilities
     ? result.facilities.map((x: { id: number }) => {
         const singleItem = accommodationFacilities
@@ -95,6 +96,18 @@ const ResultItem = ({
     setCurrentDescription('');
   };
 
+  const DisplayFacilitiesButton = () => {
+    return (
+      <button
+        type="button"
+        className="pl-3 text-[12px] text-blue-800 font-semibold underline hover:text-blue-950"
+        onClick={() => setShowAllFacilities(!showAllFacilities)}
+      >
+        {showAllFacilities ? 'hide' : 'show'} all facilities
+      </button>
+    );
+  };
+
   return (
     <>
       <div
@@ -103,11 +116,16 @@ const ResultItem = ({
         } rounded-md flex flex-col w-full mt-2`}
       >
         <div className="grid grid-cols-6 gap-1">
-          {currPhoto !== 'NA' && (
-            <div className="p-2 flex items-start align-middle">
+          <div className="p-2 flex items-start align-middle">
+            {currPhoto !== 'NA' ? (
               <Image src={currPhoto} width={200} height={200} alt="Image of hotel" />
-            </div>
-          )}
+            ) : (
+              <div className="flex border border-black w-[200px] h-[200px] items-center justify-center">
+                <small>Image not available</small>
+              </div>
+            )}
+          </div>
+
           <div className="p-2 col-span-5 items-center">
             <div className="flex flex-col">
               {isCommon && <small>(Found both in Booking.com and Google Maps)</small>}
@@ -197,7 +215,24 @@ const ResultItem = ({
                   <p>
                     <span className="font-bold">Facilities:</span>
                   </p>
-                  {facilities.join(', ')}
+                  <div className="flex flex-row items-center">
+                    {showAllFacilities ? (
+                      <>
+                        <p>
+                          {facilities.join(', ')}
+                          {facilities.length > 10 && <DisplayFacilitiesButton />}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p>
+                          {facilities.slice(0, 10).join(', ')}
+                          {facilities.length > 10 && '...'}
+                          {facilities.length > 10 && <DisplayFacilitiesButton />}
+                        </p>
+                      </>
+                    )}
+                  </div>
                   <p>
                     <span className="font-bold">Description:</span>
                   </p>
