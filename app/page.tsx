@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import moment from 'moment';
 import chunkArray from '@/utils/chunkArray';
+import similarity from '@/utils/similarity';
 
 // coponents
 import ResultItem from '@/components/ResultItem';
@@ -165,29 +166,29 @@ const Page = () => {
     googleHotels: any[] | undefined,
     bookingHotels: any[] | undefined
   ) => {
-    // // Was used like this
-    // // Intersect all accommodations with google accommodations here
-    // const allCommonAccommodations: any = await commonAccommodations(
-    //   googleHotels,
-    //   allAccommodationsFetched
-    // );
-    // setAllCommonAccommodations(allCommonAccommodations.map((x: { id: any }) => x.id));
-
     if (!googleHotels || !bookingHotels) return;
 
-    const commonHotels = bookingHotels.filter((bookingHotel) => {
+    // let nomatches: any[] = [];
+    let commonHotels: any[] = [];
+    bookingHotels.forEach((bookingHotel) => {
       const bookingHotelName = bookingHotel.name['en-gb'];
-      return googleHotels.some((googleHotel) => {
+      googleHotels.forEach((googleHotel) => {
         const googleHotelName = googleHotel.name;
-        return googleHotelName === bookingHotelName;
+        const similarityPercentage: number = similarity(googleHotelName, bookingHotelName);
+
+        if (similarityPercentage > 85) {
+          commonHotels.push({ ...bookingHotel, google_data: googleHotel });
+        } else {
+          // nomatches.push({
+          //   google: googleHotelName,
+          //   booking: bookingHotelName,
+          //   similarity: similarityPercentage,
+          // });
+        }
       });
     });
-
-    // console.log('Google Hotels: ' + googleHotels.length);
-    // console.log('Booking Hotels: ' + bookingHotels.length);
-    // console.log('Common Hotels: ' + commonHotels.length);
-
-    // console.log(commonHotels);
+    // console.log(JSON.stringify(nomatches));
+    console.log(commonHotels);
 
     return commonHotels;
   };
@@ -235,11 +236,12 @@ const Page = () => {
       fetchedHotels,
       allFetchedAccommodations
     );
+    setAllCommonAccommodations(allCommonAccommodations);
+
     const convertedFetchedHotels = convertGoogleHotels(fetchedHotels, neighborhood);
+    setAllGoogleAccommodations(convertedFetchedHotels);
 
     setGoogleFetchingAccommodations(false);
-    setAllCommonAccommodations(allCommonAccommodations);
-    setAllGoogleAccommodations(convertedFetchedHotels);
   };
 
   const fetchAccommodations = async () => {
