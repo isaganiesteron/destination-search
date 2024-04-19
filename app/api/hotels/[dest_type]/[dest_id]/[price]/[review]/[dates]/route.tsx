@@ -51,19 +51,21 @@ const _fetchHotelPrices = async (
   const min_price = price.split('_')[0];
   const max_price = price.split('_')[1];
 
-  const requestBody = {
+  let requestBody: {
+    booker: { country: string; platform: string };
+    currency: string;
+    checkin: string;
+    checkout: string;
+    extras: string[];
+    guests: { number_of_adults: number; number_of_rooms: number };
+    price?: { minimum: number; maximum: number };
+    rating?: { minimum_review_score: number };
+  } = {
     booker: {
       country: 'nl',
       platform: 'desktop',
     },
     currency: 'USD',
-    price: {
-      minimum: parseInt(min_price),
-      maximum: parseInt(max_price),
-    },
-    rating: {
-      minimum_review_score: parseInt(review),
-    },
     checkin: moment(checkin).format('YYYY-MM-DD'),
     checkout: moment(checkout).format('YYYY-MM-DD'),
     extras: ['extra_charges', 'products'],
@@ -72,6 +74,18 @@ const _fetchHotelPrices = async (
       number_of_rooms: 1,
     },
   };
+
+  if (price !== 'null' && review !== 'null') {
+    requestBody = {
+      ...requestBody,
+      price: { minimum: parseInt(min_price), maximum: parseInt(max_price) },
+      rating: {
+        minimum_review_score: parseInt(review),
+      },
+    };
+  }
+
+  console.log(requestBody);
 
   let updatedRequestBody: object = {};
   if (page !== 'null') {

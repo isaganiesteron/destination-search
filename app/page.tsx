@@ -88,36 +88,23 @@ const Page = () => {
     },
   });
 
+  // the new settings will be like this instead of just 1 object
+  // the only object will be the price tier and review filter
   const [showFlats, setShowFlats] = useState(true);
   const [showTopTen, setshowTopTen] = useState(true);
+  const [ignorePriceAndRating, setIgnorePriceAndRating] = useState<boolean>(false);
 
   const fetchSuggestions = async (query: string) => {
     const response = await fetch('/api/autosuggest/' + query);
     if (response.status === 200) {
       const data = await response.json();
       setSuggestions(data);
-      // setSuggestions(
-      //   data.filter(
-      //     (x: any) =>
-      //       x.dest_type !== 'district' && x.dest_type !== 'hotel' && x.dest_type !== 'airport'
-      //   )
-      // );
     }
   };
 
   const fetchDistricts = async () => {
     const destinationType = currentDestination['type' as keyof typeof currentDestination];
     const destinationId = currentDestination['id' as keyof typeof currentDestination];
-
-    const fetchString = `/api/district/null/${destinationType}/${destinationId}`;
-    const response = await fetch(fetchString);
-    const responseJson = await response.json();
-
-    // it's possible to have a next_page here, take into account this
-
-    // ****************************************************
-    // ****************************************************
-    // ****************************************************
 
     let nextPageToken = '';
     let fetchingDone = false;
@@ -199,6 +186,12 @@ const Page = () => {
     setAllCommonAccommodations([]);
     setAllGoogleAccommodations([]);
 
+    // The 2 below are important because we need to show users ONLY common hotels AND ignore filtering with districts
+    setSelectedSources([2]);
+    setSelectedDistricts(
+      currentDistricts.map((district) => district['id' as keyof typeof district])
+    );
+
     let fetchedHotels: any[] = [];
 
     // console.log('****USING MOCK DATA****');
@@ -258,7 +251,7 @@ const Page = () => {
     const tierSettings = settings[settings.tier as keyof typeof settings];
     const minPrice = tierSettings['min_price' as keyof typeof tierSettings];
     const maxPrice = tierSettings['max_price' as keyof typeof tierSettings];
-    const review = settings.review;
+    const review = ignorePriceAndRating ? 'null' : settings.review;
 
     const dateCheckin = currentDates['checkin' as keyof typeof currentDates];
     const dateCheckout = currentDates['checkout' as keyof typeof currentDates];
@@ -291,10 +284,13 @@ const Page = () => {
     while (morePages) {
       const currentDestinationType = nextPage === '' ? destinationType : nextPage;
       const currentDestinationId = nextPage === '' ? destinationId : 'null';
-      const currentPriceRange = nextPage === '' ? `${minPrice}_${maxPrice}` : 'null';
-      const response = await fetch(
-        `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`
-      ); // maxPrice is in USD
+      const currentPriceRange =
+        nextPage === '' ? (ignorePriceAndRating ? 'null' : `${minPrice}_${maxPrice}`) : 'null';
+
+      const fetchString = `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`;
+      console.log('***fetchString');
+      console.log(fetchString);
+      const response = await fetch(fetchString); // maxPrice is in USD
       const responseJson = await response.json();
       if (responseJson.data) {
         allAccommodationsFetched.push(...responseJson.data);
@@ -748,7 +744,7 @@ const Page = () => {
 
   return (
     <main>
-      <small className="float-end">v.1.0.1</small>
+      <small className="float-end">v1.0.2</small>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
         <div>
           <div className="grid grid-cols-4 gap-1">
@@ -779,6 +775,7 @@ const Page = () => {
             <div>
               <p className="font-bold text-md">Price Tier</p>
               <select
+                disabled={ignorePriceAndRating}
                 className="border border-black rounded-md w-full p-2"
                 name="tier"
                 id="tier"
@@ -998,6 +995,8 @@ const Page = () => {
               settings={settings}
               showFlats={showFlats}
               showTopTen={showTopTen}
+              ignorePriceAndRating={ignorePriceAndRating}
+              setIgnorePriceAndRating={setIgnorePriceAndRating}
               saveSettings={setSettings}
               setShowFlats={setShowFlats}
               setShowTopTen={setshowTopTen}

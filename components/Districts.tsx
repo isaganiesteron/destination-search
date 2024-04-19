@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 const Districts = ({
   currentDistricts,
@@ -14,8 +14,8 @@ const Districts = ({
     <>
       <div className="grid grid-cols-5 gap-1 ">
         {currentDistricts.map((district, i) => {
-          const districtName = district["name" as keyof typeof district];
-          const districtId = district["id" as keyof typeof district];
+          const districtName = district['name' as keyof typeof district];
+          const districtId = district['id' as keyof typeof district];
           return (
             <div key={i} className="flex flex-row items-center">
               <input
@@ -26,9 +26,7 @@ const Districts = ({
                   if (e.target.checked) {
                     setSelectedDistricts([...selectedDistricts, districtId]);
                   } else {
-                    setSelectedDistricts(
-                      selectedDistricts.filter((id) => id !== districtId)
-                    );
+                    setSelectedDistricts(selectedDistricts.filter((id) => id !== districtId));
                   }
                 }}
               />
@@ -43,14 +41,12 @@ const Districts = ({
         onClick={() => {
           const currentAllSelect = allIsChecked
             ? []
-            : currentDistricts.map(
-                (district) => district["id" as keyof typeof district]
-              );
+            : currentDistricts.map((district) => district['id' as keyof typeof district]);
           setSelectedDistricts(currentAllSelect);
           setAllIsChecked(!allIsChecked);
         }}
       >
-        {allIsChecked ? "Unselect All" : "Select All"}
+        {allIsChecked ? 'Unselect All' : 'Select All'}
       </button>
     </>
   );

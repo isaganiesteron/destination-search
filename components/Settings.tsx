@@ -8,6 +8,8 @@ type settingsProps = {
   saveSettings: Function;
   setShowFlats: Function;
   setShowTopTen: Function;
+  ignorePriceAndRating: boolean;
+  setIgnorePriceAndRating: Function;
 };
 
 const Settings = ({
@@ -17,6 +19,8 @@ const Settings = ({
   saveSettings,
   setShowFlats,
   setShowTopTen,
+  ignorePriceAndRating,
+  setIgnorePriceAndRating,
 }: settingsProps) => {
   const [curSearchMultiPrices, setCurSearchMultiPrices] = useState<boolean>(
     settings.fetchMultiplePrices
@@ -119,6 +123,17 @@ const Settings = ({
             onChange={(e) => setShowFlats(e.target.checked)}
           />
           <p className="text-sm ml-2">Show Flats</p>
+        </div>
+      </div>
+      <div className="pt-4">
+        <p className="font-bold text-sm ">Ignore Price Tier and Review Score</p>
+        <div className="flex flex-row">
+          <input
+            type="checkbox"
+            checked={ignorePriceAndRating}
+            onChange={(e) => setIgnorePriceAndRating(e.target.checked)}
+          />
+          <p className="text-sm ml-2">Don't search accommodations based on Price and Reviews</p>
         </div>
       </div>
       <div className="pt-4">
