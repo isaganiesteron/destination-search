@@ -93,6 +93,7 @@ const Page = () => {
   const [showFlats, setShowFlats] = useState(true);
   const [showTopTen, setshowTopTen] = useState(true);
   const [ignorePriceAndRating, setIgnorePriceAndRating] = useState<boolean>(false);
+  const [googleSearchStatus, setGoogleSearchStatus] = useState<string[]>([]);
 
   const fetchSuggestions = async (query: string) => {
     const response = await fetch('/api/autosuggest/' + query);
@@ -175,7 +176,6 @@ const Page = () => {
       });
     });
     // console.log(JSON.stringify(nomatches));
-    console.log(commonHotels);
 
     return commonHotels;
   };
@@ -185,6 +185,7 @@ const Page = () => {
     setGoogleFetchingAccommodations(true);
     setAllCommonAccommodations([]);
     setAllGoogleAccommodations([]);
+    setGoogleSearchStatus([]);
 
     // The 2 below are important because we need to show users ONLY common hotels AND ignore filtering with districts
     setSelectedSources([2]);
@@ -197,6 +198,10 @@ const Page = () => {
     // console.log('****USING MOCK DATA****');
     // fetchedHotels = require('@/mock_data/googlehotels').default;
 
+    setGoogleSearchStatus([
+      ...googleSearchStatus,
+      `Searching Google Maps for hotels in ${neighborhood}...`,
+    ]);
     let nextPageToken = null;
     let fetchingDone = false;
 
@@ -221,6 +226,11 @@ const Page = () => {
         fetchingDone = true;
       }
     }
+
+    setGoogleSearchStatus([
+      ...googleSearchStatus,
+      `Found ${fetchedHotels.length} hotels in ${neighborhood}...`,
+    ]);
     // sort fetchedHotels by name field
     fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -229,7 +239,25 @@ const Page = () => {
       fetchedHotels,
       allFetchedAccommodations
     );
+
+    console.log(allCommonAccommodations);
     setAllCommonAccommodations(allCommonAccommodations);
+
+    const allCommonAccommodationsGoogleId = allCommonAccommodations.map(
+      (x: { google_data: { place_id: any } }) => x.google_data.place_id
+    );
+    const fetchedHotelsNoMatch = fetchedHotels.filter(
+      (x) => !allCommonAccommodationsGoogleId.includes(x.place_id)
+    );
+
+    setGoogleSearchStatus([
+      ...googleSearchStatus,
+      `Matched ${allCommonAccommodations.length} Google Maps Hotels to ${allFetchedAccommodations.length} fetched Booking.com hotels...`,
+      `${
+        fetchedHotels.length - allCommonAccommodations.length
+      } Google Maps Hotels with no match. Searching booking.com for the following hotels:`,
+      `${fetchedHotelsNoMatch.map((x) => x.name).join(', ')}`,
+    ]);
 
     const convertedFetchedHotels = convertGoogleHotels(fetchedHotels, neighborhood);
     setAllGoogleAccommodations(convertedFetchedHotels);
@@ -858,6 +886,15 @@ const Page = () => {
                     {googleFetchingAccommodations ? <Spinner /> : 'Search Google Maps'}
                   </button>
                 </div>
+                {googleSearchStatus.length > 0 && (
+                  <div className="p-2">
+                    {googleSearchStatus.map((status, index) => (
+                      <p key={index} className="text-sm">
+                        {status}
+                      </p>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
