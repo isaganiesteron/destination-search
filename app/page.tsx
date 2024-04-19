@@ -109,7 +109,7 @@ const Page = () => {
 
     let nextPageToken = '';
     let fetchingDone = false;
-    let fetchedDistricts: any[] = [];
+    let fetchedDistricts: any[] = [{ id: 0, name: 'No District' }];
 
     while (!fetchingDone) {
       const response: any = await fetch(
@@ -165,7 +165,16 @@ const Page = () => {
         const similarityPercentage: number = similarity(googleHotelName, bookingHotelName);
 
         if (similarityPercentage > 85) {
-          commonHotels.push({ ...bookingHotel, google_data: googleHotel });
+          // make sure that this accommodation is included as a hotel or flat
+          const isIncludedHotel = settings.hoteltypes.includes(
+            String(bookingHotel.accommodation_type)
+          );
+          const isIncludedFlat = settings.apartmenttypes.includes(
+            String(bookingHotel.accommodation_type)
+          );
+
+          if (isIncludedHotel || isIncludedFlat)
+            commonHotels.push({ ...bookingHotel, google_data: googleHotel });
         } else {
           // nomatches.push({
           //   google: googleHotelName,
@@ -240,7 +249,9 @@ const Page = () => {
       allFetchedAccommodations
     );
 
-    console.log(allCommonAccommodations);
+    console.log(
+      allCommonAccommodations.map((x: { [x: string]: any }) => x['name' as keyof typeof x])
+    );
     setAllCommonAccommodations(allCommonAccommodations);
 
     const allCommonAccommodationsGoogleId = allCommonAccommodations.map(
@@ -316,8 +327,6 @@ const Page = () => {
         nextPage === '' ? (ignorePriceAndRating ? 'null' : `${minPrice}_${maxPrice}`) : 'null';
 
       const fetchString = `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`;
-      console.log('***fetchString');
-      console.log(fetchString);
       const response = await fetch(fetchString); // maxPrice is in USD
       const responseJson = await response.json();
       if (responseJson.data) {
@@ -454,6 +463,7 @@ const Page = () => {
     // get all districts from all fetched accommodations here
 
     // initially set the selected districtss
+    // WILL RESOLVE BUG!!! include the accommodations with no districts or not found
     let tempSelectedDistricts: number[] = [...selectedDistricts];
     allAccommodationsFetchedWithMultiplePrice.forEach((x: { location: { districts: any } }) => {
       const currentDiscrict = x.location.districts;
@@ -464,10 +474,27 @@ const Page = () => {
         });
       }
     });
+
+    // differentiate  the different kinds of accommodations
+
+    // Categorize the accommodations based on the type
+    // const accommodationsIncluded =
+    //   accommodation_type == 'hotels' ? settings.hoteltypes : settings.apartmenttypes;
+
+    let hotelCount = 0;
+    let flatCount = 0;
+    let otherCount = 0;
+
+    allAccommodationsFetchedWithMultiplePrice.forEach((x) => {
+      if (settings.hoteltypes.includes(String(x.accommodation_type))) hotelCount++;
+      else if (settings.apartmenttypes.includes(String(x.accommodation_type))) flatCount++;
+      else otherCount++;
+    });
+
     setSelectedDistricts(tempSelectedDistricts); // this will fire the useEffect where hotels are prepared
     setStatus({
       loading: false,
-      message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
+      message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations. ${hotelCount} Hotels, ${flatCount} Flats and ${otherCount} other types. In ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
     });
     console.log('----Done Fetching Hotels----');
 
@@ -486,7 +513,7 @@ const Page = () => {
       return accommodationsIncluded.includes(String(x.accommodation_type));
     });
 
-    // Set the status
+    // If no accommodations are found return and let user know
     const tierSettings = settings[settings.tier as keyof typeof settings];
     const minPrice = tierSettings['min_price' as keyof typeof tierSettings];
     const maxPrice = tierSettings['max_price' as keyof typeof tierSettings];
@@ -505,31 +532,51 @@ const Page = () => {
     const accommodationsWithRating = addRatingInfo(specificAccommodations);
 
     // Filter by selected districts
+    // const accommodationsFilteredByDistrict = accommodationsWithRating;
     const accommodationsFilteredByDistrict = accommodationsWithRating.filter(
       (x: { place_id: any; location: { districts: number[] } }) => {
         if (x.place_id) return true;
-        return x.location.districts.some((district) => selectedDistricts.includes(district));
+        if (x.location.districts.length === 0) {
+          return selectedDistricts.includes(0); // include accommodations with no districts
+        }
+
+        let includeAccommodation = false;
+        // check if the
+        x.location.districts.forEach((district: number) => {
+          // first check if the district is even in the list of fetched districts. If not, include the accommodation and add it to the list of Districts
+          // if(currentDistricts.includes(district))
+          const currentDistrictsIDs: number[] = currentDistricts.map(
+            (dist) => dist['id' as keyof typeof dist]
+          );
+
+          if (!currentDistrictsIDs.includes(district))
+            setCurrentDistricts([...currentDistricts, { id: district, name: 'Unknown' }]);
+          if (selectedDistricts.includes(district)) includeAccommodation = true;
+        });
+
+        return includeAccommodation;
       }
     );
 
+    console.log(allCommonAccommodations);
+    // console.log('1. ', accommodationsFilteredByDistrict.length);
     // Filter by selected stars and sources
     const accommodationsFilteredByStars = accommodationsFilteredByDistrict.filter(
       (x: { name(name: any): any; id: number; place_id: number; rating: { stars: number } }) => {
-        // the following is for google hotels where it's possible to have stars that are not whole numbers
-        const roundedUpStars = Math.ceil(x.rating.stars);
-        const roundedDownStars = Math.floor(x.rating.stars);
+        // filter by stars
         let starFilter = false;
-        let sourceFilter = false;
-
+        const roundedUpStars = Math.ceil(x.rating.stars); // this is for google hotels where it's possible to have stars that are not whole numbers
+        const roundedDownStars = Math.floor(x.rating.stars); // this is for google hotels where it's possible to have stars that are not whole numbers
         if (x.rating.stars === null) starFilter = selectedStars.includes(0);
         starFilter =
           selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
 
+        // filter by source
+        let sourceFilter = false;
         const isCommonHotel = allCommonAccommodations.map((x: { id: any }) => x.id).includes(x.id)
           ? true
           : false;
         const isGoogleHotel = x.place_id ? true : false;
-
         if (!isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(0);
         else if (isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(1);
         else if (isCommonHotel) sourceFilter = selectedSources.includes(2);
@@ -537,6 +584,7 @@ const Page = () => {
         return starFilter && sourceFilter;
       }
     );
+    // console.log('2. ', accommodationsFilteredByStars.length);
 
     // Filter hotels by review (This might not be necessary because we are already filtering by review in the API call)
     // TODO: try and not include this part
