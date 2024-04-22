@@ -15,6 +15,7 @@ import Districts from '@/components/Districts';
 // constants
 import { Settings as I_Settings } from '@/constants/interfaces';
 import { hotelTypes } from '@/constants/accommodationtypes';
+import accommodations from '@/mock_data/accommodations';
 
 const Page = () => {
   const [status, setStatus] = useState<object>({
@@ -190,6 +191,10 @@ const Page = () => {
     return commonHotels;
   };
 
+  const fetchBookingAccommodations = async (accommodations: string[]) => {
+    // From an or strings I need an array of accommodation IDs
+  };
+
   const fetchGoogleAccommodations = async (neighborhood: string) => {
     if (neighborhood === '') return;
     setGoogleFetchingAccommodations(true);
@@ -251,9 +256,6 @@ const Page = () => {
       allFetchedAccommodations
     );
 
-    console.log(
-      allCommonAccommodations.map((x: { [x: string]: any }) => x['name' as keyof typeof x])
-    );
     setAllCommonAccommodations(allCommonAccommodations);
 
     const allCommonAccommodationsGoogleId = allCommonAccommodations.map(
@@ -275,7 +277,6 @@ const Page = () => {
 
     const convertedFetchedHotels = convertGoogleHotels(fetchedHotels, neighborhood);
     setAllGoogleAccommodations(convertedFetchedHotels);
-
     setGoogleFetchingAccommodations(false);
   };
 
@@ -803,6 +804,7 @@ const Page = () => {
     ];
 
     const preparedHotels = prepareResults(combineGoogleAndBookingHotels, 'hotels') || [];
+    console.log(preparedHotels.map((x) => x.id));
     setCurrentAllHotels(preparedHotels);
 
     if (showFlats) {

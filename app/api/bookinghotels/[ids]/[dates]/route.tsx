@@ -1,8 +1,7 @@
-import fetchApi from '@/utils/fetchApi';
-import { NextResponse } from 'next/server';
 import moment from 'moment';
+import { NextResponse } from 'next/server';
+import fetchApi from '@/utils/fetchApi';
 import chunkArray from '@/utils/chunkArray';
-// import tempHotelPricesAndDetails from "@/mock_data/hotels
 
 const _combinePricesAndDetails = (details: object[], prices: object[]) => {
   const detailsAndPrices = details.map((detail: object) => {
@@ -30,33 +29,24 @@ const _combinePricesAndDetails = (details: object[], prices: object[]) => {
   return detailsAndPrices;
 };
 
-const _fetchHotelPrices = async (
-  type: string,
-  id: string,
-  price: string,
-  review: string,
-  dates: string,
-  page: string
-) => {
+const _fetchHotelPrices = async (ids: number[], dates: string) => {
   const checkin = dates.split('_')[0];
   const checkout = dates.split('_')[1];
-  const min_price = price.split('_')[0];
-  const max_price = price.split('_')[1];
 
   let requestBody: {
     booker: { country: string; platform: string };
+    accommodations: number[];
     currency: string;
     checkin: string;
     checkout: string;
     extras: string[];
     guests: { number_of_adults: number; number_of_rooms: number };
-    price?: { minimum: number; maximum: number };
-    rating?: { minimum_review_score: number };
   } = {
     booker: {
       country: 'nl',
       platform: 'desktop',
     },
+    accommodations: ids,
     currency: 'USD',
     checkin: moment(checkin).format('YYYY-MM-DD'),
     checkout: moment(checkout).format('YYYY-MM-DD'),
@@ -67,42 +57,16 @@ const _fetchHotelPrices = async (
     },
   };
 
-  if (price !== 'null' && review !== 'null') {
-    requestBody = {
-      ...requestBody,
-      price: { minimum: parseInt(min_price), maximum: parseInt(max_price) },
-      rating: {
-        minimum_review_score: parseInt(review),
-      },
-    };
-  }
-
   console.log(requestBody);
 
-  let updatedRequestBody: object = {};
-  if (page !== 'null') {
-    updatedRequestBody = { page };
-  } else {
-    if (type === 'airport') {
-      updatedRequestBody = { ...requestBody, airport: Number(id) };
-    } else if (type === 'city') {
-      updatedRequestBody = { ...requestBody, city: Number(id) };
-    } else if (type === 'country') {
-      updatedRequestBody = { ...requestBody, country: Number(id) };
-    } else if (type === 'district') {
-      updatedRequestBody = { ...requestBody, district: Number(id) };
-    } else if (type === 'landmark') {
-      updatedRequestBody = { ...requestBody, landmark: Number(id) };
-    } else if (type === 'region') {
-      updatedRequestBody = { ...requestBody, region: Number(id) };
-    }
-  }
-  const hotelSearch = await fetchApi('/accommodations/search', updatedRequestBody);
+  const hotelSearch = await fetchApi('/accommodations/search', requestBody);
   return hotelSearch;
 };
 
 const _fetchHotelDetails = async (hotelIds: number[]) => {
   /**
+   * ***THIS IS EXACTLY THE SAME AS THE hotels API endpoint
+   *
    * Hotel hoteIds here will most probably be an array of 100 hotels already because
    * _fetchHotelPrices is ran on a per page basis. BUT just in case it's split into
    * 100 hotels per request.
@@ -141,27 +105,20 @@ const _fetchHotelDetails = async (hotelIds: number[]) => {
 };
 
 export async function GET(request: Request, params: any) {
-  const { dest_type, dest_id, price, review, dates } = params.params;
-  // If next_page exists then that means remove all params and just use next_page
-
-  let next_page = dest_type && dest_id === 'null' && price === 'null' ? dest_type : 'null';
-
+  const { ids, dates } = params.params;
   try {
+    const hotelLists: number[] = ids.split(',').map((x: string) => parseInt(x));
+
+    hotelLists.forEach((id: number) => {
+      console.log(typeof id);
+    });
+
     console.log(`****Fetching hotel prices...`);
-    const hotelPrices = await _fetchHotelPrices(
-      dest_type,
-      dest_id,
-      price,
-      review,
-      dates,
-      next_page
-    );
+    const hotelPrices = await _fetchHotelPrices(hotelLists, dates);
     console.log(`... DONE Fetching hotel prices.`);
 
     console.log('Fetching hotel details...');
-    const hotelDetails = await _fetchHotelDetails(
-      hotelPrices?.data.map((x: { id: number }) => x.id)
-    );
+    const hotelDetails = await _fetchHotelDetails(hotelLists);
     console.log('... DONE Fetching hotel details.');
 
     console.log('****Combining prices and details...');
@@ -171,9 +128,10 @@ export async function GET(request: Request, params: any) {
     console.log('');
     console.log('');
     console.log(`****Done fetching ${hotelPricesAndDetails.length} hotels****`);
+
     return NextResponse.json({
       data: hotelPricesAndDetails,
-      next_page: hotelPrices.next_page ? hotelPrices.next_page : null,
+      next_page: null,
     });
   } catch (error) {
     console.log(error);
