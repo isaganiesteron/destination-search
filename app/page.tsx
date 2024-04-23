@@ -190,20 +190,124 @@ const Page = () => {
     return commonHotels;
   };
 
+  const fetchGoogleAccommodations = async (neighborhood: string) => {
+    if (neighborhood === '') return;
+    setGoogleFetchingAccommodations(true);
+    setAllCommonAccommodations([]);
+    setAllGoogleAccommodations([]);
+    setGoogleSearchLog('');
+
+    // The 3 below are important because we need to show users ONLY common hotels, ignore filtering with districts AND show more than 10 results
+    setSelectedSources([2]);
+    setSelectedDistricts(
+      currentDistricts.map((district) => district['id' as keyof typeof district])
+    );
+    setshowTopTen(false);
+
+    /**
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     */
+
+    let currentLogs = '';
+    let fetchedHotels: any[] = [];
+
+    currentLogs += `Searching Google Maps for hotels in ${neighborhood}...\n`;
+    setGoogleSearchLog(currentLogs);
+
+    let nextPageToken = null;
+    let fetchingDone = false;
+
+    while (!fetchingDone) {
+      const response: any = await fetch(
+        nextPageToken
+          ? `/api/googlehotels/${nextPageToken}/null`
+          : `/api/googlehotels/null/${neighborhood}`
+      );
+      const data = await response.json();
+      if (data) {
+        if (data.next_page_token) {
+          nextPageToken = data.next_page_token;
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
+        } else {
+          fetchingDone = true;
+        }
+        fetchedHotels = [...fetchedHotels, ...data.results];
+      } else {
+        console.log('ERROR: no places found');
+        console.log(data);
+        fetchingDone = true;
+      }
+    }
+
+    currentLogs += `Found ${fetchedHotels.length} hotels in ${neighborhood}...\n`;
+    setGoogleSearchLog(currentLogs);
+
+    // sort fetchedHotels by name field
+    fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
+
+    /**
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     */
+
+    // console.log('****USING MOCK DATA****');
+    // const fetchedHotels = require('@/mock_data/googlehotels').default;
+
+    // Intersect all accommodations with google accommodations here
+    const allCommonAccommodations: any = await commonAccommodations(
+      fetchedHotels,
+      allFetchedAccommodations
+    );
+
+    currentLogs += `Matched ${allCommonAccommodations.length} Google Maps Hotels to ${
+      allFetchedAccommodations.length
+    } fetched Booking.com hotels...\nSearching booking.com for ${
+      fetchedHotels.length - allCommonAccommodations.length
+    } Google Maps Hotels with no match...`;
+    setGoogleSearchLog(currentLogs);
+
+    setAllCommonAccommodations(allCommonAccommodations);
+
+    const allCommonAccommodationsGoogleId = allCommonAccommodations.map(
+      (x: { google_data: { place_id: any } }) => x.google_data.place_id
+    );
+
+    const fetchedHotelsNoMatch = fetchedHotels.filter(
+      (x: { place_id: any }) => !allCommonAccommodationsGoogleId.includes(x.place_id)
+    );
+
+    const convertedFetchedHotels: any = convertGoogleHotels(fetchedHotels, neighborhood);
+
+    setAllGoogleAccommodations(convertedFetchedHotels);
+
+    const fetchBookingAccommodationsLogs = await fetchBookingAccommodations(
+      allCommonAccommodations,
+      fetchedHotelsNoMatch
+    );
+
+    currentLogs += fetchBookingAccommodationsLogs;
+    setGoogleSearchLog(currentLogs);
+
+    setGoogleFetchingAccommodations(false);
+  };
+
   const fetchBookingAccommodations = async (
     allCommonAccommodations: any[],
     accommodations: any[]
   ) => {
-    // From an or strings I need an array of accommodation IDs
-
+    let logs = '';
     const accommodationNames = accommodations.map((x: { name: any }) => x.name);
-    console.log(`Searching Booking.com for ${accommodationNames.length} hotels.`);
+    // console.log(`Searching Booking.com for ${accommodationNames.length} hotels.`);
 
     // first get the accommodation id of all hotels based on their names
     let allAccommodationsFetched: any[] = [];
     let accommodationCounter = 0;
-
-    console.log(`Fetching for booking destination ID based on hotel name...`);
+    // console.log(`Fetching for booking destination ID based on hotel name...`);
     while (accommodationCounter < accommodationNames.length) {
       console.log(`Find dest_id => ${accommodationNames[accommodationCounter]}`);
       const response = await fetch('/api/autosuggest/' + accommodationNames[accommodationCounter]);
@@ -211,6 +315,11 @@ const Page = () => {
         const data = await response.json();
 
         const currentData = data?.length > 0 ? data[0] : null;
+
+        logs += `\n${accommodationCounter + 1}. ${accommodationNames[accommodationCounter]} ${
+          currentData ? '✅' : '❌'
+        }`;
+
         allAccommodationsFetched = [
           ...allAccommodationsFetched,
           { name: accommodationNames[accommodationCounter], data: currentData },
@@ -220,7 +329,14 @@ const Page = () => {
         console.log(response);
       }
       accommodationCounter++;
+      // setGoogleSearchLog(logs);
     }
+
+    logs += `\nFound Destination ID for ${
+      allAccommodationsFetched.filter((x) => x.data).length
+    } Google Hotels with no matches...\nSearching Booking.com for ${
+      allAccommodationsFetched.filter((x) => x.data).length
+    } accommodations...`;
 
     console.log(`Done Fetching booking destination ID's...`);
     // get all accommodation ids. First check if data is null
@@ -268,6 +384,7 @@ const Page = () => {
         currentNewCommonAccommodations,
         null
       );
+
       const currentUniqueAccommodations = allAccommodationsFetchedWithPrice.filter(
         (accommodation) => {
           return !allFetchedAccommodations.some((existingAccommodation) => {
@@ -275,110 +392,17 @@ const Page = () => {
           });
         }
       );
+
+      logs += `\nFound ${currentUniqueAccommodations.length} out of ${
+        allAccommodationsFetched.filter((x) => x.data).length
+      } accommodations on booking.com.`;
       setAllFetchedAccommodations([...allFetchedAccommodations, ...currentUniqueAccommodations]);
       setAllCommonAccommodations([
         ...allCommonAccommodations,
         ...allAccommodationsFetchedWithPrice,
       ]);
     }
-  };
-
-  const fetchGoogleAccommodations = async (neighborhood: string) => {
-    if (neighborhood === '') return;
-    setGoogleFetchingAccommodations(true);
-    setAllCommonAccommodations([]);
-    setAllGoogleAccommodations([]);
-    setGoogleSearchLog('');
-
-    // The 2 below are important because we need to show users ONLY common hotels AND ignore filtering with districts
-    setSelectedSources([2]);
-    setSelectedDistricts(
-      currentDistricts.map((district) => district['id' as keyof typeof district])
-    );
-
-    /**
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     */
-
-    let fetchedHotels: any[] = [];
-
-    setGoogleSearchLog(`Searching Google Maps for hotels in ${neighborhood}...\n`);
-
-    let nextPageToken = null;
-    let fetchingDone = false;
-
-    while (!fetchingDone) {
-      const response: any = await fetch(
-        nextPageToken
-          ? `/api/googlehotels/${nextPageToken}/null`
-          : `/api/googlehotels/null/${neighborhood}`
-      );
-      const data = await response.json();
-      if (data) {
-        if (data.next_page_token) {
-          nextPageToken = data.next_page_token;
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
-        } else {
-          fetchingDone = true;
-        }
-        fetchedHotels = [...fetchedHotels, ...data.results];
-      } else {
-        console.log('ERROR: no places found');
-        console.log(data);
-        fetchingDone = true;
-      }
-    }
-    setGoogleSearchLog(
-      `${googleSearchLog}\nFound ${fetchedHotels.length} hotels in ${neighborhood}...\n`
-    );
-    // sort fetchedHotels by name field
-    fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
-
-    /**
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     */
-
-    // console.log('****USING MOCK DATA****');
-    // const fetchedHotels = require('@/mock_data/googlehotels').default;
-
-    // Intersect all accommodations with google accommodations here
-    const allCommonAccommodations: any = await commonAccommodations(
-      fetchedHotels,
-      allFetchedAccommodations
-    );
-
-    setAllCommonAccommodations(allCommonAccommodations);
-
-    const allCommonAccommodationsGoogleId = allCommonAccommodations.map(
-      (x: { google_data: { place_id: any } }) => x.google_data.place_id
-    );
-
-    const fetchedHotelsNoMatch = fetchedHotels.filter(
-      (x: { place_id: any }) => !allCommonAccommodationsGoogleId.includes(x.place_id)
-    );
-
-    setGoogleSearchLog(
-      `Found ${fetchedHotels.length} hotels in ${neighborhood}...\n\nMatched ${
-        allCommonAccommodations.length
-      } Google Maps Hotels to ${allFetchedAccommodations.length} fetched Booking.com hotels...\n\n${
-        fetchedHotels.length - allCommonAccommodations.length
-      } Google Maps Hotels with no match. Searching booking.com for the following hotels:\n${fetchedHotelsNoMatch
-        .map((x: { name: any }, i: number) => `${i + 1}: ${x.name}`)
-        .join('\n')}`
-    );
-
-    const convertedFetchedHotels: any = convertGoogleHotels(fetchedHotels, neighborhood);
-
-    setAllGoogleAccommodations(convertedFetchedHotels);
-
-    await fetchBookingAccommodations(allCommonAccommodations, fetchedHotelsNoMatch);
-    setGoogleFetchingAccommodations(false);
+    return logs;
   };
 
   const fetchAccommodations = async () => {
@@ -947,7 +971,7 @@ const Page = () => {
 
   return (
     <main>
-      <small className="float-end">v1.0.2</small>
+      <small className="float-end">v1.0.3</small>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
         <div>
           <div className="grid grid-cols-4 gap-1">
@@ -1063,20 +1087,12 @@ const Page = () => {
                 </div>
                 {googleSearchLog !== '' && (
                   <textarea
+                    id="googleSearchLog"
                     disabled
                     className="border border-black rounded-md h-32 w-full p-2 mt-2 text-xs"
                     value={googleSearchLog}
                   />
                 )}
-                {/* {googleSearchStatus.length > 0 && (
-                  <div className="p-2">
-                    {googleSearchStatus.map((status, index) => (
-                      <p key={index} className="text-sm">
-                        {status}
-                      </p>
-                    ))}
-                  </div>
-                )} */}
               </div>
             </div>
           )}
