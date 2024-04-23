@@ -15,7 +15,7 @@ import Districts from '@/components/Districts';
 // constants
 import { Settings as I_Settings } from '@/constants/interfaces';
 import { hotelTypes } from '@/constants/accommodationtypes';
-import accommodations from '@/mock_data/accommodations';
+// import accommodations from '@/mock_data/accommodations';
 
 const Page = () => {
   const [status, setStatus] = useState<object>({
@@ -94,7 +94,6 @@ const Page = () => {
   const [showFlats, setShowFlats] = useState(true);
   const [showTopTen, setshowTopTen] = useState(true);
   const [ignorePriceAndRating, setIgnorePriceAndRating] = useState<boolean>(false);
-  // const [googleSearchStatus, setGoogleSearchStatus] = useState<string[]>([]);
   const [googleSearchLog, setGoogleSearchLog] = useState<string>('');
 
   const fetchSuggestions = async (query: string) => {
@@ -191,8 +190,97 @@ const Page = () => {
     return commonHotels;
   };
 
-  const fetchBookingAccommodations = async (accommodations: string[]) => {
+  const fetchBookingAccommodations = async (
+    allCommonAccommodations: any[],
+    accommodations: any[]
+  ) => {
     // From an or strings I need an array of accommodation IDs
+
+    const accommodationNames = accommodations.map((x: { name: any }) => x.name);
+    console.log(`Searching Booking.com for ${accommodationNames.length} hotels.`);
+
+    // first get the accommodation id of all hotels based on their names
+    let allAccommodationsFetched: any[] = [];
+    let accommodationCounter = 0;
+
+    console.log(`Fetching for booking destination ID based on hotel name...`);
+    while (accommodationCounter < accommodationNames.length) {
+      console.log(`Find dest_id => ${accommodationNames[accommodationCounter]}`);
+      const response = await fetch('/api/autosuggest/' + accommodationNames[accommodationCounter]);
+      if (response.status === 200) {
+        const data = await response.json();
+
+        const currentData = data?.length > 0 ? data[0] : null;
+        allAccommodationsFetched = [
+          ...allAccommodationsFetched,
+          { name: accommodationNames[accommodationCounter], data: currentData },
+        ];
+      } else {
+        console.log('ERROR: no response');
+        console.log(response);
+      }
+      accommodationCounter++;
+    }
+
+    console.log(`Done Fetching booking destination ID's...`);
+    // get all accommodation ids. First check if data is null
+    const allAccommodationIds = allAccommodationsFetched
+      .filter((x) => x.data !== null)
+      .map((x) => x.data.dest_id);
+
+    // fetch all accommodations in Booking.com API
+
+    const dateCheckin = currentDates['checkin' as keyof typeof currentDates];
+    const dateCheckout = currentDates['checkout' as keyof typeof currentDates];
+
+    const checkin =
+      dateCheckin === 'null'
+        ? moment().format('YYYY-MM-DD')
+        : moment(dateCheckin, 'YYYY-MM-DD').format('YYYY-MM-DD');
+    const checkout =
+      dateCheckout === 'null'
+        ? moment().add(1, 'days').format('YYYY-MM-DD')
+        : moment(dateCheckout, 'YYYY-MM-DD').format('YYYY-MM-DD');
+
+    console.log(
+      `Fetching bulk accommodation details for all ${allAccommodationIds.length} booking destination IDs...`
+    );
+    const response = await fetch(
+      `/api/bookinghotels/${allAccommodationIds.join(',')}/${checkin}_${checkout}`
+    );
+    const responseJson = await response.json();
+    if (responseJson.data) {
+      const currentNewCommonAccommodations = responseJson.data.map((bookingAccommodation: any) => {
+        const currentAccommodation = allAccommodationsFetched.find((x) => {
+          if (x.data !== null) return x.data.dest_id === String(bookingAccommodation.id);
+          return false;
+        });
+        if (currentAccommodation) {
+          const googleHotel = accommodations.find((x) => x.name === currentAccommodation.name);
+
+          return { ...bookingAccommodation, google_data: googleHotel };
+        } else {
+          return { ...bookingAccommodation, google_data: null };
+        }
+      });
+
+      const allAccommodationsFetchedWithPrice = addMultiplePrices(
+        currentNewCommonAccommodations,
+        null
+      );
+      const currentUniqueAccommodations = allAccommodationsFetchedWithPrice.filter(
+        (accommodation) => {
+          return !allFetchedAccommodations.some((existingAccommodation) => {
+            return existingAccommodation.id === accommodation.id;
+          });
+        }
+      );
+      setAllFetchedAccommodations([...allFetchedAccommodations, ...currentUniqueAccommodations]);
+      setAllCommonAccommodations([
+        ...allCommonAccommodations,
+        ...allAccommodationsFetchedWithPrice,
+      ]);
+    }
   };
 
   const fetchGoogleAccommodations = async (neighborhood: string) => {
@@ -200,7 +288,6 @@ const Page = () => {
     setGoogleFetchingAccommodations(true);
     setAllCommonAccommodations([]);
     setAllGoogleAccommodations([]);
-    // setGoogleSearchStatus([]);
     setGoogleSearchLog('');
 
     // The 2 below are important because we need to show users ONLY common hotels AND ignore filtering with districts
@@ -209,10 +296,14 @@ const Page = () => {
       currentDistricts.map((district) => district['id' as keyof typeof district])
     );
 
-    let fetchedHotels: any[] = [];
+    /**
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     */
 
-    // console.log('****USING MOCK DATA****');
-    // fetchedHotels = require('@/mock_data/googlehotels').default;
+    let fetchedHotels: any[] = [];
 
     setGoogleSearchLog(`Searching Google Maps for hotels in ${neighborhood}...\n`);
 
@@ -243,12 +334,18 @@ const Page = () => {
     setGoogleSearchLog(
       `${googleSearchLog}\nFound ${fetchedHotels.length} hotels in ${neighborhood}...\n`
     );
-    // setGoogleSearchStatus([
-    //   ...googleSearchStatus,
-    //   `Found ${fetchedHotels.length} hotels in ${neighborhood}...`,
-    // ]);
     // sort fetchedHotels by name field
     fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
+
+    /**
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
+     */
+
+    // console.log('****USING MOCK DATA****');
+    // const fetchedHotels = require('@/mock_data/googlehotels').default;
 
     // Intersect all accommodations with google accommodations here
     const allCommonAccommodations: any = await commonAccommodations(
@@ -261,8 +358,9 @@ const Page = () => {
     const allCommonAccommodationsGoogleId = allCommonAccommodations.map(
       (x: { google_data: { place_id: any } }) => x.google_data.place_id
     );
+
     const fetchedHotelsNoMatch = fetchedHotels.filter(
-      (x) => !allCommonAccommodationsGoogleId.includes(x.place_id)
+      (x: { place_id: any }) => !allCommonAccommodationsGoogleId.includes(x.place_id)
     );
 
     setGoogleSearchLog(
@@ -271,12 +369,15 @@ const Page = () => {
       } Google Maps Hotels to ${allFetchedAccommodations.length} fetched Booking.com hotels...\n\n${
         fetchedHotels.length - allCommonAccommodations.length
       } Google Maps Hotels with no match. Searching booking.com for the following hotels:\n${fetchedHotelsNoMatch
-        .map((x, i) => `${i + 1}: ${x.name}`)
+        .map((x: { name: any }, i: number) => `${i + 1}: ${x.name}`)
         .join('\n')}`
     );
 
-    const convertedFetchedHotels = convertGoogleHotels(fetchedHotels, neighborhood);
+    const convertedFetchedHotels: any = convertGoogleHotels(fetchedHotels, neighborhood);
+
     setAllGoogleAccommodations(convertedFetchedHotels);
+
+    await fetchBookingAccommodations(allCommonAccommodations, fetchedHotelsNoMatch);
     setGoogleFetchingAccommodations(false);
   };
 
@@ -320,130 +421,130 @@ const Page = () => {
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
-    // // fetch all accommodations in Booking.com API
-    // let allAccommodationsFetched: any[] = [];
-    // let morePages = true;
-    // let nextPage = '';
-    // while (morePages) {
-    //   const currentDestinationType = nextPage === '' ? destinationType : nextPage;
-    //   const currentDestinationId = nextPage === '' ? destinationId : 'null';
-    //   const currentPriceRange =
-    //     nextPage === '' ? (ignorePriceAndRating ? 'null' : `${minPrice}_${maxPrice}`) : 'null';
+    // fetch all accommodations in Booking.com API
+    let allAccommodationsFetched: any[] = [];
+    let morePages = true;
+    let nextPage = '';
+    while (morePages) {
+      const currentDestinationType = nextPage === '' ? destinationType : nextPage;
+      const currentDestinationId = nextPage === '' ? destinationId : 'null';
+      const currentPriceRange =
+        nextPage === '' ? (ignorePriceAndRating ? 'null' : `${minPrice}_${maxPrice}`) : 'null';
 
-    //   const fetchString = `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`;
-    //   const response = await fetch(fetchString); // maxPrice is in USD
-    //   const responseJson = await response.json();
-    //   if (responseJson.data) {
-    //     allAccommodationsFetched.push(...responseJson.data);
-    //   }
-    //   if (responseJson.next_page) {
-    //     nextPage = responseJson.next_page;
-    //     ``;
-    //     setStatus({
-    //       loading: true,
-    //       message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...`,
-    //     });
-    //     // pause for 1 second before next request
-    //     await new Promise((resolve) => setTimeout(resolve, 1000));
-    //   } else {
-    //     nextPage = '';
-    //     morePages = false;
-    //   }
-    // }
+      const fetchString = `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`;
+      const response = await fetch(fetchString); // maxPrice is in USD
+      const responseJson = await response.json();
+      if (responseJson.data) {
+        allAccommodationsFetched.push(...responseJson.data);
+      }
+      if (responseJson.next_page) {
+        nextPage = responseJson.next_page;
+        ``;
+        setStatus({
+          loading: true,
+          message: `Fetched ${allAccommodationsFetched.length} hotels so far. Fetching more...`,
+        });
+        // pause for 1 second before next request
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } else {
+        nextPage = '';
+        morePages = false;
+      }
+    }
 
-    // // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
-    // // filter results by saved facilities here
-    // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
-    //   (accommodation) => {
-    //     const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
-    //       return settings.facilities.includes(x.id);
-    //     });
-    //     return facilitiesAreIncluded.length === settings.facilities.length;
-    //   }
-    // );
-    // if (allAccommodationsFetchedWithFacilities.length === 0) {
-    //   setStatus({
-    //     loading: false,
-    //     message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
-    //   });
-    //   console.log('----Done Fetching Hotels----');
-    //   return;
-    // }
-    // //add multiple prices here
-    // let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-    //   allAccommodationsFetchedWithFacilities,
-    //   null
-    // );
+    // const allAccommodationsFetchedWithFacilities = allAccommodationsFetched;
+    // filter results by saved facilities here
+    const allAccommodationsFetchedWithFacilities = allAccommodationsFetched.filter(
+      (accommodation) => {
+        const facilitiesAreIncluded = accommodation.facilities.filter((x: any) => {
+          return settings.facilities.includes(x.id);
+        });
+        return facilitiesAreIncluded.length === settings.facilities.length;
+      }
+    );
+    if (allAccommodationsFetchedWithFacilities.length === 0) {
+      setStatus({
+        loading: false,
+        message: `Fetched 0 accommodations in ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review} with facilities selected.`,
+      });
+      console.log('----Done Fetching Hotels----');
+      return;
+    }
+    //add multiple prices here
+    let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+      allAccommodationsFetchedWithFacilities,
+      null
+    );
 
-    // if (settings.fetchMultiplePrices) {
-    //   // Fetch multiple prices for next 5 months
-    //   const accommodationExtraPrices: any[] = [];
-    //   // This has to be 4 months ahead of the current month
-    //   const monthsToFetchPrices = [];
-    //   const currentMonth = moment().format('MMMM');
-    //   monthsToFetchPrices.push(currentMonth);
-    //   for (let i = 1; i <= 4; i++) {
-    //     const nextMonth = moment().add(i, 'months').format('MMMM');
-    //     monthsToFetchPrices.push(nextMonth);
-    //   }
+    if (settings.fetchMultiplePrices) {
+      // Fetch multiple prices for next 5 months
+      const accommodationExtraPrices: any[] = [];
+      // This has to be 4 months ahead of the current month
+      const monthsToFetchPrices = [];
+      const currentMonth = moment().format('MMMM');
+      monthsToFetchPrices.push(currentMonth);
+      for (let i = 1; i <= 4; i++) {
+        const nextMonth = moment().add(i, 'months').format('MMMM');
+        monthsToFetchPrices.push(nextMonth);
+      }
 
-    //   let monthCounter = 0;
-    //   let requestCounter = 0;
-    //   while (monthCounter < monthsToFetchPrices.length) {
-    //     console.log(`   ***Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
+      let monthCounter = 0;
+      let requestCounter = 0;
+      while (monthCounter < monthsToFetchPrices.length) {
+        console.log(`   ***Fetching prices for ${monthsToFetchPrices[monthCounter]}`);
 
-    //     const isCurrentMonth = moment().format('MMMM') === monthsToFetchPrices[monthCounter];
+        const isCurrentMonth = moment().format('MMMM') === monthsToFetchPrices[monthCounter];
 
-    //     const checkin = isCurrentMonth
-    //       ? moment()
-    //       : moment().month(monthsToFetchPrices[monthCounter]).startOf('month');
-    //     const checkout = isCurrentMonth
-    //       ? moment().add(1, 'days')
-    //       : moment().month(monthsToFetchPrices[monthCounter]).startOf('month').add(1, 'days');
-    //     // api only allows accommodations of 100 ids
-    //     const chunks = chunkArray(allAccommodationsFetched);
+        const checkin = isCurrentMonth
+          ? moment()
+          : moment().month(monthsToFetchPrices[monthCounter]).startOf('month');
+        const checkout = isCurrentMonth
+          ? moment().add(1, 'days')
+          : moment().month(monthsToFetchPrices[monthCounter]).startOf('month').add(1, 'days');
+        // api only allows accommodations of 100 ids
+        const chunks = chunkArray(allAccommodationsFetched);
 
-    //     let chunkCount = 0;
-    //     console.log(`       Will fetch ${chunks.length} chunks`);
+        let chunkCount = 0;
+        console.log(`       Will fetch ${chunks.length} chunks`);
 
-    //     while (chunkCount < chunks.length) {
-    //       setStatus({
-    //         loading: true,
-    //         message: `Fetching Prices for ${monthsToFetchPrices[monthCounter]} (${monthCounter}/${monthsToFetchPrices.length} months). Processing ${chunkCount}/${chunks.length} requests.`,
-    //       });
+        while (chunkCount < chunks.length) {
+          setStatus({
+            loading: true,
+            message: `Fetching Prices for ${monthsToFetchPrices[monthCounter]} (${monthCounter}/${monthsToFetchPrices.length} months). Processing ${chunkCount}/${chunks.length} requests.`,
+          });
 
-    //       const allIdsParam = chunks[chunkCount].map((x) => x.id).join(',');
-    //       const response = await fetch(
-    //         `/api/prices/${allIdsParam}/${checkin.format('YYYY-MM-DD')}/${checkout.format(
-    //           'YYYY-MM-DD'
-    //         )}`
-    //       );
-    //       requestCounter++;
-    //       const responseJson = await response.json();
-    //       if (responseJson.data) accommodationExtraPrices.push(responseJson.data);
-    //       else {
-    //         console.log('         No Data Found for this chunk, moving on...');
-    //         console.log(responseJson);
-    //       }
-    //       // pause for 1 second before next request
-    //       await new Promise((resolve) => setTimeout(resolve, 1000));
-    //       if (requestCounter % 5 === 0) {
-    //         // pause an extra 5 seconds every 5 requests
-    //         await new Promise((resolve) => setTimeout(resolve, 5000));
-    //       }
-    //       chunkCount++;
-    //     }
-    //     monthCounter++;
-    //   }
-    //   accommodationExtraPrices.forEach((month) => {
-    //     allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
-    //       allAccommodationsFetchedWithMultiplePrice,
-    //       month
-    //     );
-    //   });
-    // } else {
-    //   console.log('*******skipping multiple prices********');
-    // }
+          const allIdsParam = chunks[chunkCount].map((x) => x.id).join(',');
+          const response = await fetch(
+            `/api/prices/${allIdsParam}/${checkin.format('YYYY-MM-DD')}/${checkout.format(
+              'YYYY-MM-DD'
+            )}`
+          );
+          requestCounter++;
+          const responseJson = await response.json();
+          if (responseJson.data) accommodationExtraPrices.push(responseJson.data);
+          else {
+            console.log('         No Data Found for this chunk, moving on...');
+            console.log(responseJson);
+          }
+          // pause for 1 second before next request
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          if (requestCounter % 5 === 0) {
+            // pause an extra 5 seconds every 5 requests
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+          }
+          chunkCount++;
+        }
+        monthCounter++;
+      }
+      accommodationExtraPrices.forEach((month) => {
+        allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
+          allAccommodationsFetchedWithMultiplePrice,
+          month
+        );
+      });
+    } else {
+      console.log('*******skipping multiple prices********');
+    }
 
     /**
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
@@ -452,9 +553,9 @@ const Page = () => {
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
-    // mock data
-    let allAccommodationsFetchedWithMultiplePrice: any[] = [];
-    allAccommodationsFetchedWithMultiplePrice = require('@/mock_data/accommodations').default;
+    // // mock data
+    // let allAccommodationsFetchedWithMultiplePrice: any[] = [];
+    // allAccommodationsFetchedWithMultiplePrice = require('@/mock_data/accommodations').default;
 
     // This errors out for some reason, I feel like it's because the addMultiplePrices function is still running and we're hitting a 429
     await fetchDistricts();
@@ -509,6 +610,10 @@ const Page = () => {
     if (allAccommodations === null) return;
     let currentStatusText = '';
 
+    console.log(
+      `Preparing results starting with ${allAccommodations.length} ${accommodation_type} items...`
+    );
+
     // Categorize the accommodations based on the type
     const accommodationsIncluded =
       accommodation_type == 'hotels' ? settings.hoteltypes : settings.apartmenttypes;
@@ -516,6 +621,13 @@ const Page = () => {
       if (x.place_id) return true; // automatically include google hotels
       return accommodationsIncluded.includes(String(x.accommodation_type));
     });
+    console.log(
+      `Filtered out ${
+        allAccommodations.length - specificAccommodations.length
+      } items that are not chosen accommodation types. ${
+        specificAccommodations.length
+      } remaining items.`
+    );
 
     // If no accommodations are found return and let user know
     const tierSettings = settings[settings.tier as keyof typeof settings];
@@ -561,8 +673,13 @@ const Page = () => {
         return includeAccommodation;
       }
     );
+    console.log(
+      `Filtered out ${
+        accommodationsWithRating.length - accommodationsFilteredByDistrict.length
+      } items based on districts. ${accommodationsFilteredByDistrict.length} remaining items.`
+    );
 
-    // Filter by selected stars and sources
+    // Filter by selected stars
     const accommodationsFilteredByStars = accommodationsFilteredByDistrict.filter(
       (x: { name(name: any): any; id: number; place_id: number; rating: { stars: number } }) => {
         // filter by stars
@@ -572,31 +689,39 @@ const Page = () => {
         if (x.rating.stars === null) starFilter = selectedStars.includes(0);
         starFilter =
           selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
-
-        // filter by source
-        let sourceFilter = false;
-        const isCommonHotel = allCommonAccommodations.map((x: { id: any }) => x.id).includes(x.id)
-          ? true
-          : false;
-        const isGoogleHotel = x.place_id ? true : false;
-        if (!isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(0);
-        else if (isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(1);
-        else if (isCommonHotel) sourceFilter = selectedSources.includes(2);
-
-        return starFilter && sourceFilter;
+        return starFilter;
       }
     );
+    console.log(
+      `Filtered out ${
+        accommodationsFilteredByDistrict.length - accommodationsFilteredByStars.length
+      } items based on stars. ${accommodationsFilteredByStars.length} remaining items.`
+    );
 
-    // Filter hotels by review (This might not be necessary because we are already filtering by review in the API call)
-    // TODO: try and not include this part
-    const accommodationsFilteredByReview = accommodationsFilteredByStars; //DON'T FILTER BY REVIEW ANYMORE BECAUSE THIS WILL INITIALLY HAVE BEEN DONE IN THE API CALL
-    // const accommodationsFilteredByReview = accommodationsFilteredByStars.filter(
-    //   (x: { rating: { review_score: number } }) => x.rating?.review_score >= settings.review
-    // );
+    // THERE IS A BUG HERE WHERE ITS FILTERING EVERYTHING OUT BECAUSE ITS NOT RECOGNIZING IT AS COMMON
+    // The problem here is that allCommonAccommodations is not yet updated so it's not considering the common hotels
+    // Filter by selected sources
+    const accommodationsFilteredBySource = accommodationsFilteredByStars.filter((x: any) => {
+      // filter by source
+      let sourceFilter = false;
+      const isCommonHotel = allCommonAccommodations.map((x: { id: any }) => x.id).includes(x.id)
+        ? true
+        : false;
+      const isGoogleHotel = x.place_id ? true : false;
+      if (!isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(0);
+      else if (isGoogleHotel && !isCommonHotel) sourceFilter = selectedSources.includes(1);
+      else if (isCommonHotel) sourceFilter = selectedSources.includes(2);
+      return sourceFilter;
+    });
+    console.log(
+      `Filtered out ${
+        accommodationsFilteredByStars.length - accommodationsFilteredBySource.length
+      } items based on sources. ${accommodationsFilteredBySource.length} remaining items.`
+    );
 
     // Sort based on review score
     if (settings.consider_review_quantity) {
-      accommodationsFilteredByReview.sort(
+      accommodationsFilteredBySource.sort(
         (
           a: {
             rating: { additional_info: { average_review_score: number } };
@@ -614,25 +739,25 @@ const Page = () => {
         }
       );
     } else {
-      accommodationsFilteredByReview.sort(
+      accommodationsFilteredBySource.sort(
         (a: { rating: { review_score: number } }, b: { rating: { review_score: number } }) => {
           return b.rating.review_score - a.rating.review_score;
         }
       );
     }
 
-    currentStatusText = `Found ${accommodationsFilteredByReview.length} ${accommodation_type} in ${
+    currentStatusText = `Found ${accommodationsFilteredBySource.length} ${accommodation_type} in ${
       currentDestination['label' as keyof typeof currentDestination]
     }. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`;
     if (accommodation_type === 'hotels')
       setHotelStatus({ loading: false, message: currentStatusText });
     else setFlatStatus({ loading: false, message: currentStatusText });
 
-    // return accommodationsFilteredByReview; // ***DEV PURPOSES: RETURN ALL HOTELS
+    // return accommodationsFilteredBySource; // ***DEV PURPOSES: RETURN ALL HOTELS
     // // Get the top 10 accommodations
     const limitedAccommodations = showTopTen
-      ? accommodationsFilteredByReview.slice(0, 10)
-      : accommodationsFilteredByReview;
+      ? accommodationsFilteredBySource.slice(0, 10)
+      : accommodationsFilteredBySource;
     return limitedAccommodations;
   };
 
@@ -804,7 +929,6 @@ const Page = () => {
     ];
 
     const preparedHotels = prepareResults(combineGoogleAndBookingHotels, 'hotels') || [];
-    console.log(preparedHotels.map((x) => x.id));
     setCurrentAllHotels(preparedHotels);
 
     if (showFlats) {
@@ -818,6 +942,7 @@ const Page = () => {
     showTopTen,
     showFlats,
     allGoogleAccommodations,
+    allCommonAccommodations,
   ]);
 
   return (
