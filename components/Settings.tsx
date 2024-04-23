@@ -133,7 +133,9 @@ const Settings = ({
             checked={ignorePriceAndRating}
             onChange={(e) => setIgnorePriceAndRating(e.target.checked)}
           />
-          <p className="text-sm ml-2">Don't search accommodations based on Price and Reviews</p>
+          <p className="text-sm ml-2">
+            Don&apos;t search accommodations based on Price and Reviews
+          </p>
         </div>
       </div>
       <div className="pt-4">
