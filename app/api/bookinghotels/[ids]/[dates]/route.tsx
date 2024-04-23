@@ -57,7 +57,7 @@ const _fetchHotelPrices = async (ids: number[], dates: string) => {
     },
   };
 
-  console.log(requestBody);
+  // console.log(requestBody);
 
   const hotelSearch = await fetchApi('/accommodations/search', requestBody);
   return hotelSearch;
@@ -108,10 +108,6 @@ export async function GET(request: Request, params: any) {
   const { ids, dates } = params.params;
   try {
     const hotelLists: number[] = ids.split(',').map((x: string) => parseInt(x));
-
-    hotelLists.forEach((id: number) => {
-      console.log(typeof id);
-    });
 
     console.log(`****Fetching hotel prices...`);
     const hotelPrices = await _fetchHotelPrices(hotelLists, dates);

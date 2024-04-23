@@ -309,7 +309,7 @@ const Page = () => {
     let accommodationCounter = 0;
     // console.log(`Fetching for booking destination ID based on hotel name...`);
     while (accommodationCounter < accommodationNames.length) {
-      console.log(`Find dest_id => ${accommodationNames[accommodationCounter]}`);
+      // console.log(`Find dest_id => ${accommodationNames[accommodationCounter]}`);
       const response = await fetch('/api/autosuggest/' + accommodationNames[accommodationCounter]);
       if (response.status === 200) {
         const data = await response.json();
@@ -317,7 +317,7 @@ const Page = () => {
         const currentData = data?.length > 0 ? data[0] : null;
 
         logs += `\n${accommodationCounter + 1}. ${accommodationNames[accommodationCounter]} ${
-          currentData ? '✅' : '❌'
+          currentData ? '' : '❌ destination ID not found'
         }`;
 
         allAccommodationsFetched = [
@@ -332,9 +332,9 @@ const Page = () => {
       // setGoogleSearchLog(logs);
     }
 
-    logs += `\nFound Destination ID for ${
+    logs += `\nFound Destination IDs for ${
       allAccommodationsFetched.filter((x) => x.data).length
-    } Google Hotels with no matches...\nSearching Booking.com for ${
+    } out of ${allAccommodationsFetched.length} Google Hotels...\nSearching Booking.com for ${
       allAccommodationsFetched.filter((x) => x.data).length
     } accommodations...`;
 
@@ -673,6 +673,7 @@ const Page = () => {
 
     // Filter by selected districts
     // const accommodationsFilteredByDistrict = accommodationsWithRating;
+    let newDistricts: { id: number; name: string }[] = [];
     const accommodationsFilteredByDistrict = accommodationsWithRating.filter(
       (x: { place_id: any; location: { districts: number[] } }) => {
         if (x.place_id) return true;
@@ -689,14 +690,27 @@ const Page = () => {
             (dist) => dist['id' as keyof typeof dist]
           );
 
-          if (!currentDistrictsIDs.includes(district))
-            setCurrentDistricts([...currentDistricts, { id: district, name: 'Unknown' }]);
+          if (!currentDistrictsIDs.includes(district)) {
+            console.log('Found a district that is not included => ' + district);
+            if (newDistricts.map((x) => x.id).includes(district) === false)
+              newDistricts.push({ id: district, name: `Unknown (${district})` });
+          }
           if (selectedDistricts.includes(district)) includeAccommodation = true;
         });
 
         return includeAccommodation;
       }
     );
+    if (newDistricts.length > 0) {
+      setCurrentDistricts([...currentDistricts, ...newDistricts]);
+      // this will select them all after they are all added
+      setSelectedDistricts(
+        [...currentDistricts, ...newDistricts].map(
+          (district) => district['id' as keyof typeof district]
+        )
+      );
+    }
+
     console.log(
       `Filtered out ${
         accommodationsWithRating.length - accommodationsFilteredByDistrict.length
