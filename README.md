@@ -2,6 +2,10 @@
 
 Booking.com Hotel Finder is an app designed to simplify the process of finding accommodations for your travel needs. Utilizing the Booking.com API, users can easily search for accommodations in their desired destination and customize their search based on various criteria.
 
+## Version
+
+Notes on the updates for each version can be found in the /about page.
+
 ## Features
 
 - **Auto-suggest City Search**: Users can type in a destination, and the app will provide a dropdown of cities that match the input, making it easy to select the desired location.
