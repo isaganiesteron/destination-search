@@ -5,6 +5,10 @@ const Page = () => {
         <h1 className="text-xl font-bold">v1.0.4 (current)</h1>
         <ul>
           <li>
+            Change to unoptimized images since we always reach the 1000 limit of optimized images
+            from vercel.
+          </li>
+          <li>
             Added a spinner signifying loading while app is searching for hotels in google maps api.
           </li>
           <li>
