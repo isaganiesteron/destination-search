@@ -985,7 +985,7 @@ const Page = () => {
 
   return (
     <main>
-      <small className="float-end">v1.0.3</small>
+      <small className="float-end">v1.0.4</small>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
         <div>
           <div className="grid grid-cols-4 gap-1">
