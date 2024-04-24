@@ -1274,25 +1274,32 @@ const Page = () => {
             <p className="text-sm">{hotelStatus['message' as keyof typeof hotelStatus]}</p>
           </div>
           {currentAllHotels.length > 0 && (
-            <div className="border border-black rounded-md h-auto p-2 flex flex-col">
-              {currentAllHotels.length > 0
-                ? currentAllHotels.map((x, i) => {
-                    const commonHotel = allCommonAccommodations.find(
-                      (item: { id: any }) => item.id === x.id
-                    );
+            <>
+              <div className="border border-black rounded-md h-auto p-2 flex flex-col">
+                {googleFetchingAccommodations && (
+                  <div className="py-5 flex flex-row justify-center">
+                    <Spinner />
+                  </div>
+                )}
 
-                    return (
-                      <ResultItem
-                        key={`result_${i}`}
-                        index={i}
-                        result={commonHotel ? commonHotel : x}
-                        districts={currentDistricts}
-                        commonData={commonHotel}
-                      />
-                    );
-                  })
-                : null}
-            </div>
+                {currentAllHotels.length > 0
+                  ? currentAllHotels.map((x, i) => {
+                      const commonHotel = allCommonAccommodations.find(
+                        (item: { id: any }) => item.id === x.id
+                      );
+                      return (
+                        <ResultItem
+                          key={`result_${i}`}
+                          index={i}
+                          result={commonHotel ? commonHotel : x}
+                          districts={currentDistricts}
+                          commonData={commonHotel}
+                        />
+                      );
+                    })
+                  : null}
+              </div>
+            </>
           )}
         </div>
 
