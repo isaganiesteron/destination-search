@@ -192,6 +192,7 @@ const Page = () => {
 
   const fetchGoogleAccommodations = async (neighborhood: string) => {
     if (neighborhood === '') return;
+
     setGoogleFetchingAccommodations(true);
     setAllCommonAccommodations([]);
     setAllGoogleAccommodations([]);
@@ -211,10 +212,13 @@ const Page = () => {
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
+    const searchString = `${neighborhood}, ${
+      currentDestination['label' as keyof typeof currentDestination]
+    }`;
     let currentLogs = '';
     let fetchedHotels: any[] = [];
 
-    currentLogs += `Searching Google Maps for hotels in ${neighborhood}...\n`;
+    currentLogs += `Searching Google Maps for hotels in ${searchString}...\n`;
     setGoogleSearchLog(currentLogs);
 
     let nextPageToken = null;
@@ -224,7 +228,7 @@ const Page = () => {
       const response: any = await fetch(
         nextPageToken
           ? `/api/googlehotels/${nextPageToken}/null`
-          : `/api/googlehotels/null/${neighborhood}`
+          : `/api/googlehotels/null/${encodeURI(searchString)}`
       );
       const data = await response.json();
       if (data) {
