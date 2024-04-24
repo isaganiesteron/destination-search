@@ -3,6 +3,7 @@ const nextConfig = {
   // basePath: "/destination-search",
   // output: "export",
   images: {
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: 'https',
