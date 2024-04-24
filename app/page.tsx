@@ -638,9 +638,9 @@ const Page = () => {
     if (allAccommodations === null) return;
     let currentStatusText = '';
 
-    console.log(
-      `Preparing results starting with ${allAccommodations.length} ${accommodation_type} items...`
-    );
+    // console.log(
+    //   `Preparing results starting with ${allAccommodations.length} ${accommodation_type} items...`
+    // );
 
     // Categorize the accommodations based on the type
     const accommodationsIncluded =
@@ -649,13 +649,13 @@ const Page = () => {
       if (x.place_id) return true; // automatically include google hotels
       return accommodationsIncluded.includes(String(x.accommodation_type));
     });
-    console.log(
-      `Filtered out ${
-        allAccommodations.length - specificAccommodations.length
-      } items that are not chosen accommodation types. ${
-        specificAccommodations.length
-      } remaining items.`
-    );
+    // console.log(
+    //   `Filtered out ${
+    //     allAccommodations.length - specificAccommodations.length
+    //   } items that are not chosen accommodation types. ${
+    //     specificAccommodations.length
+    //   } remaining items.`
+    // );
 
     // If no accommodations are found return and let user know
     const tierSettings = settings[settings.tier as keyof typeof settings];
@@ -715,11 +715,11 @@ const Page = () => {
       );
     }
 
-    console.log(
-      `Filtered out ${
-        accommodationsWithRating.length - accommodationsFilteredByDistrict.length
-      } items based on districts. ${accommodationsFilteredByDistrict.length} remaining items.`
-    );
+    // console.log(
+    //   `Filtered out ${
+    //     accommodationsWithRating.length - accommodationsFilteredByDistrict.length
+    //   } items based on districts. ${accommodationsFilteredByDistrict.length} remaining items.`
+    // );
 
     // Filter by selected stars
     const accommodationsFilteredByStars = accommodationsFilteredByDistrict.filter(
@@ -734,14 +734,12 @@ const Page = () => {
         return starFilter;
       }
     );
-    console.log(
-      `Filtered out ${
-        accommodationsFilteredByDistrict.length - accommodationsFilteredByStars.length
-      } items based on stars. ${accommodationsFilteredByStars.length} remaining items.`
-    );
+    // console.log(
+    //   `Filtered out ${
+    //     accommodationsFilteredByDistrict.length - accommodationsFilteredByStars.length
+    //   } items based on stars. ${accommodationsFilteredByStars.length} remaining items.`
+    // );
 
-    // THERE IS A BUG HERE WHERE ITS FILTERING EVERYTHING OUT BECAUSE ITS NOT RECOGNIZING IT AS COMMON
-    // The problem here is that allCommonAccommodations is not yet updated so it's not considering the common hotels
     // Filter by selected sources
     const accommodationsFilteredBySource = accommodationsFilteredByStars.filter((x: any) => {
       // filter by source
@@ -755,11 +753,11 @@ const Page = () => {
       else if (isCommonHotel) sourceFilter = selectedSources.includes(2);
       return sourceFilter;
     });
-    console.log(
-      `Filtered out ${
-        accommodationsFilteredByStars.length - accommodationsFilteredBySource.length
-      } items based on sources. ${accommodationsFilteredBySource.length} remaining items.`
-    );
+    // console.log(
+    //   `Filtered out ${
+    //     accommodationsFilteredByStars.length - accommodationsFilteredBySource.length
+    //   } items based on sources. ${accommodationsFilteredBySource.length} remaining items.`
+    // );
 
     // Sort based on review score
     if (settings.consider_review_quantity) {
