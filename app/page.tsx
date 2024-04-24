@@ -314,7 +314,16 @@ const Page = () => {
     // console.log(`Fetching for booking destination ID based on hotel name...`);
     while (accommodationCounter < accommodationNames.length) {
       // console.log(`Find dest_id => ${accommodationNames[accommodationCounter]}`);
-      const response = await fetch('/api/autosuggest/' + accommodationNames[accommodationCounter]);
+
+      const hasApostrophe = accommodationNames[accommodationCounter].split('-');
+      const hotelName =
+        hasApostrophe.length > 1 ? hasApostrophe[0] : accommodationNames[accommodationCounter];
+      const cleanHotelName = hotelName.replace('&', 'and').trim();
+      if (hasApostrophe.length > 1)
+        console.log(
+          `Hotel Name: ${accommodationNames[accommodationCounter]} EDITED => ${cleanHotelName}`
+        );
+      const response = await fetch('/api/autosuggest/' + cleanHotelName);
       if (response.status === 200) {
         const data = await response.json();
 
@@ -925,6 +934,7 @@ const Page = () => {
     setStatus({ loading: false, message: '' });
     setHotelStatus({ loading: false, message: '' });
     setFlatStatus({ loading: false, message: '' });
+    setGoogleSearchLog('');
   };
 
   useEffect(() => {
