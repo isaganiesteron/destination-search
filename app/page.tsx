@@ -13,7 +13,9 @@ import DateDialog from '@/components/DateDialog';
 import Districts from '@/components/Districts';
 
 // constants
+import { FetchSettings as I_FetchSettings } from '@/constants/interfaces';
 import { Settings as I_Settings } from '@/constants/interfaces';
+
 import { hotelTypes } from '@/constants/accommodationtypes';
 // import accommodations from '@/mock_data/accommodations';
 
@@ -64,14 +66,9 @@ const Page = () => {
   });
 
   const [currentTier, setCurrentTier] = useState<string>('budget');
-  const [settings, setSettings] = useState<I_Settings>({
+  const [fetchSettings, setFetchSettings] = useState<I_FetchSettings>({
     review: 8.3,
-    consider_review_quantity: true,
     tier: 'budget',
-    hoteltypes: hotelTypes,
-    facilities: [], // check none by default
-    apartmenttypes: ['201'],
-    fetchMultiplePrices: false,
     budget: {
       min_price: 0,
       max_price: 100,
@@ -89,11 +86,23 @@ const Page = () => {
     },
   });
 
+  const [settings, setSettings] = useState<I_Settings>({
+    consider_review_quantity: true,
+    hoteltypes: hotelTypes,
+    apartmenttypes: ['201'],
+    facilities: [],
+    fetchMultiplePrices: false,
+    showFlats: true,
+    showTop10: true,
+    ignorePriceAndRating: true,
+  });
+
   // the new settings will be like this instead of just 1 object
   // the only object will be the price tier and review filter
-  const [showFlats, setShowFlats] = useState(true);
-  const [showTopTen, setshowTopTen] = useState(true);
+  const [showFlats, setShowFlats] = useState<boolean>(true);
+  const [showTopTen, setshowTopTen] = useState<boolean>(true);
   const [ignorePriceAndRating, setIgnorePriceAndRating] = useState<boolean>(false);
+
   const [googleSearchLog, setGoogleSearchLog] = useState<string>('');
 
   const fetchSuggestions = async (query: string) => {
@@ -429,10 +438,10 @@ const Page = () => {
     resetVariablesAndStatus();
 
     // declare variables
-    const tierSettings = settings[settings.tier as keyof typeof settings];
+    const tierSettings = fetchSettings[fetchSettings.tier as keyof typeof fetchSettings];
     const minPrice = tierSettings['min_price' as keyof typeof tierSettings];
     const maxPrice = tierSettings['max_price' as keyof typeof tierSettings];
-    const review = ignorePriceAndRating ? 'null' : settings.review;
+    const review = ignorePriceAndRating ? 'null' : fetchSettings.review;
 
     const dateCheckin = currentDates['checkin' as keyof typeof currentDates];
     const dateCheckout = currentDates['checkout' as keyof typeof currentDates];
@@ -499,6 +508,7 @@ const Page = () => {
         return facilitiesAreIncluded.length === settings.facilities.length;
       }
     );
+
     if (allAccommodationsFetchedWithFacilities.length === 0) {
       setStatus({
         loading: false,
@@ -507,6 +517,7 @@ const Page = () => {
       console.log('----Done Fetching Hotels----');
       return;
     }
+
     //add multiple prices here
     let allAccommodationsFetchedWithMultiplePrice = addMultiplePrices(
       allAccommodationsFetchedWithFacilities,
@@ -667,13 +678,15 @@ const Page = () => {
     // );
 
     // If no accommodations are found return and let user know
-    const tierSettings = settings[settings.tier as keyof typeof settings];
+    const tierSettings = fetchSettings[fetchSettings.tier as keyof typeof fetchSettings];
     const minPrice = tierSettings['min_price' as keyof typeof tierSettings];
     const maxPrice = tierSettings['max_price' as keyof typeof tierSettings];
     if (specificAccommodations.length === 0) {
       currentStatusText = `No ${accommodation_type} found in ${
         currentDestination['label' as keyof typeof currentDestination]
-      }. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`;
+      }. With a minimum review of ${
+        fetchSettings.review
+      } and a price range of ${minPrice}-${maxPrice}.`;
 
       if (accommodation_type === 'hotels')
         setHotelStatus({ loading: false, message: currentStatusText });
@@ -797,7 +810,9 @@ const Page = () => {
 
     currentStatusText = `Found ${accommodationsFilteredBySource.length} ${accommodation_type} in ${
       currentDestination['label' as keyof typeof currentDestination]
-    }. With a minimum review of ${settings.review} and a price range of ${minPrice}-${maxPrice}.`;
+    }. With a minimum review of ${
+      fetchSettings.review
+    } and a price range of ${minPrice}-${maxPrice}.`;
     if (accommodation_type === 'hotels')
       setHotelStatus({ loading: false, message: currentStatusText });
     else setFlatStatus({ loading: false, message: currentStatusText });
@@ -937,15 +952,15 @@ const Page = () => {
     setGoogleSearchLog('');
   };
 
+  // These will watch fetchSettings, currentDestination, currentDates and currentTier and refetch accommodations
   useEffect(() => {
-    setSettings({ ...settings, tier: currentTier });
+    setFetchSettings({ ...fetchSettings, tier: currentTier });
     // reload results based on the new tier
   }, [currentTier]);
-
   useEffect(() => {
     if (showSettings) setShowSettings(false);
     fetchAccommodations();
-  }, [currentDestination, settings]);
+  }, [currentDestination, fetchSettings]);
 
   useEffect(() => {
     const curCheckin = currentDates['checkin' as keyof typeof currentDates];
@@ -1253,12 +1268,12 @@ const Page = () => {
           </button>
           {showSettings && (
             <Settings
-              settings={settings}
+              settings={fetchSettings}
               showFlats={showFlats}
               showTopTen={showTopTen}
               ignorePriceAndRating={ignorePriceAndRating}
               setIgnorePriceAndRating={setIgnorePriceAndRating}
-              saveSettings={setSettings}
+              saveSettings={setFetchSettings}
               setShowFlats={setShowFlats}
               setShowTopTen={setshowTopTen}
             />
