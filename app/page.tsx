@@ -18,6 +18,7 @@ import { FetchSettings as I_FetchSettings } from '@/constants/interfaces';
 import { Settings as I_Settings } from '@/constants/interfaces';
 
 import { hotelTypes, apartmentTypes } from '@/constants/accommodationtypes';
+import { text } from 'stream/consumers';
 // import accommodations from '@/mock_data/accommodations';
 
 const Page = () => {
@@ -214,8 +215,11 @@ const Page = () => {
   };
 
   const fetchGoogleAccommodations = async () => {
-    if (neighborhoodInput === '') return;
+    if (neighborhoodInput === '' || neighborhoodPlaceId === '') return;
 
+    console.log(neighborhoodInput);
+    console.log(neighborhoodPlaceId);
+    return;
     const neighborhood = neighborhoodInput;
 
     // reset all variables
@@ -1171,14 +1175,22 @@ const Page = () => {
                       setTimeout(() => setSuggestedCities([]), 500);
                     }}
                     onChange={(event) => {
+                      if (event.target.value === '') setNeighborhoodPlaceId('');
                       setNeighborhoodInput(event.target.value);
                       if (event.target.value.length > 3) getCitySuggestions(event.target.value);
                     }}
                   />
                   <button
-                    disabled={googleFetchingAccommodations}
+                    disabled={
+                      googleFetchingAccommodations ||
+                      neighborhoodInput === '' ||
+                      neighborhoodPlaceId === ''
+                    }
                     className={`w-1/5 border border-black rounded-md p-2 hover:bg-gray-200 ${
-                      googleFetchingAccommodations && 'bg-gray-200'
+                      (googleFetchingAccommodations ||
+                        neighborhoodInput === '' ||
+                        neighborhoodPlaceId === '') &&
+                      'bg-gray-200'
                     } flex items-center justify-center`}
                     onClick={() => fetchGoogleAccommodations()}
                   >
