@@ -217,11 +217,6 @@ const Page = () => {
   const fetchGoogleAccommodations = async () => {
     if (neighborhoodInput === '' || neighborhoodPlaceId === '') return;
 
-    console.log(neighborhoodInput);
-    console.log(neighborhoodPlaceId);
-    return;
-    const neighborhood = neighborhoodInput;
-
     // reset all variables
     setGoogleFetchingAccommodations(true);
     setAllCommonAccommodations([]);
@@ -246,7 +241,7 @@ const Page = () => {
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
-    const searchString = `${neighborhood}, ${
+    const searchString = `${neighborhoodInput}, ${
       currentDestination['label' as keyof typeof currentDestination]
     }`;
     let currentLogs = '';
@@ -258,12 +253,13 @@ const Page = () => {
     /**
      * *****START: REPLACE THIS SECTION TO USE THE MORE ACCURATE GOOGLE HOTELS SEARCH
      */
-    const fetchedHotels = await googleHotelsTextSearch(neighborhood);
+    const fetchedHotels = await googleHotelsNearbySearch(neighborhoodPlaceId);
+    // const fetchedHotels = await googleHotelsTextSearch(neighborhoodInput);
     /**
      * *****END: REPLACE THIS SECTION TO USE THE MORE ACCURATE GOOGLE HOTELS SEARCH
      */
 
-    currentLogs += `Found ${fetchedHotels.length} hotels in ${neighborhood}...\n`;
+    currentLogs += `Found ${fetchedHotels.length} hotels in ${neighborhoodInput}...\n`;
     setGoogleSearchLog(currentLogs);
 
     // sort fetchedHotels by name field
@@ -302,7 +298,7 @@ const Page = () => {
       (x: { place_id: any }) => !allCommonAccommodationsGoogleId.includes(x.place_id)
     );
 
-    const convertedFetchedHotels: any = convertGoogleHotels(fetchedHotels, neighborhood);
+    const convertedFetchedHotels: any = convertGoogleHotels(fetchedHotels, neighborhoodInput);
 
     setAllGoogleAccommodations(convertedFetchedHotels);
 
@@ -354,7 +350,59 @@ const Page = () => {
     return fetchedHotels;
   };
 
-  const googleHotelsNearbySearch = async (neighborhood: string) => {};
+  const googleHotelsNearbySearch = async (place_id: string) => {
+    // first get the location using the place_id
+    const response = await fetch(`/api/location/${place_id}`);
+    const responseData = await response.json();
+
+    console.log('resonseData');
+    console.log(responseData);
+    const location = responseData?.location;
+    console.log('location');
+    console.log(location);
+    const locationParam = location ? `${location.latitude},${location.longitude}` : '';
+    console.log('locationParam');
+    console.log(locationParam);
+
+    if (locationParam !== '') {
+      let fetchedHotels: any[] = []; // these are all google hotels
+      let nextPageToken = null;
+      let fetchingDone = false;
+
+      while (!fetchingDone) {
+        const responseNearby: any = await fetch(
+          nextPageToken
+            ? `/api/nearby/${nextPageToken}/null/null`
+            : `/api/nearby/null/${locationParam}/${settings.googleSearchRadius}`
+        );
+        const dataNearby = await responseNearby.json();
+        console.log('dataNearby');
+        console.log(dataNearby);
+
+        if (dataNearby) {
+          if (dataNearby.next_page_token) {
+            nextPageToken = dataNearby.next_page_token;
+            await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
+          } else {
+            fetchingDone = true;
+          }
+          fetchedHotels = [...fetchedHotels, ...dataNearby.results];
+          console.log(`Got ${dataNearby.results.length} hotels...`);
+        } else {
+          console.log('ERROR: no places found');
+          console.log(dataNearby);
+          fetchingDone = true;
+        }
+      }
+
+      return fetchedHotels;
+    } else {
+      console.log('ERROR: no location found');
+      console.log(location);
+      console.log(locationParam);
+      return [];
+    }
+  };
 
   const fetchBookingAccommodations = async (
     allCommonAccommodations: any[],
@@ -375,10 +423,10 @@ const Page = () => {
       const hotelName =
         hasApostrophe.length > 1 ? hasApostrophe[0] : accommodationNames[accommodationCounter];
       const cleanHotelName = hotelName.replace('&', 'and').trim();
-      if (hasApostrophe.length > 1)
-        console.log(
-          `Hotel Name: ${accommodationNames[accommodationCounter]} EDITED => ${cleanHotelName}`
-        );
+
+      // console.log(
+      //   `Hotel Name: ${accommodationNames[accommodationCounter]} || EDITED: ${cleanHotelName}`
+      // );
       const response = await fetch('/api/autosuggest/' + cleanHotelName);
       if (response.status === 200) {
         const data = await response.json();
@@ -396,6 +444,10 @@ const Page = () => {
       } else {
         console.log('ERROR: no response');
         console.log(response);
+
+        logs += `\n${accommodationCounter + 1}. ${accommodationNames[accommodationCounter]} ❌ ${
+          response.statusText
+        }`;
       }
       accommodationCounter++;
       // setGoogleSearchLog(logs);
@@ -709,9 +761,9 @@ const Page = () => {
     if (allAccommodations === null) return;
     let currentStatusText = '';
 
-    // console.log(
-    //   `Preparing results starting with ${allAccommodations.length} ${accommodation_type} items...`
-    // );
+    console.log(
+      `Preparing results starting with ${allAccommodations.length} ${accommodation_type} items...`
+    );
 
     // Categorize the accommodations based on the type
     const accommodationsIncluded =
@@ -720,13 +772,13 @@ const Page = () => {
       if (x.place_id) return true; // automatically include google hotels
       return accommodationsIncluded.includes(String(x.accommodation_type));
     });
-    // console.log(
-    //   `Filtered out ${
-    //     allAccommodations.length - specificAccommodations.length
-    //   } items that are not chosen accommodation types. ${
-    //     specificAccommodations.length
-    //   } remaining items.`
-    // );
+    console.log(
+      `Filtered out ${
+        allAccommodations.length - specificAccommodations.length
+      } items that are not chosen accommodation types. ${
+        specificAccommodations.length
+      } remaining items.`
+    );
 
     // If no accommodations are found return and let user know
     const tierSettings = fetchSettings[fetchSettings.tier as keyof typeof fetchSettings];
@@ -788,11 +840,11 @@ const Page = () => {
       );
     }
 
-    // console.log(
-    //   `Filtered out ${
-    //     accommodationsWithRating.length - accommodationsFilteredByDistrict.length
-    //   } items based on districts. ${accommodationsFilteredByDistrict.length} remaining items.`
-    // );
+    console.log(
+      `Filtered out ${
+        accommodationsWithRating.length - accommodationsFilteredByDistrict.length
+      } items based on districts. ${accommodationsFilteredByDistrict.length} remaining items.`
+    );
 
     // Filter by selected stars
     const accommodationsFilteredByStars = accommodationsFilteredByDistrict.filter(
@@ -807,11 +859,11 @@ const Page = () => {
         return starFilter;
       }
     );
-    // console.log(
-    //   `Filtered out ${
-    //     accommodationsFilteredByDistrict.length - accommodationsFilteredByStars.length
-    //   } items based on stars. ${accommodationsFilteredByStars.length} remaining items.`
-    // );
+    console.log(
+      `Filtered out ${
+        accommodationsFilteredByDistrict.length - accommodationsFilteredByStars.length
+      } items based on stars. ${accommodationsFilteredByStars.length} remaining items.`
+    );
 
     // Filter by selected sources
     const accommodationsFilteredBySource = accommodationsFilteredByStars.filter((x: any) => {
@@ -826,11 +878,11 @@ const Page = () => {
       else if (isCommonHotel) sourceFilter = selectedSources.includes(2);
       return sourceFilter;
     });
-    // console.log(
-    //   `Filtered out ${
-    //     accommodationsFilteredByStars.length - accommodationsFilteredBySource.length
-    //   } items based on sources. ${accommodationsFilteredBySource.length} remaining items.`
-    // );
+    console.log(
+      `Filtered out ${
+        accommodationsFilteredByStars.length - accommodationsFilteredBySource.length
+      } items based on sources. ${accommodationsFilteredBySource.length} remaining items.`
+    );
 
     // Sort based on review score
     if (settings.useReviewQuantity) {
