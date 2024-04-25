@@ -97,12 +97,6 @@ const Page = () => {
     showTopTen: true,
   });
 
-  // the new settings will be like this instead of just 1 object
-  // the only object will be the price tier and review filter
-  // const [showFlats, setShowFlats] = useState<boolean>(true);
-  // const [showTopTen, setshowTopTen] = useState<boolean>(true);
-  // const [ignorePriceAndRating, setIgnorePriceAndRating] = useState<boolean>(false);
-
   const [googleSearchLog, setGoogleSearchLog] = useState<string>('');
 
   const fetchSuggestions = async (query: string) => {
@@ -965,14 +959,7 @@ const Page = () => {
   useEffect(() => {
     if (showSettings) setShowSettings(false);
     fetchAccommodations();
-    console.log('fetchSettings');
-    console.log(fetchSettings);
   }, [currentDestination, fetchSettings]);
-
-  useEffect(() => {
-    console.log('settings');
-    console.log(settings);
-  }, [settings]);
 
   useEffect(() => {
     const curCheckin = currentDates['checkin' as keyof typeof currentDates];
@@ -1016,15 +1003,16 @@ const Page = () => {
     selectedDistricts,
     selectedStars,
     selectedSources,
-    settings.showTopTen,
-    settings.showFlats,
     allGoogleAccommodations,
     allCommonAccommodations,
+    // settings.showTopTen,
+    // settings.showFlats,
+    settings,
   ]);
 
   return (
     <main>
-      <small className="float-end">v1.0.4</small>
+      <small className="float-end">v1.0.5</small>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
         <div>
           <div className="grid grid-cols-4 gap-1">

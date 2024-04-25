@@ -2,7 +2,19 @@ const Page = () => {
   return (
     <main>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-        <h1 className="text-xl font-bold">v1.0.4 (current)</h1>
+        <h1 className="text-xl font-bold">v1.0.5 (current)</h1>
+        <ul>
+          <li>Settings are now divided into 2 sections: Fetch Settings and Display Settings.</li>
+          <li>
+            Fetch Settings are settings that require the user to click "Save Fetch Settings" and
+            will refetch accommodations.
+          </li>
+          <li>
+            Display Settings are settings that dont require a refetch of accommodations and will
+            instantly update the existing search results.
+          </li>
+        </ul>
+        <h1 className="text-xl font-bold">v1.0.4 </h1>
         <ul>
           <li>
             Change to unoptimized images since we always reach the 1000 limit of optimized images

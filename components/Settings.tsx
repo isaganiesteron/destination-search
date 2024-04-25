@@ -212,7 +212,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
       </div>
 
       <div className="p-2 border border-black rounded-md">
-        <p className="font-bold text-md pb-2">Settings:</p>
+        <p className="font-bold text-md pb-2">Display Settings:</p>
         <div className="pt-1">
           <p className="font-bold text-sm ">
             Search Multiple Prices **will take significanly more time to load
