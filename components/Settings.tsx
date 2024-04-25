@@ -2,45 +2,47 @@ import React, { useEffect, useState } from 'react';
 import { accommodationTypes } from '@/constants/accommodationtypes';
 
 type settingsProps = {
+  fetchSettings: any;
+  saveFetchSettings: Function;
   settings: any;
-  showFlats: boolean;
-  showTopTen: boolean;
   saveSettings: Function;
-  setShowFlats: Function;
-  setShowTopTen: Function;
-  ignorePriceAndRating: boolean;
-  setIgnorePriceAndRating: Function;
 };
 
-const Settings = ({
-  settings,
-  showFlats,
-  showTopTen,
-  saveSettings,
-  setShowFlats,
-  setShowTopTen,
-  ignorePriceAndRating,
-  setIgnorePriceAndRating,
-}: settingsProps) => {
-  const [curSearchMultiPrices, setCurSearchMultiPrices] = useState<boolean>(
-    settings.fetchMultiplePrices
+const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: settingsProps) => {
+  // fetchSettings
+  const [curReviewScore, setCurReviewScore] = useState<number>(fetchSettings.review);
+  const [curBudgetMinPrice, setCurBudgetMinPrice] = useState<number>(
+    fetchSettings.budget.min_price
   );
-  const [curReviewScore, setCurReviewScore] = useState<number>(settings.review);
+  const [curBudgetMaxPrice, setCurBudgetMaxPrice] = useState<number>(
+    fetchSettings.budget.max_price
+  );
+  const [curMidrangeMinPrice, setCurMidrangeMinPrice] = useState<number>(
+    fetchSettings.midrange.min_price
+  );
+  const [curMidrangeMaxPrice, setCurMidrangeMaxPrice] = useState<number>(
+    fetchSettings.midrange.max_price
+  );
+  const [curLuxuryMinPrice, setCurLuxuryMinPrice] = useState<number>(
+    fetchSettings.luxury.min_price
+  );
+  const [curLuxuryMaxPrice, setCurLuxuryMaxPrice] = useState<number>(
+    fetchSettings.luxury.max_price
+  );
+
+  // settings
   const [curConsiderReviewQuantity, setCurConsiderReviewQuantity] = useState<boolean>(
     settings.consider_review_quantity
   );
-  const [curhotelTypes, setCurhotelTypes] = useState<object[]>();
+  const [curHotelTypes, setCurHotelTypes] = useState<object[]>();
+  const [curApartmentTypes, setCurApartmentTypes] = useState<object[]>([]);
   const [curFacilities, setCurFacilities] = useState<number[]>(settings.facilities);
-  const [curBudgetMinPrice, setCurBudgetMinPrice] = useState<number>(settings.budget.min_price);
-  const [curBudgetMaxPrice, setCurBudgetMaxPrice] = useState<number>(settings.budget.max_price);
-  const [curMidrangeMinPrice, setCurMidrangeMinPrice] = useState<number>(
-    settings.midrange.min_price
+  const [curSearchMultiPrices, setCurSearchMultiPrices] = useState<boolean>(
+    settings.fetchMultiplePrices
   );
-  const [curMidrangeMaxPrice, setCurMidrangeMaxPrice] = useState<number>(
-    settings.midrange.max_price
-  );
-  const [curLuxuryMinPrice, setCurLuxuryMinPrice] = useState<number>(settings.luxury.min_price);
-  const [curLuxuryMaxPrice, setCurLuxuryMaxPrice] = useState<number>(settings.luxury.max_price);
+  const [showFlats, setShowFlats] = useState(settings.showFlats);
+  const [showTopTen, setShowTopTen] = useState(settings.showTop10);
+  const [ignorePriceAndRating, setIgnorePriceAndRating] = useState(settings.ignorePriceAndRating);
 
   const _facilityHandler = (isChecked: boolean, facilityId: number) => {
     if (isChecked) {
@@ -54,8 +56,8 @@ const Settings = ({
   };
 
   const saveHandler = () => {
-    saveSettings({
-      ...settings,
+    saveFetchSettings({
+      ...fetchSettings,
       review: curReviewScore,
       budget: {
         min_price: curBudgetMinPrice,
@@ -83,11 +85,37 @@ const Settings = ({
   };
 
   useEffect(() => {
-    const hotelTypesChecked = settings.hoteltypes.map((x: string) => {
-      return accommodationTypes.find((type) => type.id === Number(x));
-    });
-    setCurhotelTypes(hotelTypesChecked);
+    if (settings.hoteltypes) {
+      const hotelTypesChecked = settings.hoteltypes.map((x: string) => {
+        return accommodationTypes.find((type) => type.id === Number(x));
+      });
+      setCurHotelTypes(hotelTypesChecked);
+    }
   }, [settings.hoteltypes]);
+
+  // useEffect(() => {
+  //   console.log('update settings');
+
+  //   saveSettings({
+  //     consider_review_quantity: curConsiderReviewQuantity,
+  //     hoteltypes: curHotelTypes,
+  //     apartmenttypes: curApartmentTypes,
+  //     facilities: curFacilities,
+  //     fetchMultiplePrices: curSearchMultiPrices,
+  //     showFlats: showFlats,
+  //     showTop10: showTopTen,
+  //     ignorePriceAndRating: ignorePriceAndRating,
+  //   });
+  // }, [
+  //   curConsiderReviewQuantity,
+  //   curHotelTypes,
+  //   curApartmentTypes,
+  //   curFacilities,
+  //   curSearchMultiPrices,
+  //   showFlats,
+  //   showTopTen,
+  //   ignorePriceAndRating,
+  // ]);
 
   return (
     <div className="flex flex-col m-4 p-2 border border-black rounded-md gap-4">
@@ -225,7 +253,9 @@ const Settings = ({
           <p className="font-bold text-sm">Hotel Types</p>
           <div className="grid grid-cols-4 gap-1">
             {accommodationTypes.map((type) => {
-              const isChecked = curhotelTypes?.find((x) => x['id' as keyof typeof x] === type.id)
+              const isChecked = curHotelTypes?.find((x) => {
+                if (x) x['id' as keyof typeof x] === type.id;
+              })
                 ? true
                 : false;
               return (
@@ -235,13 +265,13 @@ const Settings = ({
                     checked={isChecked}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        if (curhotelTypes) setCurhotelTypes([...curhotelTypes, type]);
-                        else setCurhotelTypes([type]);
+                        if (curHotelTypes) setCurHotelTypes([...curHotelTypes, type]);
+                        else setCurHotelTypes([type]);
                       } else {
-                        const newTypes = curhotelTypes?.filter(
+                        const newTypes = curHotelTypes?.filter(
                           (x) => x['id' as keyof typeof x] !== type.id
                         );
-                        setCurhotelTypes(newTypes);
+                        setCurHotelTypes(newTypes);
                       }
                     }}
                   />

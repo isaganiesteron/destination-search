@@ -85,7 +85,6 @@ const Page = () => {
       conditions: {},
     },
   });
-
   const [settings, setSettings] = useState<I_Settings>({
     consider_review_quantity: true,
     hoteltypes: hotelTypes,
@@ -960,7 +959,13 @@ const Page = () => {
   useEffect(() => {
     if (showSettings) setShowSettings(false);
     fetchAccommodations();
+    console.log(fetchSettings);
   }, [currentDestination, fetchSettings]);
+
+  useEffect(() => {
+    console.log('settings');
+    console.log(settings);
+  }, [settings]);
 
   useEffect(() => {
     const curCheckin = currentDates['checkin' as keyof typeof currentDates];
@@ -1268,14 +1273,16 @@ const Page = () => {
           </button>
           {showSettings && (
             <Settings
-              settings={fetchSettings}
-              showFlats={showFlats}
-              showTopTen={showTopTen}
-              ignorePriceAndRating={ignorePriceAndRating}
-              setIgnorePriceAndRating={setIgnorePriceAndRating}
-              saveSettings={setFetchSettings}
-              setShowFlats={setShowFlats}
-              setShowTopTen={setshowTopTen}
+              fetchSettings={fetchSettings}
+              saveFetchSettings={setFetchSettings}
+              settings={settings}
+              saveSettings={setSettings}
+              // showFlats={showFlats}
+              // showTopTen={showTopTen}
+              // ignorePriceAndRating={ignorePriceAndRating}
+              // setIgnorePriceAndRating={setIgnorePriceAndRating}
+              // setShowFlats={setShowFlats}
+              // setShowTopTen={setshowTopTen}
             />
           )}
         </div>
