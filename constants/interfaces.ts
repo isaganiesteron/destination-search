@@ -35,4 +35,5 @@ export interface Settings {
   fetchMultiplePrices: boolean;
   showFlats: boolean;
   showTopTen: boolean;
+  googleSearchRadius: number;
 }

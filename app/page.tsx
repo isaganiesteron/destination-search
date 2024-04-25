@@ -95,6 +95,7 @@ const Page = () => {
     fetchMultiplePrices: false,
     showFlats: true,
     showTopTen: true,
+    googleSearchRadius: 500,
   });
 
   const [googleSearchLog, setGoogleSearchLog] = useState<string>('');
@@ -196,17 +197,21 @@ const Page = () => {
   const fetchGoogleAccommodations = async (neighborhood: string) => {
     if (neighborhood === '') return;
 
+    // reset all variables
     setGoogleFetchingAccommodations(true);
     setAllCommonAccommodations([]);
     setAllGoogleAccommodations([]);
     setGoogleSearchLog('');
 
-    // The 3 below are important because we need to show users ONLY common hotels, ignore filtering with districts AND show more than 10 results
+    /**
+     * The 3 below are important because we need to show
+     * users ONLY common hotels,ignore filtering with
+     * districts AND show more than 10 results
+     */
     setSelectedSources([2]);
     setSelectedDistricts(
       currentDistricts.map((district) => district['id' as keyof typeof district])
     );
-    // setshowTopTen(false);
     setSettings({ ...settings, showTopTen: false });
 
     /**
@@ -220,35 +225,18 @@ const Page = () => {
       currentDestination['label' as keyof typeof currentDestination]
     }`;
     let currentLogs = '';
-    let fetchedHotels: any[] = [];
+    // let fetchedHotels: any[] = []; // these are all google hotels
 
     currentLogs += `Searching Google Maps for hotels in ${searchString}...\n`;
     setGoogleSearchLog(currentLogs);
 
-    let nextPageToken = null;
-    let fetchingDone = false;
-
-    while (!fetchingDone) {
-      const response: any = await fetch(
-        nextPageToken
-          ? `/api/googlehotels/${nextPageToken}/null`
-          : `/api/googlehotels/null/${encodeURI(searchString)}`
-      );
-      const data = await response.json();
-      if (data) {
-        if (data.next_page_token) {
-          nextPageToken = data.next_page_token;
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
-        } else {
-          fetchingDone = true;
-        }
-        fetchedHotels = [...fetchedHotels, ...data.results];
-      } else {
-        console.log('ERROR: no places found');
-        console.log(data);
-        fetchingDone = true;
-      }
-    }
+    /**
+     * *****START: REPLACE THIS SECTION TO USE THE MORE ACCURATE GOOGLE HOTELS SEARCH
+     */
+    const fetchedHotels = await googleHotelsTextSearch(neighborhood);
+    /**
+     * *****END: REPLACE THIS SECTION TO USE THE MORE ACCURATE GOOGLE HOTELS SEARCH
+     */
 
     currentLogs += `Found ${fetchedHotels.length} hotels in ${neighborhood}...\n`;
     setGoogleSearchLog(currentLogs);
@@ -303,6 +291,45 @@ const Page = () => {
 
     setGoogleFetchingAccommodations(false);
   };
+
+  const googleHotelsTextSearch = async (neighborhood: string) => {
+    // Textsearch Google Maps Api using textstring
+
+    let fetchedHotels: any[] = []; // these are all google hotels
+
+    const searchString = `${neighborhood}, ${
+      currentDestination['label' as keyof typeof currentDestination]
+    }`;
+
+    let nextPageToken = null;
+    let fetchingDone = false;
+
+    while (!fetchingDone) {
+      const response: any = await fetch(
+        nextPageToken
+          ? `/api/googlehotels/${nextPageToken}/null`
+          : `/api/googlehotels/null/${encodeURI(searchString)}`
+      );
+      const data = await response.json();
+      if (data) {
+        if (data.next_page_token) {
+          nextPageToken = data.next_page_token;
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
+        } else {
+          fetchingDone = true;
+        }
+        fetchedHotels = [...fetchedHotels, ...data.results];
+      } else {
+        console.log('ERROR: no places found');
+        console.log(data);
+        fetchingDone = true;
+      }
+    }
+
+    return fetchedHotels;
+  };
+
+  const googleHotelsNearbySearch = async (neighborhood: string) => {};
 
   const fetchBookingAccommodations = async (
     allCommonAccommodations: any[],
@@ -1106,7 +1133,7 @@ const Page = () => {
               />
               <div className="mt-4">
                 <p className="font-bold text-sm">
-                  Search Additional Hotels with Google Maps by District/Neighborhood
+                  {`Search Additional Hotels with Google Maps by District/Neighborhood (Radius: ${settings.googleSearchRadius}m)`}
                 </p>
                 <div className="flex flex-row gap-1 w-full justify-center">
                   <input

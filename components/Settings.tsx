@@ -228,6 +228,18 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
             <p className="text-sm ml-2">Search prices for current month and the next 4 months</p>
           </div>
         </div>
+
+        <div className="pt-4">
+          <p className="font-bold text-sm ">Google Search Radius (meters)</p>
+          <input
+            type="number"
+            value={settings.googleSearchRadius}
+            className="w-full border border-black rounded-md px-1"
+            onChange={(e) =>
+              saveSettings({ ...settings, googleSearchRadius: Number(e.target.value) })
+            }
+          />
+        </div>
         <div className="pt-4">
           <p className="font-bold text-sm ">Limit Search Results</p>
           <div className="flex flex-row">
