@@ -16,7 +16,7 @@ import Districts from '@/components/Districts';
 import { FetchSettings as I_FetchSettings } from '@/constants/interfaces';
 import { Settings as I_Settings } from '@/constants/interfaces';
 
-import { hotelTypes } from '@/constants/accommodationtypes';
+import { hotelTypes, apartmentTypes } from '@/constants/accommodationtypes';
 // import accommodations from '@/mock_data/accommodations';
 
 const Page = () => {
@@ -67,6 +67,7 @@ const Page = () => {
 
   const [currentTier, setCurrentTier] = useState<string>('budget');
   const [fetchSettings, setFetchSettings] = useState<I_FetchSettings>({
+    ignoreReviewAndTier: false,
     review: 8.3,
     tier: 'budget',
     budget: {
@@ -85,22 +86,22 @@ const Page = () => {
       conditions: {},
     },
   });
+
   const [settings, setSettings] = useState<I_Settings>({
-    consider_review_quantity: true,
+    useReviewQuantity: true,
     hoteltypes: hotelTypes,
-    apartmenttypes: ['201'],
+    apartmentTypes: apartmentTypes,
     facilities: [],
     fetchMultiplePrices: false,
     showFlats: true,
-    showTop10: true,
-    ignorePriceAndRating: true,
+    showTopTen: true,
   });
 
   // the new settings will be like this instead of just 1 object
   // the only object will be the price tier and review filter
-  const [showFlats, setShowFlats] = useState<boolean>(true);
-  const [showTopTen, setshowTopTen] = useState<boolean>(true);
-  const [ignorePriceAndRating, setIgnorePriceAndRating] = useState<boolean>(false);
+  // const [showFlats, setShowFlats] = useState<boolean>(true);
+  // const [showTopTen, setshowTopTen] = useState<boolean>(true);
+  // const [ignorePriceAndRating, setIgnorePriceAndRating] = useState<boolean>(false);
 
   const [googleSearchLog, setGoogleSearchLog] = useState<string>('');
 
@@ -178,7 +179,7 @@ const Page = () => {
           const isIncludedHotel = settings.hoteltypes.includes(
             String(bookingHotel.accommodation_type)
           );
-          const isIncludedFlat = settings.apartmenttypes.includes(
+          const isIncludedFlat = settings.apartmentTypes.includes(
             String(bookingHotel.accommodation_type)
           );
 
@@ -211,7 +212,8 @@ const Page = () => {
     setSelectedDistricts(
       currentDistricts.map((district) => district['id' as keyof typeof district])
     );
-    setshowTopTen(false);
+    // setshowTopTen(false);
+    setSettings({ ...settings, showTopTen: false });
 
     /**
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
@@ -440,7 +442,7 @@ const Page = () => {
     const tierSettings = fetchSettings[fetchSettings.tier as keyof typeof fetchSettings];
     const minPrice = tierSettings['min_price' as keyof typeof tierSettings];
     const maxPrice = tierSettings['max_price' as keyof typeof tierSettings];
-    const review = ignorePriceAndRating ? 'null' : fetchSettings.review;
+    const review = fetchSettings.ignoreReviewAndTier ? 'null' : fetchSettings.review;
 
     const dateCheckin = currentDates['checkin' as keyof typeof currentDates];
     const dateCheckout = currentDates['checkout' as keyof typeof currentDates];
@@ -474,7 +476,11 @@ const Page = () => {
       const currentDestinationType = nextPage === '' ? destinationType : nextPage;
       const currentDestinationId = nextPage === '' ? destinationId : 'null';
       const currentPriceRange =
-        nextPage === '' ? (ignorePriceAndRating ? 'null' : `${minPrice}_${maxPrice}`) : 'null';
+        nextPage === ''
+          ? fetchSettings.ignoreReviewAndTier
+            ? 'null'
+            : `${minPrice}_${maxPrice}`
+          : 'null';
 
       const fetchString = `/api/hotels/${currentDestinationType}/${currentDestinationId}/${currentPriceRange}/${review}/${checkin}_${checkout}`;
       const response = await fetch(fetchString); // maxPrice is in USD
@@ -639,7 +645,7 @@ const Page = () => {
 
     allAccommodationsFetchedWithMultiplePrice.forEach((x) => {
       if (settings.hoteltypes.includes(String(x.accommodation_type))) hotelCount++;
-      else if (settings.apartmenttypes.includes(String(x.accommodation_type))) flatCount++;
+      else if (settings.apartmentTypes.includes(String(x.accommodation_type))) flatCount++;
       else otherCount++;
     });
 
@@ -663,7 +669,7 @@ const Page = () => {
 
     // Categorize the accommodations based on the type
     const accommodationsIncluded =
-      accommodation_type == 'hotels' ? settings.hoteltypes : settings.apartmenttypes;
+      accommodation_type == 'hotels' ? settings.hoteltypes : settings.apartmentTypes;
     const specificAccommodations = allAccommodations.filter((x) => {
       if (x.place_id) return true; // automatically include google hotels
       return accommodationsIncluded.includes(String(x.accommodation_type));
@@ -781,7 +787,7 @@ const Page = () => {
     // );
 
     // Sort based on review score
-    if (settings.consider_review_quantity) {
+    if (settings.useReviewQuantity) {
       accommodationsFilteredBySource.sort(
         (
           a: {
@@ -818,7 +824,7 @@ const Page = () => {
 
     // return accommodationsFilteredBySource; // ***DEV PURPOSES: RETURN ALL HOTELS
     // // Get the top 10 accommodations
-    const limitedAccommodations = showTopTen
+    const limitedAccommodations = settings.showTopTen
       ? accommodationsFilteredBySource.slice(0, 10)
       : accommodationsFilteredBySource;
     return limitedAccommodations;
@@ -959,6 +965,7 @@ const Page = () => {
   useEffect(() => {
     if (showSettings) setShowSettings(false);
     fetchAccommodations();
+    console.log('fetchSettings');
     console.log(fetchSettings);
   }, [currentDestination, fetchSettings]);
 
@@ -1001,7 +1008,7 @@ const Page = () => {
     const preparedHotels = prepareResults(combineGoogleAndBookingHotels, 'hotels') || [];
     setCurrentAllHotels(preparedHotels);
 
-    if (showFlats) {
+    if (settings.showFlats) {
       const prepareFlats = prepareResults(combineGoogleAndBookingHotels, 'flats') || [];
       setCurrentAllFlats(prepareFlats);
     }
@@ -1009,8 +1016,8 @@ const Page = () => {
     selectedDistricts,
     selectedStars,
     selectedSources,
-    showTopTen,
-    showFlats,
+    settings.showTopTen,
+    settings.showFlats,
     allGoogleAccommodations,
     allCommonAccommodations,
   ]);
@@ -1048,7 +1055,7 @@ const Page = () => {
             <div>
               <p className="font-bold text-md">Price Tier</p>
               <select
-                disabled={ignorePriceAndRating}
+                disabled={fetchSettings.ignoreReviewAndTier}
                 className="border border-black rounded-md w-full p-2"
                 name="tier"
                 id="tier"
@@ -1277,19 +1284,15 @@ const Page = () => {
               saveFetchSettings={setFetchSettings}
               settings={settings}
               saveSettings={setSettings}
-              // showFlats={showFlats}
-              // showTopTen={showTopTen}
-              // ignorePriceAndRating={ignorePriceAndRating}
-              // setIgnorePriceAndRating={setIgnorePriceAndRating}
-              // setShowFlats={setShowFlats}
-              // setShowTopTen={setshowTopTen}
             />
           )}
         </div>
 
         <div>
           {currentAllHotels.length > 0 && (
-            <p className="font-bold text-xl">{`${showTopTen ? 'Top 10' : 'All'} Hotels:`}</p>
+            <p className="font-bold text-xl">{`${
+              settings.showTopTen ? 'Top 10' : 'All'
+            } Hotels:`}</p>
           )}
           <div className="flex flex-row">
             <div>{hotelStatus['loading' as keyof typeof hotelStatus] ? <Spinner /> : ''}</div>
@@ -1325,10 +1328,12 @@ const Page = () => {
           )}
         </div>
 
-        {showFlats && (
+        {settings.showFlats && (
           <div>
             {currentAllFlats.length > 0 && (
-              <p className="font-bold text-xl">{`${showTopTen ? 'Top 10' : 'All'} Flats:`}</p>
+              <p className="font-bold text-xl">{`${
+                settings.showTopTen ? 'Top 10' : 'All'
+              } Flats:`}</p>
             )}
             <div className="flex flex-row">
               <div>{flatStatus['loading' as keyof typeof flatStatus] ? <Spinner /> : ''}</div>

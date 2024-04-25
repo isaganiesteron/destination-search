@@ -10,6 +10,9 @@ type settingsProps = {
 
 const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: settingsProps) => {
   // fetchSettings
+  const [curIgnoreReviewAndPrice, setCurIgnoreReviewAndPrice] = useState<boolean>(
+    fetchSettings.ignoreReviewAndTier
+  );
   const [curReviewScore, setCurReviewScore] = useState<number>(fetchSettings.review);
   const [curBudgetMinPrice, setCurBudgetMinPrice] = useState<number>(
     fetchSettings.budget.min_price
@@ -30,21 +33,11 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
     fetchSettings.luxury.max_price
   );
 
-  // settings
-  const [curConsiderReviewQuantity, setCurConsiderReviewQuantity] = useState<boolean>(
-    settings.consider_review_quantity
-  );
   const [curHotelTypes, setCurHotelTypes] = useState<object[]>();
   const [curApartmentTypes, setCurApartmentTypes] = useState<object[]>([]);
   const [curFacilities, setCurFacilities] = useState<number[]>(settings.facilities);
-  const [curSearchMultiPrices, setCurSearchMultiPrices] = useState<boolean>(
-    settings.fetchMultiplePrices
-  );
-  const [showFlats, setShowFlats] = useState(settings.showFlats);
-  const [showTopTen, setShowTopTen] = useState(settings.showTop10);
-  const [ignorePriceAndRating, setIgnorePriceAndRating] = useState(settings.ignorePriceAndRating);
 
-  const _facilityHandler = (isChecked: boolean, facilityId: number) => {
+  const facilityHandler = (isChecked: boolean, facilityId: number) => {
     if (isChecked) {
       const tempcurFacilities = [...curFacilities];
       tempcurFacilities.push(facilityId);
@@ -58,6 +51,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
   const saveHandler = () => {
     saveFetchSettings({
       ...fetchSettings,
+      ignoreReviewAndTier: curIgnoreReviewAndPrice,
       review: curReviewScore,
       budget: {
         min_price: curBudgetMinPrice,
@@ -74,13 +68,6 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
         max_price: curLuxuryMaxPrice,
         conditions: {},
       },
-      // consider_review_quantity: curConsiderReviewQuantity,
-      // hoteltypes: curhotelTypes
-      //   ? curhotelTypes.map((x) => String(x['id' as keyof typeof x]))
-      //   : settings.hoteltypes,
-      // facilities: curFacilities,
-      // apartmenttypes: settings.apartmenttypes,
-      // fetchMultiplePrices: curSearchMultiPrices,
     });
   };
 
@@ -91,31 +78,40 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
       });
       setCurHotelTypes(hotelTypesChecked);
     }
-  }, [settings.hoteltypes]);
+    if (settings.apartmentTypes) {
+      const apartmentTypesChecked = settings.apartmentTypes.map((x: string) => {
+        return accommodationTypes.find((type) => type.id === Number(x));
+      });
+      setCurApartmentTypes(apartmentTypesChecked);
+    }
+  }, []);
 
-  // useEffect(() => {
-  //   console.log('update settings');
+  useEffect(() => {
+    if (curHotelTypes) {
+      saveSettings({
+        ...settings,
+        hoteltypes: curHotelTypes.map((x) => String(x['id' as keyof typeof x])),
+      });
+    }
+  }, [curHotelTypes]);
 
-  //   saveSettings({
-  //     consider_review_quantity: curConsiderReviewQuantity,
-  //     hoteltypes: curHotelTypes,
-  //     apartmenttypes: curApartmentTypes,
-  //     facilities: curFacilities,
-  //     fetchMultiplePrices: curSearchMultiPrices,
-  //     showFlats: showFlats,
-  //     showTop10: showTopTen,
-  //     ignorePriceAndRating: ignorePriceAndRating,
-  //   });
-  // }, [
-  //   curConsiderReviewQuantity,
-  //   curHotelTypes,
-  //   curApartmentTypes,
-  //   curFacilities,
-  //   curSearchMultiPrices,
-  //   showFlats,
-  //   showTopTen,
-  //   ignorePriceAndRating,
-  // ]);
+  useEffect(() => {
+    if (curApartmentTypes) {
+      saveSettings({
+        ...settings,
+        apartmentTypes: curApartmentTypes.map((x) => String(x['id' as keyof typeof x])),
+      });
+    }
+  }, [curApartmentTypes]);
+
+  useEffect(() => {
+    if (curFacilities) {
+      saveSettings({
+        ...settings,
+        facilities: curFacilities,
+      });
+    }
+  }, [curFacilities]);
 
   return (
     <div className="flex flex-col m-4 p-2 border border-black rounded-md gap-4">
@@ -125,6 +121,20 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
           ***Updating the following settings will force a refetch after clicking on 'Save Fetch
           Settings'
         </p>
+
+        <div className="pt-4">
+          <p className="font-bold text-sm ">Ignore Review Score and Price Tier</p>
+          <div className="flex flex-row">
+            <input
+              type="checkbox"
+              checked={curIgnoreReviewAndPrice}
+              onChange={(e) => setCurIgnoreReviewAndPrice(e.target.checked)}
+            />
+            <p className="text-sm ml-2">
+              Don&apos;t search accommodations based on Reviews and Price Tiers
+            </p>
+          </div>
+        </div>
         <div className="pt-4">
           <p className="font-bold text-sm ">Minimum Review Score</p>
           <input
@@ -136,8 +146,8 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
           <div className="flex flex-row">
             <input
               type="checkbox"
-              checked={curConsiderReviewQuantity}
-              onChange={(e) => setCurConsiderReviewQuantity(e.target.checked)}
+              checked={settings.useReviewQuantity}
+              onChange={(e) => saveSettings({ ...settings, useReviewQuantity: e.target.checked })}
             />
             <p className="font-bold text-sm ml-2">Consider Review Quantity</p>
           </div>
@@ -210,8 +220,10 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
           <div className="flex flex-row">
             <input
               type="checkbox"
-              checked={curSearchMultiPrices}
-              onChange={(e) => setCurSearchMultiPrices(e.target.checked)}
+              checked={settings.fetchMultiplePrices}
+              onChange={(e) => {
+                saveSettings({ ...settings, fetchMultiplePrices: e.target.checked });
+              }}
             />
             <p className="text-sm ml-2">Search prices for current month and the next 4 months</p>
           </div>
@@ -221,31 +233,18 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
           <div className="flex flex-row">
             <input
               type="checkbox"
-              checked={showTopTen}
-              onChange={(e) => setShowTopTen(e.target.checked)}
+              checked={settings.showTopTen}
+              onChange={(e) => saveSettings({ ...settings, showTopTen: e.target.checked })}
             />
             <p className="text-sm ml-2">Show Top 10</p>
           </div>
           <div className="flex flex-row">
             <input
               type="checkbox"
-              checked={showFlats}
-              onChange={(e) => setShowFlats(e.target.checked)}
+              checked={settings.showFlats}
+              onChange={(e) => saveSettings({ ...settings, showFlats: e.target.checked })}
             />
             <p className="text-sm ml-2">Show Flats</p>
-          </div>
-        </div>
-        <div className="pt-4">
-          <p className="font-bold text-sm ">Ignore Price Tier and Review Score</p>
-          <div className="flex flex-row">
-            <input
-              type="checkbox"
-              checked={ignorePriceAndRating}
-              onChange={(e) => setIgnorePriceAndRating(e.target.checked)}
-            />
-            <p className="text-sm ml-2">
-              Don&apos;t search accommodations based on Price and Reviews
-            </p>
           </div>
         </div>
 
@@ -253,16 +252,12 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
           <p className="font-bold text-sm">Hotel Types</p>
           <div className="grid grid-cols-4 gap-1">
             {accommodationTypes.map((type) => {
-              const isChecked = curHotelTypes?.find((x) => {
-                if (x) x['id' as keyof typeof x] === type.id;
-              })
-                ? true
-                : false;
+              const isChecked = curHotelTypes?.find((x) => x['id' as keyof typeof x] === type.id);
               return (
-                <div key={type.id} className="flex flex-row items-center">
+                <div key={`hotels_${type.id}`} className="flex flex-row items-center">
                   <input
                     type="checkbox"
-                    checked={isChecked}
+                    checked={isChecked ? true : false}
                     onChange={(e) => {
                       if (e.target.checked) {
                         if (curHotelTypes) setCurHotelTypes([...curHotelTypes, type]);
@@ -283,6 +278,37 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
         </div>
 
         <div className="pt-4">
+          <p className="font-bold text-sm">Apartment Types</p>
+          <div className="grid grid-cols-4 gap-1">
+            {accommodationTypes.map((type) => {
+              const isChecked = curApartmentTypes?.find(
+                (x) => x['id' as keyof typeof x] === type.id
+              );
+              return (
+                <div key={`apartments_${type.id}`} className="flex flex-row items-center">
+                  <input
+                    type="checkbox"
+                    checked={isChecked ? true : false}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        if (curApartmentTypes) setCurApartmentTypes([...curApartmentTypes, type]);
+                        else setCurApartmentTypes([type]);
+                      } else {
+                        const newTypes = curApartmentTypes?.filter(
+                          (x) => x['id' as keyof typeof x] !== type.id
+                        );
+                        setCurApartmentTypes(newTypes);
+                      }
+                    }}
+                  />
+                  <p className="text-sm ml-1">{type.name}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="pt-4">
           <p className="font-bold text-sm">Airport</p>
           <div className="grid grid-cols-4 gap-1">
             <div className="flex flex-row items-center">
@@ -290,7 +316,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 disabled
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 0);
+                  facilityHandler(e.target.checked, 0);
                 }}
               />
               <p className="text-sm ml-1 line-through">***1km away from an airport</p>
@@ -300,7 +326,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(8)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 8);
+                  facilityHandler(e.target.checked, 8);
                 }}
               />
               <p className="text-sm ml-1">24-hour Front Desk</p>
@@ -310,7 +336,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(17)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 17);
+                  facilityHandler(e.target.checked, 17);
                 }}
               />
               <p className="text-sm ml-1">Airport Shuttle</p>
@@ -326,7 +352,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(28)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 28);
+                  facilityHandler(e.target.checked, 28);
                 }}
               />
               <p className="text-sm ml-1">Family Rooms</p>
@@ -336,7 +362,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(21)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 21);
+                  facilityHandler(e.target.checked, 21);
                 }}
               />
               <p className="text-sm ml-1">Baby Sitting Services</p>
@@ -346,7 +372,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(56)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 56);
+                  facilityHandler(e.target.checked, 56);
                 }}
               />
               <p className="text-sm ml-1">Playgroud/Kids Play Area</p>
@@ -363,7 +389,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(149)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 149);
+                  facilityHandler(e.target.checked, 149);
                 }}
               />
               <p className="text-sm ml-1">Adults Only</p>
@@ -373,7 +399,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(7)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 7);
+                  facilityHandler(e.target.checked, 7);
                 }}
               />
               <p className="text-sm ml-1">Bar</p>
@@ -383,7 +409,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(15)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 15);
+                  facilityHandler(e.target.checked, 15);
                 }}
               />
               <p className="text-sm ml-1">Terraces</p>
@@ -393,7 +419,7 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
                 type="checkbox"
                 checked={curFacilities.includes(192)}
                 onChange={(e) => {
-                  _facilityHandler(e.target.checked, 192);
+                  facilityHandler(e.target.checked, 192);
                 }}
               />
               <p className="text-sm ml-1">Rooftop Pool</p>

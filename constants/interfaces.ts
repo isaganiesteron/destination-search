@@ -1,4 +1,5 @@
 export interface FetchSettings {
+  ignoreReviewAndTier: boolean;
   review: number;
   tier: string;
   budget: Budget;
@@ -27,12 +28,11 @@ export interface Luxury {
 }
 
 export interface Settings {
-  consider_review_quantity: boolean;
+  useReviewQuantity: boolean;
   hoteltypes: string[];
-  apartmenttypes: string[];
+  apartmentTypes: string[];
   facilities: number[];
   fetchMultiplePrices: boolean;
   showFlats: boolean;
-  showTop10: boolean;
-  ignorePriceAndRating: boolean;
+  showTopTen: boolean;
 }
