@@ -6,7 +6,7 @@ const Page = () => {
         <ul>
           <li>Settings are now divided into 2 sections: Fetch Settings and Display Settings.</li>
           <li>
-            Fetch Settings are settings that require the user to click "Save Fetch Settings" and
+            Fetch Settings are settings that require the user to click &quot;Save Fetch Settings&quot; and
             will refetch accommodations.
           </li>
           <li>

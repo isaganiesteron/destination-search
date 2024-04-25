@@ -118,8 +118,8 @@ const Settings = ({ fetchSettings, saveFetchSettings, settings, saveSettings }: 
       <div className="p-2 border border-black rounded-md">
         <p className="font-bold text-md pb-2">Fetch Settings:</p>
         <p className="text-xs italic">
-          ***Updating the following settings will force a refetch after clicking on 'Save Fetch
-          Settings'
+          ***Updating the following settings will force a refetch after clicking on &apos;Save Fetch
+          Settings&apos;
         </p>
 
         <div className="pt-4">
