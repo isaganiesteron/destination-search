@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 import chunkArray from '@/utils/chunkArray';
 import similarity from '@/utils/similarity';
@@ -36,6 +37,7 @@ const Page = () => {
   const [googleFetchingAccommodations, setGoogleFetchingAccommodations] = useState<boolean>(false);
 
   const [neighborhoodInput, setNeighborhoodInput] = useState<string>('');
+  const [neighborhoodPlaceId, setNeighborhoodPlaceId] = useState<string>('');
   const [allFetchedAccommodations, setAllFetchedAccommodations] = useState<any[]>([]);
   const [allCommonAccommodations, setAllCommonAccommodations] = useState<any[]>([]);
   const [allGoogleAccommodations, setAllGoogleAccommodations] = useState<any[]>([]);
@@ -99,6 +101,8 @@ const Page = () => {
   });
 
   const [googleSearchLog, setGoogleSearchLog] = useState<string>('');
+  const [suggestedCities, setSuggestedCities] = useState<object[]>([]);
+  const [autoSuggestToken, setAutoSuggestToken] = useState<string>('');
 
   const fetchSuggestions = async (query: string) => {
     const response = await fetch('/api/autosuggest/' + query);
@@ -106,6 +110,21 @@ const Page = () => {
       const data = await response.json();
       setSuggestions(data);
     }
+  };
+
+  const getCitySuggestions = async (textQuery: string) => {
+    if (textQuery === '') return;
+
+    const response: any = await fetch(`/api/autocomplete/${textQuery}/${autoSuggestToken}`);
+    const data = await response.json();
+
+    if (data.suggestions) {
+      setSuggestedCities(
+        data.suggestions.map((x: any) => {
+          return { label: x.placePrediction.text.text, place_id: x.placePrediction.placeId };
+        })
+      );
+    } else setSuggestedCities([]);
   };
 
   const fetchDistricts = async () => {
@@ -194,8 +213,10 @@ const Page = () => {
     return commonHotels;
   };
 
-  const fetchGoogleAccommodations = async (neighborhood: string) => {
-    if (neighborhood === '') return;
+  const fetchGoogleAccommodations = async () => {
+    if (neighborhoodInput === '') return;
+
+    const neighborhood = neighborhoodInput;
 
     // reset all variables
     setGoogleFetchingAccommodations(true);
@@ -1135,7 +1156,62 @@ const Page = () => {
                 <p className="font-bold text-sm">
                   {`Search Additional Hotels with Google Maps by District/Neighborhood (Radius: ${settings.googleSearchRadius}m)`}
                 </p>
+
                 <div className="flex flex-row gap-1 w-full justify-center">
+                  <input
+                    type="text"
+                    placeholder="Enter a nieghborhood/district"
+                    value={neighborhoodInput}
+                    className="w-4/5 border border-black rounded-md p-[5.5px]"
+                    onFocus={() => {
+                      if (autoSuggestToken === '') setAutoSuggestToken(uuidv4());
+                    }}
+                    onBlur={() => {
+                      setAutoSuggestToken('');
+                      setTimeout(() => setSuggestedCities([]), 500);
+                    }}
+                    onChange={(event) => {
+                      setNeighborhoodInput(event.target.value);
+                      if (event.target.value.length > 3) getCitySuggestions(event.target.value);
+                    }}
+                  />
+                  <button
+                    disabled={googleFetchingAccommodations}
+                    className={`w-1/5 border border-black rounded-md p-2 hover:bg-gray-200 ${
+                      googleFetchingAccommodations && 'bg-gray-200'
+                    } flex items-center justify-center`}
+                    onClick={() => fetchGoogleAccommodations()}
+                  >
+                    {googleFetchingAccommodations ? <Spinner /> : 'Search Google Maps'}
+                  </button>
+                </div>
+
+                {suggestedCities.length > 0 && (
+                  <div className="flex flex-row gap-1 w-full justify-start">
+                    <div className="w-4/5 border border-black rounded-md p-[5.5px]">
+                      {suggestedCities.map((x, i) => {
+                        return (
+                          <div key={i} className="flex p-1 hover:bg-slate-200 rounded-md">
+                            <button
+                              className="flex flex-col justify-start w-full m-1"
+                              onClick={() => {
+                                setNeighborhoodInput(x['label' as keyof typeof x]);
+                                setNeighborhoodPlaceId(x['place_id' as keyof typeof x]);
+                                setSuggestedCities([]);
+                              }}
+                            >
+                              <h1 className="font-bold">{x['label' as keyof typeof x]}</h1>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="w-1/5"></div>
+                  </div>
+                )}
+
+                {/* <div className="flex flex-row gap-1 w-full justify-center">
+                  // this interface uses the google maps textsearch api
                   <input
                     type="text"
                     placeholder="Enter a nieghborhood/district"
@@ -1152,7 +1228,7 @@ const Page = () => {
                   >
                     {googleFetchingAccommodations ? <Spinner /> : 'Search Google Maps'}
                   </button>
-                </div>
+                </div> */}
                 {googleSearchLog !== '' && (
                   <textarea
                     id="googleSearchLog"
