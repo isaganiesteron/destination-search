@@ -1170,17 +1170,16 @@ const Page = () => {
             </div>
           </div>
 
-          {openDatePicker && (
-            <DateDialog
-              dateDialogValues={{
-                duration: dateDialogValues['duration' as keyof typeof dateDialogValues],
-                monthYear: dateDialogValues['monthYear' as keyof typeof dateDialogValues],
-              }}
-              setDialogValues={setDateDialogValues}
-              setCurrentDates={setCurrentDates}
-              closeDialog={setOpenDatePicker}
-            />
-          )}
+          <DateDialog
+            isOpen={openDatePicker}
+            dateDialogValues={{
+              duration: dateDialogValues['duration' as keyof typeof dateDialogValues],
+              monthYear: dateDialogValues['monthYear' as keyof typeof dateDialogValues],
+            }}
+            setDialogValues={setDateDialogValues}
+            setCurrentDates={setCurrentDates}
+            closeDialog={setOpenDatePicker}
+          />
 
           {suggestions.length > 0 && (
             <div className="flex flex-col w-full gap-3 bg-white">
@@ -1435,20 +1434,26 @@ const Page = () => {
             <div>{status['loading' as keyof typeof status] ? <Spinner /> : ''}</div>
             <p className="text-sm">{status['message' as keyof typeof status]}</p>
           </div>
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
-          >
-            {!showSettings ? '+ open' : '- close'} settings
-          </button>
-          {showSettings && (
-            <Settings
-              fetchSettings={fetchSettings}
-              saveFetchSettings={setFetchSettings}
-              settings={settings}
-              saveSettings={setSettings}
-            />
-          )}
+          <Settings
+            isOpen={showSettings}
+            setShowSettings={setShowSettings}
+            fetchSettings={fetchSettings}
+            saveFetchSettings={setFetchSettings}
+            settings={settings}
+            saveSettings={setSettings}
+          />
+          <div className="flex flex-row-reverse">
+            <button
+              className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold"
+              onClick={() => {
+                setCurrentDestination({ type: 'null', id: 'null', label: 'null' });
+                setDestination('');
+                resetVariablesAndStatus();
+              }}
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         <div>
@@ -1531,19 +1536,6 @@ const Page = () => {
             )}
           </div>
         )}
-
-        <div className="flex flex-row-reverse">
-          <button
-            className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold"
-            onClick={() => {
-              setCurrentDestination({ type: 'null', id: 'null', label: 'null' });
-              setDestination('');
-              resetVariablesAndStatus();
-            }}
-          >
-            Reset
-          </button>
-        </div>
       </div>
     </main>
   );
