@@ -2,12 +2,27 @@ const Page = () => {
   return (
     <main>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-        <h1 className="text-xl font-bold">v1.0.5 (current)</h1>
+        <h1 className="text-xl font-bold">v1.0.6 (current)</h1>
+        <ul>
+          <li>
+            Using Nearby Search Google Map endpoint instead of the Text Search endpoint for improved
+            accuracy using the radius parameter
+          </li>
+          <li>Added Google Search Radius setting for the new Google Map Search endpoint</li>
+          <li>
+            Improved Hotel and Flat Logs: User can now understand how many accommodations is being
+            filtered out.
+          </li>
+          <li>
+            Disabled &quot;Search Google Maps&quot; button if not neighbord/district is selected
+          </li>
+        </ul>
+        <h1 className="text-xl font-bold">v1.0.5</h1>
         <ul>
           <li>Settings are now divided into 2 sections: Fetch Settings and Display Settings.</li>
           <li>
-            Fetch Settings are settings that require the user to click &quot;Save Fetch Settings&quot; and
-            will refetch accommodations.
+            Fetch Settings are settings that require the user to click &quot;Save Fetch
+            Settings&quot; and will refetch accommodations.
           </li>
           <li>
             Display Settings are settings that dont require a refetch of accommodations and will
