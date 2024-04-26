@@ -314,7 +314,7 @@ const Page = () => {
   };
 
   const googleHotelsTextSearch = async (neighborhood: string) => {
-    // Textsearch Google Maps Api using textstring
+    // Text Search Google Maps Api : https://developers.google.com/maps/documentation/places/web-service/search-text
 
     let fetchedHotels: any[] = []; // these are all google hotels
 
@@ -351,7 +351,8 @@ const Page = () => {
   };
 
   const googleHotelsNearbySearch = async (place_id: string) => {
-    // first get the location using the place_id
+    // Nearby Search  Google Maps Api : https://developers.google.com/maps/documentation/places/web-service/search-nearby
+
     const response = await fetch(`/api/location/${place_id}`);
     const responseData = await response.json();
 
@@ -417,17 +418,17 @@ const Page = () => {
     let accommodationCounter = 0;
     // console.log(`Fetching for booking destination ID based on hotel name...`);
     while (accommodationCounter < accommodationNames.length) {
-      // console.log(`Find dest_id => ${accommodationNames[accommodationCounter]}`);
-
       const hasApostrophe = accommodationNames[accommodationCounter].split('-');
       const hotelName =
         hasApostrophe.length > 1 ? hasApostrophe[0] : accommodationNames[accommodationCounter];
       const cleanHotelName = hotelName.replace('&', 'and').trim();
 
       // console.log(
-      //   `Hotel Name: ${accommodationNames[accommodationCounter]} || EDITED: ${cleanHotelName}`
+      //   `Hotel Name: ${accommodationNames[accommodationCounter]} || EDITED: ${encodeURIComponent(
+      //     cleanHotelName
+      //   )}`
       // );
-      const response = await fetch('/api/autosuggest/' + cleanHotelName);
+      const response = await fetch('/api/autosuggest/' + encodeURIComponent(cleanHotelName));
       if (response.status === 200) {
         const data = await response.json();
 
@@ -820,7 +821,6 @@ const Page = () => {
           );
 
           if (!currentDistrictsIDs.includes(district)) {
-            console.log('Found a district that is not included => ' + district);
             if (newDistricts.map((x) => x.id).includes(district) === false)
               newDistricts.push({ id: district, name: `Unknown (${district})` });
           }
