@@ -98,7 +98,7 @@ const Page = () => {
     fetchMultiplePrices: false,
     showFlats: true,
     showTopTen: true,
-    googleSearchRadius: 500,
+    googleSearchRadius: 1000,
   });
 
   const [googleSearchLog, setGoogleSearchLog] = useState<string>('');
@@ -313,42 +313,40 @@ const Page = () => {
     setGoogleFetchingAccommodations(false);
   };
 
-  const googleHotelsTextSearch = async (neighborhood: string) => {
-    // Text Search Google Maps Api : https://developers.google.com/maps/documentation/places/web-service/search-text
+  // const googleHotelsTextSearch = async (neighborhood: string) => {
+  //   // Text Search Google Maps Api : https://developers.google.com/maps/documentation/places/web-service/search-text
 
-    let fetchedHotels: any[] = []; // these are all google hotels
+  //   let fetchedHotels: any[] = []; // these are all google hotels
 
-    const searchString = `${neighborhood}, ${
-      currentDestination['label' as keyof typeof currentDestination]
-    }`;
+  //   const searchString = `${neighborhood}`;
 
-    let nextPageToken = null;
-    let fetchingDone = false;
+  //   let nextPageToken = null;
+  //   let fetchingDone = false;
 
-    while (!fetchingDone) {
-      const response: any = await fetch(
-        nextPageToken
-          ? `/api/googlehotels/${nextPageToken}/null`
-          : `/api/googlehotels/null/${encodeURI(searchString)}`
-      );
-      const data = await response.json();
-      if (data) {
-        if (data.next_page_token) {
-          nextPageToken = data.next_page_token;
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
-        } else {
-          fetchingDone = true;
-        }
-        fetchedHotels = [...fetchedHotels, ...data.results];
-      } else {
-        console.log('ERROR: no places found');
-        console.log(data);
-        fetchingDone = true;
-      }
-    }
+  //   while (!fetchingDone) {
+  //     const response: any = await fetch(
+  //       nextPageToken
+  //         ? `/api/googlehotels/${nextPageToken}/null`
+  //         : `/api/googlehotels/null/${encodeURI(searchString)}`
+  //     );
+  //     const data = await response.json();
+  //     if (data) {
+  //       if (data.next_page_token) {
+  //         nextPageToken = data.next_page_token;
+  //         await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
+  //       } else {
+  //         fetchingDone = true;
+  //       }
+  //       fetchedHotels = [...fetchedHotels, ...data.results];
+  //     } else {
+  //       console.log('ERROR: no places found');
+  //       console.log(data);
+  //       fetchingDone = true;
+  //     }
+  //   }
 
-    return fetchedHotels;
-  };
+  //   return fetchedHotels;
+  // };
 
   const googleHotelsNearbySearch = async (place_id: string) => {
     // Nearby Search  Google Maps Api : https://developers.google.com/maps/documentation/places/web-service/search-nearby
@@ -853,9 +851,14 @@ const Page = () => {
         let starFilter = false;
         const roundedUpStars = Math.ceil(x.rating.stars); // this is for google hotels where it's possible to have stars that are not whole numbers
         const roundedDownStars = Math.floor(x.rating.stars); // this is for google hotels where it's possible to have stars that are not whole numbers
-        if (x.rating.stars === null) starFilter = selectedStars.includes(0);
-        starFilter =
-          selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
+
+        if (x.rating.stars === null || x.rating.stars === undefined) {
+          starFilter = selectedStars.includes(0);
+        } else {
+          starFilter =
+            selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
+        }
+
         return starFilter;
       }
     );
