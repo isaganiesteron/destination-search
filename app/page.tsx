@@ -26,14 +26,9 @@ const Page = () => {
     loading: false,
     message: '',
   });
-  const [hotelStatus, setHotelStatus] = useState<object>({
-    loading: false,
-    message: '',
-  });
-  const [flatStatus, setFlatStatus] = useState<object>({
-    loading: false,
-    message: '',
-  });
+
+  const [preparedHotelLogs, setPreparedHotelLogs] = useState<string[]>([]);
+  const [preparedFlatLogs, setPreparedFlatLogs] = useState<string[]>([]);
 
   const [googleFetchingAccommodations, setGoogleFetchingAccommodations] = useState<boolean>(false);
 
@@ -222,6 +217,8 @@ const Page = () => {
     setAllCommonAccommodations([]);
     setAllGoogleAccommodations([]);
     setGoogleSearchLog('');
+    setPreparedHotelLogs([]);
+    setPreparedFlatLogs([]);
 
     /**
      * The 3 below are important because we need to show
@@ -354,14 +351,8 @@ const Page = () => {
     const response = await fetch(`/api/location/${place_id}`);
     const responseData = await response.json();
 
-    console.log('resonseData');
-    console.log(responseData);
     const location = responseData?.location;
-    console.log('location');
-    console.log(location);
     const locationParam = location ? `${location.latitude},${location.longitude}` : '';
-    console.log('locationParam');
-    console.log(locationParam);
 
     if (locationParam !== '') {
       let fetchedHotels: any[] = []; // these are all google hotels
@@ -375,8 +366,6 @@ const Page = () => {
             : `/api/nearby/null/${locationParam}/${settings.googleSearchRadius}`
         );
         const dataNearby = await responseNearby.json();
-        console.log('dataNearby');
-        console.log(dataNearby);
 
         if (dataNearby) {
           if (dataNearby.next_page_token) {
@@ -386,7 +375,6 @@ const Page = () => {
             fetchingDone = true;
           }
           fetchedHotels = [...fetchedHotels, ...dataNearby.results];
-          console.log(`Got ${dataNearby.results.length} hotels...`);
         } else {
           console.log('ERROR: no places found');
           console.log(dataNearby);
@@ -759,9 +747,10 @@ const Page = () => {
   const prepareResults = (allAccommodations: any[] | null, accommodation_type: string) => {
     if (allAccommodations === null) return;
     let currentStatusText = '';
+    let curPreparedLogs: string[] = [];
 
-    console.log(
-      `Preparing results starting with ${allAccommodations.length} ${accommodation_type} items...`
+    curPreparedLogs.push(
+      `Prepared results starting with ${allAccommodations.length} ${accommodation_type} accommodations...`
     );
 
     // Categorize the accommodations based on the type
@@ -771,7 +760,8 @@ const Page = () => {
       if (x.place_id) return true; // automatically include google hotels
       return accommodationsIncluded.includes(String(x.accommodation_type));
     });
-    console.log(
+
+    curPreparedLogs.push(
       `Filtered out ${
         allAccommodations.length - specificAccommodations.length
       } items that are not chosen accommodation types. ${
@@ -784,15 +774,17 @@ const Page = () => {
     const minPrice = tierSettings['min_price' as keyof typeof tierSettings];
     const maxPrice = tierSettings['max_price' as keyof typeof tierSettings];
     if (specificAccommodations.length === 0) {
-      currentStatusText = `No ${accommodation_type} found in ${
-        currentDestination['label' as keyof typeof currentDestination]
-      }. With a minimum review of ${
-        fetchSettings.review
-      } and a price range of ${minPrice}-${maxPrice}.`;
+      curPreparedLogs.push(
+        `No ${accommodation_type} found in ${
+          currentDestination['label' as keyof typeof currentDestination]
+        }. With a minimum review of ${
+          fetchSettings.review
+        } and a price range of ${minPrice}-${maxPrice}.`
+      );
 
-      if (accommodation_type === 'hotels')
-        setHotelStatus({ loading: false, message: currentStatusText });
-      else setFlatStatus({ loading: false, message: currentStatusText });
+      if (accommodation_type === 'hotels') setPreparedHotelLogs(curPreparedLogs);
+      else setPreparedFlatLogs(curPreparedLogs);
+
       return [];
     }
 
@@ -838,7 +830,7 @@ const Page = () => {
       );
     }
 
-    console.log(
+    curPreparedLogs.push(
       `Filtered out ${
         accommodationsWithRating.length - accommodationsFilteredByDistrict.length
       } items based on districts. ${accommodationsFilteredByDistrict.length} remaining items.`
@@ -862,7 +854,8 @@ const Page = () => {
         return starFilter;
       }
     );
-    console.log(
+
+    curPreparedLogs.push(
       `Filtered out ${
         accommodationsFilteredByDistrict.length - accommodationsFilteredByStars.length
       } items based on stars. ${accommodationsFilteredByStars.length} remaining items.`
@@ -881,7 +874,8 @@ const Page = () => {
       else if (isCommonHotel) sourceFilter = selectedSources.includes(2);
       return sourceFilter;
     });
-    console.log(
+
+    curPreparedLogs.push(
       `Filtered out ${
         accommodationsFilteredByStars.length - accommodationsFilteredBySource.length
       } items based on sources. ${accommodationsFilteredBySource.length} remaining items.`
@@ -914,20 +908,31 @@ const Page = () => {
       );
     }
 
-    currentStatusText = `Found ${accommodationsFilteredBySource.length} ${accommodation_type} in ${
-      currentDestination['label' as keyof typeof currentDestination]
-    }. With a minimum review of ${
-      fetchSettings.review
-    } and a price range of ${minPrice}-${maxPrice}.`;
-    if (accommodation_type === 'hotels')
-      setHotelStatus({ loading: false, message: currentStatusText });
-    else setFlatStatus({ loading: false, message: currentStatusText });
-
-    // return accommodationsFilteredBySource; // ***DEV PURPOSES: RETURN ALL HOTELS
-    // // Get the top 10 accommodations
     const limitedAccommodations = settings.showTopTen
       ? accommodationsFilteredBySource.slice(0, 10)
       : accommodationsFilteredBySource;
+
+    if (settings.showTopTen) {
+      curPreparedLogs.push(
+        `Filtered out ${
+          accommodationsFilteredBySource.length - limitedAccommodations.length
+        } items based 'Show Top 10' filter. ${
+          accommodationsFilteredBySource.length
+        } remaining items.`
+      );
+    }
+
+    curPreparedLogs.push(
+      `Found ${limitedAccommodations.length} ${accommodation_type} in ${
+        currentDestination['label' as keyof typeof currentDestination]
+      }. With a minimum review of ${
+        fetchSettings.review
+      } and a price range of ${minPrice}-${maxPrice}.`
+    );
+
+    if (accommodation_type === 'hotels') setPreparedHotelLogs(curPreparedLogs);
+    else setPreparedFlatLogs(curPreparedLogs);
+
     return limitedAccommodations;
   };
 
@@ -1053,8 +1058,8 @@ const Page = () => {
     setSelectedSources([0, 1, 2]);
     setNeighborhoodInput('');
     setStatus({ loading: false, message: '' });
-    setHotelStatus({ loading: false, message: '' });
-    setFlatStatus({ loading: false, message: '' });
+    setPreparedHotelLogs([]);
+    setPreparedFlatLogs([]);
     setGoogleSearchLog('');
   };
 
@@ -1452,9 +1457,15 @@ const Page = () => {
               settings.showTopTen ? 'Top 10' : 'All'
             } Hotels:`}</p>
           )}
-          <div className="flex flex-row">
-            <div>{hotelStatus['loading' as keyof typeof hotelStatus] ? <Spinner /> : ''}</div>
-            <p className="text-sm">{hotelStatus['message' as keyof typeof hotelStatus]}</p>
+          <div className="flex flex-col">
+            {preparedHotelLogs.length > 0 &&
+              preparedHotelLogs.map((log, i) => {
+                return (
+                  <p className="w-full text-sm" key={`hotel_log_${i}`}>
+                    {log}
+                  </p>
+                );
+              })}
           </div>
           {currentAllHotels.length > 0 && (
             <>
@@ -1493,9 +1504,15 @@ const Page = () => {
                 settings.showTopTen ? 'Top 10' : 'All'
               } Flats:`}</p>
             )}
-            <div className="flex flex-row">
-              <div>{flatStatus['loading' as keyof typeof flatStatus] ? <Spinner /> : ''}</div>
-              <p className="text-sm">{flatStatus['message' as keyof typeof flatStatus]}</p>
+            <div className="flex flex-col">
+              {preparedFlatLogs.length > 0 &&
+                preparedFlatLogs.map((log, i) => {
+                  return (
+                    <p className="w-full text-sm" key={`flat_log_${i}`}>
+                      {log}
+                    </p>
+                  );
+                })}
             </div>
             {currentAllFlats.length > 0 && (
               <div className="border border-black rounded-md h-auto p-2 flex flex-col">
