@@ -18,7 +18,6 @@ import { FetchSettings as I_FetchSettings } from '@/constants/interfaces';
 import { Settings as I_Settings } from '@/constants/interfaces';
 
 import { hotelTypes, apartmentTypes } from '@/constants/accommodationtypes';
-import { text } from 'stream/consumers';
 // import accommodations from '@/mock_data/accommodations';
 
 const Page = () => {
@@ -805,7 +804,6 @@ const Page = () => {
         // check if the
         x.location.districts.forEach((district: number) => {
           // first check if the district is even in the list of fetched districts. If not, include the accommodation and add it to the list of Districts
-          // if(currentDistricts.includes(district))
           const currentDistrictsIDs: number[] = currentDistricts.map(
             (dist) => dist['id' as keyof typeof dist]
           );
@@ -1280,26 +1278,6 @@ const Page = () => {
                     <div className="w-1/5"></div>
                   </div>
                 )}
-
-                {/* <div className="flex flex-row gap-1 w-full justify-center">
-                  // this interface uses the google maps textsearch api
-                  <input
-                    type="text"
-                    placeholder="Enter a nieghborhood/district"
-                    value={neighborhoodInput}
-                    className="w-4/5 border border-black rounded-md p-[5.5px]"
-                    onChange={(event) => setNeighborhoodInput(event.target.value)}
-                  />
-                  <button
-                    disabled={googleFetchingAccommodations}
-                    className={`w-1/5 border border-black rounded-md p-2 hover:bg-gray-200 ${
-                      googleFetchingAccommodations && 'bg-gray-200'
-                    } flex items-center justify-center`}
-                    onClick={() => fetchGoogleAccommodations(neighborhoodInput)}
-                  >
-                    {googleFetchingAccommodations ? <Spinner /> : 'Search Google Maps'}
-                  </button>
-                </div> */}
                 {googleSearchLog !== '' && (
                   <textarea
                     id="googleSearchLog"
