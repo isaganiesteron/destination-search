@@ -63,6 +63,7 @@ const ResultItem = ({
       : 'Google Result'
     : accommodationTypes.filter((x) => x.id === result.accommodation_type).map((x) => x.name)[0];
 
+  const [showFullDesc, setshowFullDesc] = useState<boolean>(false);
   const [showAllFacilities, setShowAllFacilities] = useState<boolean>(false);
   const facilities = result.facilities
     ? result.facilities.map((x: { id: number }) => {
@@ -104,6 +105,18 @@ const ResultItem = ({
         onClick={() => setShowAllFacilities(!showAllFacilities)}
       >
         {showAllFacilities ? 'hide' : 'show'} all facilities
+      </button>
+    );
+  };
+
+  const DisplayDescButton = () => {
+    return (
+      <button
+        type="button"
+        className="pl-3 text-[12px] text-blue-800 font-semibold underline hover:text-blue-950"
+        onClick={() => setshowFullDesc(!showFullDesc)}
+      >
+        {showFullDesc ? 'hide' : 'show'} full description
       </button>
     );
   };
@@ -242,14 +255,28 @@ const ResultItem = ({
                     </div>
                   ) : (
                     <div className="transition-opacity ease-in-out duration-500">
-                      <p className="text-sm">{currentDescription}</p>
+                      {showFullDesc ? (
+                        <p className="text-sm">
+                          {currentDescription}
+                          {currentDescription.length !==
+                            currentDescription.slice(0, 250).length && <DisplayDescButton />}
+                        </p>
+                      ) : (
+                        <p className="text-sm">
+                          {currentDescription.slice(0, 250)}
+                          {currentDescription.length !== currentDescription.slice(0, 250).length &&
+                            '...'}
+                          {currentDescription.length !==
+                            currentDescription.slice(0, 250).length && <DisplayDescButton />}
+                        </p>
+                      )}
                     </div>
                   )}
                 </>
               )}
             </div>
-            {!isGoogle && (
-              <div className="space-x-2 space-y-1">
+            {!isGoogle && showFullDesc && (
+              <div className="space-x-2 space-y-1 pt-4">
                 <button
                   className="border border-black rounded-md p-1 text-xs bg-yellow-300 hover:bg-yellow-400 text-gray-700"
                   onClick={_regenerateHandler}

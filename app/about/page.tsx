@@ -16,6 +16,7 @@ const Page = () => {
           <li>
             Disabled &quot;Search Google Maps&quot; button if not neighbord/district is selected
           </li>
+          <li>Will show minimized description by default</li>
           <li>
             Using non sandbox server for booking.com api. https://demandapi-sandbox.booking.com/3.1/
             to https://demandapi-sandbox.booking.com/3.1/
