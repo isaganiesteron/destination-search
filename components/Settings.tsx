@@ -134,8 +134,17 @@ const Settings = ({
         <div className="flex flex-col m-4 p-2 border border-black rounded-md gap-4 shadow-lg shadow-secondary-900">
           <div className="p-2 border border-black rounded-md ">
             <p className="font-bold text-md pb-2">Presets:</p>
-
-            <p className="text-sm pb-2 underline">Current Preset: {'[Preset Name]'}</p>
+            <div className="flex flex-row pb-2">
+              <p className="text-sm underline">Current Preset: {'[Preset Name]'}</p>
+              <button
+                className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
+                onClick={() => {
+                  console.log('Delete Preset');
+                }}
+              >
+                Delete Preset
+              </button>
+            </div>
             <div className="pb-4 flex flex-row gap-1">
               <select
                 disabled={fetchSettings.ignoreReviewAndTier}
