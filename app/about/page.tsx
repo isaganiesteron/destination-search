@@ -2,7 +2,11 @@ const Page = () => {
   return (
     <main>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-        <h1 className="text-xl font-bold">v1.0.6 (current)</h1>
+        <h1 className="text-xl font-bold">v1.0.7 (current)</h1>
+        <ul>
+          <li>User Presets</li>
+        </ul>
+        <h1 className="text-xl font-bold">v1.0.6</h1>
         <ul>
           <li>
             Using Nearby Search Google Map endpoint instead of the Text Search endpoint for improved

@@ -132,15 +132,46 @@ const Settings = ({
       </button>
       {isOpen && (
         <div className="flex flex-col m-4 p-2 border border-black rounded-md gap-4 shadow-lg shadow-secondary-900">
+          <div className="p-2 border border-black rounded-md ">
+            <p className="font-bold text-md pb-2">Presets:</p>
+
+            <p className="text-sm pb-2 underline">Current Preset: {'[Preset Name]'}</p>
+            <div className="pb-4 flex flex-row gap-1">
+              <select
+                disabled={fetchSettings.ignoreReviewAndTier}
+                className="w-3/4 border border-black rounded-md text-black text-md p-[3px]"
+                name="preset"
+                onChange={(e) => console.log(e.target.value)}
+              >
+                <option value={'preset1'}>preset1</option>
+                <option value={'preset2'}>preset2</option>
+                <option value={'preset3'}>preset3</option>
+              </select>
+
+              <button
+                className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
+                onClick={() => console.log('Load Preset Button')}
+              >
+                Load Preset
+              </button>
+              {/* <input
+              type="number"
+              value={curReviewScore}
+              className="w-full border border-black rounded-md text-black text-md px-1"
+              onChange={(e) => setCurReviewScore(Number(e.target.value))}
+            /> */}
+            </div>
+            <button
+              className="w-full border border-black rounded-md  bg-blue-100 hover:bg-blue-200 font-bold p-[3px]"
+              onClick={() => console.log('Save Preset Button')}
+            >
+              Save Preset
+            </button>
+          </div>
           <div className="p-2 border border-black rounded-md">
             <p className="font-bold text-md pb-2">Fetch Settings:</p>
-            <p className="text-xs italic">
-              ***Updating the following settings will force a refetch after clicking on &apos;Save
-              Fetch Settings&apos;
-            </p>
-
             <div className="pt-4">
-              <p className="font-bold text-sm ">Ignore Review Score and Price Tier</p>
+              <p className="font-bold text-sm">Ignore Review Score and Price Tier</p>
               <div className="flex flex-row">
                 <input
                   type="checkbox"
@@ -220,13 +251,18 @@ const Settings = ({
               />
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 flex flex-row items-center">
               <button
-                className="w-full border border-black rounded-md p-1 bg-success-300 hover:bg-slate-300 font-bold"
+                className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
                 onClick={saveHandler}
               >
                 Save Fetch Settings
               </button>
+
+              <p className="text-xs italic">
+                For fetch settings to take effect, click on &apos;Save Fetch Settings&apos;
+                ***Updating these fetch settings will force a refetch of accommodations.
+              </p>
             </div>
           </div>
 
