@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { accommodationTypes } from '@/constants/accommodationtypes';
+import { GoogleUser } from '@/constants/interfaces';
 
 type settingsProps = {
+  user: GoogleUser;
   isOpen: boolean;
   setShowSettings: Function;
   fetchSettings: any;
@@ -11,6 +13,7 @@ type settingsProps = {
 };
 
 const Settings = ({
+  user,
   isOpen,
   setShowSettings,
   fetchSettings,
@@ -18,6 +21,8 @@ const Settings = ({
   settings,
   saveSettings,
 }: settingsProps) => {
+  console.log('Settings Fired');
+  console.log(user);
   // fetchSettings
   const [curIgnoreReviewAndPrice, setCurIgnoreReviewAndPrice] = useState<boolean>(
     fetchSettings.ignoreReviewAndTier

@@ -37,3 +37,13 @@ export interface Settings {
   showTopTen: boolean;
   googleSearchRadius: number;
 }
+
+export interface GoogleUser {
+  email: string;
+  exp: number;
+  iat: number;
+  jti: string;
+  name: string;
+  picture: string;
+  sub: string;
+}

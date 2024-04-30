@@ -14,7 +14,7 @@ import DateDialog from '@/components/DateDialog';
 import Districts from '@/components/Districts';
 
 // constants
-import { FetchSettings as I_FetchSettings } from '@/constants/interfaces';
+import { GoogleUser, FetchSettings as I_FetchSettings } from '@/constants/interfaces';
 import { Settings as I_Settings } from '@/constants/interfaces';
 
 import { hotelTypes, apartmentTypes } from '@/constants/accommodationtypes';
@@ -25,6 +25,8 @@ const Page = () => {
     loading: false,
     message: '',
   });
+
+  const [user, setUser] = useState<GoogleUser>();
 
   const [preparedHotelLogs, setPreparedHotelLogs] = useState<string[]>([]);
   const [preparedFlatLogs, setPreparedFlatLogs] = useState<string[]>([]);
@@ -83,7 +85,6 @@ const Page = () => {
       conditions: {},
     },
   });
-
   const [settings, setSettings] = useState<I_Settings>({
     useReviewQuantity: true,
     hoteltypes: hotelTypes,
@@ -175,7 +176,6 @@ const Page = () => {
   ) => {
     if (!googleHotels || !bookingHotels) return;
 
-    // let nomatches: any[] = [];
     let commonHotels: any[] = [];
     bookingHotels.forEach((bookingHotel) => {
       const bookingHotelName = bookingHotel.name['en-gb'];
@@ -194,16 +194,9 @@ const Page = () => {
 
           if (isIncludedHotel || isIncludedFlat)
             commonHotels.push({ ...bookingHotel, google_data: googleHotel });
-        } else {
-          // nomatches.push({
-          //   google: googleHotelName,
-          //   booking: bookingHotelName,
-          //   similarity: similarityPercentage,
-          // });
         }
       });
     });
-    // console.log(JSON.stringify(nomatches));
 
     return commonHotels;
   };
@@ -233,8 +226,6 @@ const Page = () => {
     /**
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
     const searchString = `${neighborhoodInput}, ${
@@ -262,8 +253,6 @@ const Page = () => {
     fetchedHotels.sort((a, b) => a.name.localeCompare(b.name));
 
     /**
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
@@ -308,41 +297,6 @@ const Page = () => {
 
     setGoogleFetchingAccommodations(false);
   };
-
-  // const googleHotelsTextSearch = async (neighborhood: string) => {
-  //   // Text Search Google Maps Api : https://developers.google.com/maps/documentation/places/web-service/search-text
-
-  //   let fetchedHotels: any[] = []; // these are all google hotels
-
-  //   const searchString = `${neighborhood}`;
-
-  //   let nextPageToken = null;
-  //   let fetchingDone = false;
-
-  //   while (!fetchingDone) {
-  //     const response: any = await fetch(
-  //       nextPageToken
-  //         ? `/api/googlehotels/${nextPageToken}/null`
-  //         : `/api/googlehotels/null/${encodeURI(searchString)}`
-  //     );
-  //     const data = await response.json();
-  //     if (data) {
-  //       if (data.next_page_token) {
-  //         nextPageToken = data.next_page_token;
-  //         await new Promise((resolve) => setTimeout(resolve, 2000)); // Without a pause the next fetch will return INVALID_REQUEST
-  //       } else {
-  //         fetchingDone = true;
-  //       }
-  //       fetchedHotels = [...fetchedHotels, ...data.results];
-  //     } else {
-  //       console.log('ERROR: no places found');
-  //       console.log(data);
-  //       fetchingDone = true;
-  //     }
-  //   }
-
-  //   return fetchedHotels;
-  // };
 
   const googleHotelsNearbySearch = async (place_id: string) => {
     // Nearby Search  Google Maps Api : https://developers.google.com/maps/documentation/places/web-service/search-nearby
@@ -396,23 +350,16 @@ const Page = () => {
   ) => {
     let logs = '';
     const accommodationNames = accommodations.map((x: { name: any }) => x.name);
-    // console.log(`Searching Booking.com for ${accommodationNames.length} hotels.`);
 
     // first get the accommodation id of all hotels based on their names
     let allAccommodationsFetched: any[] = [];
     let accommodationCounter = 0;
-    // console.log(`Fetching for booking destination ID based on hotel name...`);
     while (accommodationCounter < accommodationNames.length) {
       const hasApostrophe = accommodationNames[accommodationCounter].split('-');
       const hotelName =
         hasApostrophe.length > 1 ? hasApostrophe[0] : accommodationNames[accommodationCounter];
       const cleanHotelName = hotelName.replace('&', 'and').trim();
 
-      // console.log(
-      //   `Hotel Name: ${accommodationNames[accommodationCounter]} || EDITED: ${encodeURIComponent(
-      //     cleanHotelName
-      //   )}`
-      // );
       const response = await fetch('/api/autosuggest/' + encodeURIComponent(cleanHotelName));
       if (response.status === 200) {
         const data = await response.json();
@@ -436,7 +383,6 @@ const Page = () => {
         }`;
       }
       accommodationCounter++;
-      // setGoogleSearchLog(logs);
     }
 
     logs += `\nFound Destination IDs for ${
@@ -465,9 +411,6 @@ const Page = () => {
         ? moment().add(1, 'days').format('YYYY-MM-DD')
         : moment(dateCheckout, 'YYYY-MM-DD').format('YYYY-MM-DD');
 
-    console.log(
-      `Fetching bulk accommodation details for all ${allAccommodationIds.length} booking destination IDs...`
-    );
     const response = await fetch(
       `/api/bookinghotels/${allAccommodationIds.join(',')}/${checkin}_${checkout}`
     );
@@ -546,8 +489,6 @@ const Page = () => {
     });
 
     /**
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      * *****START: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
@@ -686,8 +627,6 @@ const Page = () => {
     /**
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
-     * *****END: COMMENT OUT STARTING FROM HERE IF USING MOCK DATA
      */
 
     // // mock data
@@ -705,7 +644,6 @@ const Page = () => {
     // get all districts from all fetched accommodations here
 
     // initially set the selected districtss
-    // WILL RESOLVE BUG!!! include the accommodations with no districts or not found
     let tempSelectedDistricts: number[] = [...selectedDistricts];
     allAccommodationsFetchedWithMultiplePrice.forEach((x: { location: { districts: any } }) => {
       const currentDiscrict = x.location.districts;
@@ -716,12 +654,6 @@ const Page = () => {
         });
       }
     });
-
-    // differentiate  the different kinds of accommodations
-
-    // Categorize the accommodations based on the type
-    // const accommodationsIncluded =
-    //   accommodation_type == 'hotels' ? settings.hoteltypes : settings.apartmenttypes;
 
     let hotelCount = 0;
     let flatCount = 0;
@@ -739,13 +671,10 @@ const Page = () => {
       message: `Fetched ${allAccommodationsFetchedWithMultiplePrice.length} accommodations. ${hotelCount} Hotels, ${flatCount} Flats and ${otherCount} other types. In ${destinationLabel} (${destinationType}) with a maximum price of ${maxPrice} with a minumum review of ${review}`,
     });
     console.log('----Done Fetching Hotels----');
-
-    // console.timeEnd('fetchAccommodations');
   };
 
   const prepareResults = (allAccommodations: any[] | null, accommodation_type: string) => {
     if (allAccommodations === null) return;
-    let currentStatusText = '';
     let curPreparedLogs: string[] = [];
 
     curPreparedLogs.push(
@@ -839,8 +768,9 @@ const Page = () => {
       (x: { name(name: any): any; id: number; place_id: number; rating: { stars: number } }) => {
         // filter by stars
         let starFilter = false;
-        const roundedUpStars = Math.ceil(x.rating.stars); // this is for google hotels where it's possible to have stars that are not whole numbers
-        const roundedDownStars = Math.floor(x.rating.stars); // this is for google hotels where it's possible to have stars that are not whole numbers
+        // these are for google hotels where it's possible to have stars that are not whole numbers
+        const roundedUpStars = Math.ceil(x.rating.stars);
+        const roundedDownStars = Math.floor(x.rating.stars);
 
         if (x.rating.stars === null || x.rating.stars === undefined) {
           starFilter = selectedStars.includes(0);
@@ -848,7 +778,6 @@ const Page = () => {
           starFilter =
             selectedStars.includes(roundedUpStars) || selectedStars.includes(roundedDownStars);
         }
-
         return starFilter;
       }
     );
@@ -1115,408 +1044,416 @@ const Page = () => {
     selectedSources,
     allGoogleAccommodations,
     allCommonAccommodations,
-    // settings.showTopTen,
-    // settings.showFlats,
     settings,
   ]);
 
-  return (
-    <main>
-      <small className="float-end">v1.0.7</small>
-      <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-        <div>
-          <div className="grid grid-cols-4 gap-1">
-            <div className="col-span-2">
-              <p className="font-bold text-md">Search</p>
-              <input
-                type="text"
-                value={destination}
-                className="border border-black rounded-md w-full p-[5.5px]"
-                onChange={(event) => {
-                  setDestination(event.target.value);
-                  if (event.target.value.length > 3) fetchSuggestions(event.target.value);
-                  else setSuggestions([]);
-                }}
-              />
-            </div>
-            <div>
-              <p className="font-bold text-md">Dates</p>
-              <input
-                style={{ cursor: 'default', caretColor: 'transparent' }}
-                value={displayedDates || ''}
-                readOnly={true}
-                type="text"
-                className="border border-black rounded-md w-full p-[5.5px]"
-                onClick={() => setOpenDatePicker(!openDatePicker)}
-              />
-            </div>
-            <div>
-              <p className="font-bold text-md">Price Tier</p>
-              <select
-                disabled={fetchSettings.ignoreReviewAndTier}
-                className="border border-black rounded-md w-full p-2"
-                name="tier"
-                id="tier"
-                onChange={(e) => {
-                  setCurrentTier(e.target.value);
-                }}
-              >
-                <option value={'budget'}>Budget</option>
-                <option value={'midrange'}>Mid Range</option>
-                <option value={'luxury'}>Luxury</option>
-              </select>
-            </div>
-          </div>
+  useEffect(() => {
+    const getUser = async () => {
+      const token = await fetch('/api/token');
+      const tokenData = await token.json();
+      if (tokenData) setUser(tokenData);
+    };
+    if (!user) getUser();
+  }, [user]);
 
-          <DateDialog
-            isOpen={openDatePicker}
-            dateDialogValues={{
-              duration: dateDialogValues['duration' as keyof typeof dateDialogValues],
-              monthYear: dateDialogValues['monthYear' as keyof typeof dateDialogValues],
-            }}
-            setDialogValues={setDateDialogValues}
-            setCurrentDates={setCurrentDates}
-            closeDialog={setOpenDatePicker}
-          />
-
-          {suggestions.length > 0 && (
-            <div className="flex flex-col w-full gap-3 bg-white">
-              <div className="grid grid-cols-4 gap-1">
-                <div className="col-span-4 border border-black rounded-md shadow-lg p-1">
-                  {suggestions.map((suggestion) => {
-                    const label = suggestion['label' as keyof typeof suggestion];
-                    const dest_id = suggestion['dest_id' as keyof typeof suggestion];
-                    const dest_type = suggestion['dest_type' as keyof typeof suggestion];
-                    return (
-                      <SuggestedItem
-                        key={dest_id}
-                        label={label}
-                        type={dest_type}
-                        id={dest_id}
-                        suggestionClick={setCurrentDestination}
-                        setDestination={setDestination}
-                      />
-                    );
-                  })}
-                </div>
+  if (user)
+    return (
+      <main>
+        <small className="float-end">v1.0.7</small>
+        <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
+          <div>
+            <div className="grid grid-cols-4 gap-1">
+              <div className="col-span-2">
+                <p className="font-bold text-md">Search</p>
+                <input
+                  type="text"
+                  value={destination}
+                  className="border border-black rounded-md w-full p-[5.5px]"
+                  onChange={(event) => {
+                    setDestination(event.target.value);
+                    if (event.target.value.length > 3) fetchSuggestions(event.target.value);
+                    else setSuggestions([]);
+                  }}
+                />
+              </div>
+              <div>
+                <p className="font-bold text-md">Dates</p>
+                <input
+                  style={{ cursor: 'default', caretColor: 'transparent' }}
+                  value={displayedDates || ''}
+                  readOnly={true}
+                  type="text"
+                  className="border border-black rounded-md w-full p-[5.5px]"
+                  onClick={() => setOpenDatePicker(!openDatePicker)}
+                />
+              </div>
+              <div>
+                <p className="font-bold text-md">Price Tier</p>
+                <select
+                  disabled={fetchSettings.ignoreReviewAndTier}
+                  className="border border-black rounded-md w-full p-2"
+                  name="tier"
+                  id="tier"
+                  onChange={(e) => {
+                    setCurrentTier(e.target.value);
+                  }}
+                >
+                  <option value={'budget'}>Budget</option>
+                  <option value={'midrange'}>Mid Range</option>
+                  <option value={'luxury'}>Luxury</option>
+                </select>
               </div>
             </div>
-          )}
 
-          {currentDistricts.length > 0 && (
-            <div className="border border-black rounded-md w-full p-2 mt-2">
-              <p className="font-bold text-sm">
-                Filter Booking.com results by District/Neighborhood
-              </p>
-              <Districts
-                currentDistricts={currentDistricts}
-                selectedDistricts={selectedDistricts}
-                setSelectedDistricts={setSelectedDistricts}
-              />
-              <div className="mt-4">
-                <p className="font-bold text-sm">
-                  {`Search Additional Hotels with Google Maps by District/Neighborhood (Radius: ${settings.googleSearchRadius}m)`}
-                </p>
-
-                <div className="flex flex-row gap-1 w-full justify-center">
-                  <input
-                    type="text"
-                    placeholder="Enter a nieghborhood/district"
-                    value={neighborhoodInput}
-                    className="w-4/5 border border-black rounded-md p-[5.5px]"
-                    onFocus={() => {
-                      if (autoSuggestToken === '') setAutoSuggestToken(uuidv4());
-                    }}
-                    onBlur={() => {
-                      setAutoSuggestToken('');
-                      setTimeout(() => setSuggestedCities([]), 500);
-                    }}
-                    onChange={(event) => {
-                      if (event.target.value === '') setNeighborhoodPlaceId('');
-                      setNeighborhoodInput(event.target.value);
-                      if (event.target.value.length > 3) getCitySuggestions(event.target.value);
-                    }}
-                  />
-                  <button
-                    disabled={
-                      googleFetchingAccommodations ||
-                      neighborhoodInput === '' ||
-                      neighborhoodPlaceId === ''
-                    }
-                    className={`w-1/5 border border-black rounded-md p-2 hover:bg-gray-200 ${
-                      (googleFetchingAccommodations ||
-                        neighborhoodInput === '' ||
-                        neighborhoodPlaceId === '') &&
-                      'bg-gray-200'
-                    } flex items-center justify-center`}
-                    onClick={() => fetchGoogleAccommodations()}
-                  >
-                    {googleFetchingAccommodations ? <Spinner /> : 'Search Google Maps'}
-                  </button>
-                </div>
-
-                {suggestedCities.length > 0 && (
-                  <div className="flex flex-row gap-1 w-full justify-start">
-                    <div className="w-4/5 border border-black rounded-md p-[5.5px]">
-                      {suggestedCities.map((x, i) => {
-                        return (
-                          <div key={i} className="flex p-1 hover:bg-slate-200 rounded-md">
-                            <button
-                              className="flex flex-col justify-start w-full m-1"
-                              onClick={() => {
-                                setNeighborhoodInput(x['label' as keyof typeof x]);
-                                setNeighborhoodPlaceId(x['place_id' as keyof typeof x]);
-                                setSuggestedCities([]);
-                              }}
-                            >
-                              <h1 className="font-bold">{x['label' as keyof typeof x]}</h1>
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="w-1/5"></div>
-                  </div>
-                )}
-                {googleSearchLog !== '' && (
-                  <textarea
-                    id="googleSearchLog"
-                    disabled
-                    className="border border-black rounded-md h-32 w-full p-2 mt-2 text-xs"
-                    value={googleSearchLog}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-
-          {allFetchedAccommodations.length > 0 && (
-            <div className="border border-black rounded-md w-full p-2 mt-2 flex gap-4">
-              <div className="flex flex-col gap-1">
-                <p className="font-bold text-sm">Filter by Stars</p>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedStars.includes(1)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStars([...selectedStars, 1]);
-                      } else {
-                        setSelectedStars(selectedStars.filter((x) => x !== 1));
-                      }
-                    }}
-                  />
-                  <p className="text-sm ml-1">1 Star</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedStars.includes(2)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStars([...selectedStars, 2]);
-                      } else {
-                        setSelectedStars(selectedStars.filter((x) => x !== 2));
-                      }
-                    }}
-                  />
-                  <p className="text-sm ml-1">2 Stars</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedStars.includes(3)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedStars([...selectedStars, 3]);
-                      else setSelectedStars(selectedStars.filter((x) => x !== 3));
-                    }}
-                  />
-                  <p className="text-sm ml-1">3 Stars</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedStars.includes(4)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedStars([...selectedStars, 4]);
-                      else setSelectedStars(selectedStars.filter((x) => x !== 4));
-                    }}
-                  />
-                  <p className="text-sm ml-1">4 Stars</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedStars.includes(5)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedStars([...selectedStars, 5]);
-                      else setSelectedStars(selectedStars.filter((x) => x !== 5));
-                    }}
-                  />
-                  <p className="text-sm ml-1">5 Stars</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedStars.includes(0)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedStars([...selectedStars, 0]);
-                      else setSelectedStars(selectedStars.filter((x) => x !== 0));
-                    }}
-                  />
-                  <p className="text-sm ml-1">Unrated</p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="font-bold text-sm">Filter by Source</p>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedSources.includes(0)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedSources([...selectedSources, 0]);
-                      else setSelectedSources(selectedSources.filter((x) => x !== 0));
-                    }}
-                  />
-                  <p className="text-sm ml-1">Booking.com</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedSources.includes(1)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedSources([...selectedSources, 1]);
-                      else setSelectedSources(selectedSources.filter((x) => x !== 1));
-                    }}
-                  />
-                  <p className="text-sm ml-1">Google Maps</p>
-                </div>
-                <div className="flex flex-row items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedSources.includes(2)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedSources([...selectedSources, 2]);
-                      else setSelectedSources(selectedSources.filter((x) => x !== 2));
-                    }}
-                  />
-                  <p className="text-sm ml-1">Common Hotels</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <div className="flex flex-row">
-            <div>{status['loading' as keyof typeof status] ? <Spinner /> : ''}</div>
-            <p className="text-sm">{status['message' as keyof typeof status]}</p>
-          </div>
-          <Settings
-            isOpen={showSettings}
-            setShowSettings={setShowSettings}
-            fetchSettings={fetchSettings}
-            saveFetchSettings={setFetchSettings}
-            settings={settings}
-            saveSettings={setSettings}
-          />
-          <div className="flex flex-row-reverse">
-            <button
-              className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold"
-              onClick={() => {
-                setCurrentDestination({ type: 'null', id: 'null', label: 'null' });
-                setDestination('');
-                resetVariablesAndStatus();
+            <DateDialog
+              isOpen={openDatePicker}
+              dateDialogValues={{
+                duration: dateDialogValues['duration' as keyof typeof dateDialogValues],
+                monthYear: dateDialogValues['monthYear' as keyof typeof dateDialogValues],
               }}
-            >
-              Reset
-            </button>
-          </div>
-        </div>
+              setDialogValues={setDateDialogValues}
+              setCurrentDates={setCurrentDates}
+              closeDialog={setOpenDatePicker}
+            />
 
-        <div>
-          {currentAllHotels.length > 0 && (
-            <p className="font-bold text-xl">{`${
-              settings.showTopTen ? 'Top 10' : 'All'
-            } Hotels:`}</p>
-          )}
-          <div className="flex flex-col">
-            {preparedHotelLogs.length > 0 &&
-              preparedHotelLogs.map((log, i) => {
-                return (
-                  <p className="w-full text-sm" key={`hotel_log_${i}`}>
-                    {log}
-                  </p>
-                );
-              })}
-          </div>
-          {currentAllHotels.length > 0 && (
-            <>
-              <div className="border border-black rounded-md h-auto p-2 flex flex-col">
-                {googleFetchingAccommodations && (
-                  <div className="py-5 flex flex-row justify-center">
-                    <Spinner />
-                  </div>
-                )}
-
-                {currentAllHotels.length > 0
-                  ? currentAllHotels.map((x, i) => {
-                      const commonHotel = allCommonAccommodations.find(
-                        (item: { id: any }) => item.id === x.id
-                      );
+            {suggestions.length > 0 && (
+              <div className="flex flex-col w-full gap-3 bg-white">
+                <div className="grid grid-cols-4 gap-1">
+                  <div className="col-span-4 border border-black rounded-md shadow-lg p-1">
+                    {suggestions.map((suggestion) => {
+                      const label = suggestion['label' as keyof typeof suggestion];
+                      const dest_id = suggestion['dest_id' as keyof typeof suggestion];
+                      const dest_type = suggestion['dest_type' as keyof typeof suggestion];
                       return (
-                        <ResultItem
-                          key={`result_${i}`}
-                          index={i}
-                          result={commonHotel ? commonHotel : x}
-                          districts={currentDistricts}
-                          commonData={commonHotel}
+                        <SuggestedItem
+                          key={dest_id}
+                          label={label}
+                          type={dest_type}
+                          id={dest_id}
+                          suggestionClick={setCurrentDestination}
+                          setDestination={setDestination}
                         />
                       );
-                    })
-                  : null}
+                    })}
+                  </div>
+                </div>
               </div>
-            </>
-          )}
-        </div>
+            )}
 
-        {settings.showFlats && (
+            {currentDistricts.length > 0 && (
+              <div className="border border-black rounded-md w-full p-2 mt-2">
+                <p className="font-bold text-sm">
+                  Filter Booking.com results by District/Neighborhood
+                </p>
+                <Districts
+                  currentDistricts={currentDistricts}
+                  selectedDistricts={selectedDistricts}
+                  setSelectedDistricts={setSelectedDistricts}
+                />
+                <div className="mt-4">
+                  <p className="font-bold text-sm">
+                    {`Search Additional Hotels with Google Maps by District/Neighborhood (Radius: ${settings.googleSearchRadius}m)`}
+                  </p>
+
+                  <div className="flex flex-row gap-1 w-full justify-center">
+                    <input
+                      type="text"
+                      placeholder="Enter a nieghborhood/district"
+                      value={neighborhoodInput}
+                      className="w-4/5 border border-black rounded-md p-[5.5px]"
+                      onFocus={() => {
+                        if (autoSuggestToken === '') setAutoSuggestToken(uuidv4());
+                      }}
+                      onBlur={() => {
+                        setAutoSuggestToken('');
+                        setTimeout(() => setSuggestedCities([]), 500);
+                      }}
+                      onChange={(event) => {
+                        if (event.target.value === '') setNeighborhoodPlaceId('');
+                        setNeighborhoodInput(event.target.value);
+                        if (event.target.value.length > 3) getCitySuggestions(event.target.value);
+                      }}
+                    />
+                    <button
+                      disabled={
+                        googleFetchingAccommodations ||
+                        neighborhoodInput === '' ||
+                        neighborhoodPlaceId === ''
+                      }
+                      className={`w-1/5 border border-black rounded-md p-2 hover:bg-gray-200 ${
+                        (googleFetchingAccommodations ||
+                          neighborhoodInput === '' ||
+                          neighborhoodPlaceId === '') &&
+                        'bg-gray-200'
+                      } flex items-center justify-center`}
+                      onClick={() => fetchGoogleAccommodations()}
+                    >
+                      {googleFetchingAccommodations ? <Spinner /> : 'Search Google Maps'}
+                    </button>
+                  </div>
+
+                  {suggestedCities.length > 0 && (
+                    <div className="flex flex-row gap-1 w-full justify-start">
+                      <div className="w-4/5 border border-black rounded-md p-[5.5px]">
+                        {suggestedCities.map((x, i) => {
+                          return (
+                            <div key={i} className="flex p-1 hover:bg-slate-200 rounded-md">
+                              <button
+                                className="flex flex-col justify-start w-full m-1"
+                                onClick={() => {
+                                  setNeighborhoodInput(x['label' as keyof typeof x]);
+                                  setNeighborhoodPlaceId(x['place_id' as keyof typeof x]);
+                                  setSuggestedCities([]);
+                                }}
+                              >
+                                <h1 className="font-bold">{x['label' as keyof typeof x]}</h1>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="w-1/5"></div>
+                    </div>
+                  )}
+                  {googleSearchLog !== '' && (
+                    <textarea
+                      id="googleSearchLog"
+                      disabled
+                      className="border border-black rounded-md h-32 w-full p-2 mt-2 text-xs"
+                      value={googleSearchLog}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {allFetchedAccommodations.length > 0 && (
+              <div className="border border-black rounded-md w-full p-2 mt-2 flex gap-4">
+                <div className="flex flex-col gap-1">
+                  <p className="font-bold text-sm">Filter by Stars</p>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStars.includes(1)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStars([...selectedStars, 1]);
+                        } else {
+                          setSelectedStars(selectedStars.filter((x) => x !== 1));
+                        }
+                      }}
+                    />
+                    <p className="text-sm ml-1">1 Star</p>
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStars.includes(2)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStars([...selectedStars, 2]);
+                        } else {
+                          setSelectedStars(selectedStars.filter((x) => x !== 2));
+                        }
+                      }}
+                    />
+                    <p className="text-sm ml-1">2 Stars</p>
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStars.includes(3)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedStars([...selectedStars, 3]);
+                        else setSelectedStars(selectedStars.filter((x) => x !== 3));
+                      }}
+                    />
+                    <p className="text-sm ml-1">3 Stars</p>
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStars.includes(4)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedStars([...selectedStars, 4]);
+                        else setSelectedStars(selectedStars.filter((x) => x !== 4));
+                      }}
+                    />
+                    <p className="text-sm ml-1">4 Stars</p>
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStars.includes(5)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedStars([...selectedStars, 5]);
+                        else setSelectedStars(selectedStars.filter((x) => x !== 5));
+                      }}
+                    />
+                    <p className="text-sm ml-1">5 Stars</p>
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedStars.includes(0)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedStars([...selectedStars, 0]);
+                        else setSelectedStars(selectedStars.filter((x) => x !== 0));
+                      }}
+                    />
+                    <p className="text-sm ml-1">Unrated</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="font-bold text-sm">Filter by Source</p>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedSources.includes(0)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedSources([...selectedSources, 0]);
+                        else setSelectedSources(selectedSources.filter((x) => x !== 0));
+                      }}
+                    />
+                    <p className="text-sm ml-1">Booking.com</p>
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedSources.includes(1)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedSources([...selectedSources, 1]);
+                        else setSelectedSources(selectedSources.filter((x) => x !== 1));
+                      }}
+                    />
+                    <p className="text-sm ml-1">Google Maps</p>
+                  </div>
+                  <div className="flex flex-row items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedSources.includes(2)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedSources([...selectedSources, 2]);
+                        else setSelectedSources(selectedSources.filter((x) => x !== 2));
+                      }}
+                    />
+                    <p className="text-sm ml-1">Common Hotels</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div>
-            {currentAllFlats.length > 0 && (
+            <div className="flex flex-row">
+              <div>{status['loading' as keyof typeof status] ? <Spinner /> : ''}</div>
+              <p className="text-sm">{status['message' as keyof typeof status]}</p>
+            </div>
+            <Settings
+              user={user}
+              isOpen={showSettings}
+              setShowSettings={setShowSettings}
+              fetchSettings={fetchSettings}
+              saveFetchSettings={setFetchSettings}
+              settings={settings}
+              saveSettings={setSettings}
+            />
+            <div className="flex flex-row-reverse">
+              <button
+                className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold"
+                onClick={() => {
+                  setCurrentDestination({ type: 'null', id: 'null', label: 'null' });
+                  setDestination('');
+                  resetVariablesAndStatus();
+                }}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div>
+            {currentAllHotels.length > 0 && (
               <p className="font-bold text-xl">{`${
                 settings.showTopTen ? 'Top 10' : 'All'
-              } Flats:`}</p>
+              } Hotels:`}</p>
             )}
             <div className="flex flex-col">
-              {preparedFlatLogs.length > 0 &&
-                preparedFlatLogs.map((log, i) => {
+              {preparedHotelLogs.length > 0 &&
+                preparedHotelLogs.map((log, i) => {
                   return (
-                    <p className="w-full text-sm" key={`flat_log_${i}`}>
+                    <p className="w-full text-sm" key={`hotel_log_${i}`}>
                       {log}
                     </p>
                   );
                 })}
             </div>
-            {currentAllFlats.length > 0 && (
-              <div className="border border-black rounded-md h-auto p-2 flex flex-col">
-                {currentAllFlats.length > 0
-                  ? currentAllFlats.map((x, i) => (
-                      <ResultItem
-                        key={`result_${i}`}
-                        index={i}
-                        result={x}
-                        districts={currentDistricts}
-                        commonData={null}
-                      />
-                    ))
-                  : null}
-              </div>
+            {currentAllHotels.length > 0 && (
+              <>
+                <div className="border border-black rounded-md h-auto p-2 flex flex-col">
+                  {googleFetchingAccommodations && (
+                    <div className="py-5 flex flex-row justify-center">
+                      <Spinner />
+                    </div>
+                  )}
+
+                  {currentAllHotels.length > 0
+                    ? currentAllHotels.map((x, i) => {
+                        const commonHotel = allCommonAccommodations.find(
+                          (item: { id: any }) => item.id === x.id
+                        );
+                        return (
+                          <ResultItem
+                            key={`result_${i}`}
+                            index={i}
+                            result={commonHotel ? commonHotel : x}
+                            districts={currentDistricts}
+                            commonData={commonHotel}
+                          />
+                        );
+                      })
+                    : null}
+                </div>
+              </>
             )}
           </div>
-        )}
-      </div>
-    </main>
-  );
-};
 
+          {settings.showFlats && (
+            <div>
+              {currentAllFlats.length > 0 && (
+                <p className="font-bold text-xl">{`${
+                  settings.showTopTen ? 'Top 10' : 'All'
+                } Flats:`}</p>
+              )}
+              <div className="flex flex-col">
+                {preparedFlatLogs.length > 0 &&
+                  preparedFlatLogs.map((log, i) => {
+                    return (
+                      <p className="w-full text-sm" key={`flat_log_${i}`}>
+                        {log}
+                      </p>
+                    );
+                  })}
+              </div>
+              {currentAllFlats.length > 0 && (
+                <div className="border border-black rounded-md h-auto p-2 flex flex-col">
+                  {currentAllFlats.length > 0
+                    ? currentAllFlats.map((x, i) => (
+                        <ResultItem
+                          key={`result_${i}`}
+                          index={i}
+                          result={x}
+                          districts={currentDistricts}
+                          commonData={null}
+                        />
+                      ))
+                    : null}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    );
+};
 export default Page;
