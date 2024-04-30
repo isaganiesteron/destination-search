@@ -1050,8 +1050,10 @@ const Page = () => {
   useEffect(() => {
     const getUser = async () => {
       const token = await fetch('/api/token');
-      const tokenData = await token.json();
-      if (tokenData) setUser(tokenData);
+      if (token.status === 200) {
+        const tokenData = await token.json();
+        if (tokenData) setUser(tokenData);
+      }
     };
     if (!user) getUser();
   }, [user]);
