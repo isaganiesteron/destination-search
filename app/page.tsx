@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
+import Image from 'next/image';
 import chunkArray from '@/utils/chunkArray';
 import similarity from '@/utils/similarity';
 
@@ -1063,6 +1064,16 @@ const Page = () => {
       <main>
         <small className="float-end">v1.0.7</small>
         <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
+          <div className="flex flex-row justify-end gap-2 items-center">
+            <p>{user.email}</p>
+            <Image
+              className="rounded-full"
+              src={user.picture}
+              width={35}
+              height={35}
+              alt="User Google Avatar"
+            />
+          </div>
           <div>
             <div className="grid grid-cols-4 gap-1">
               <div className="col-span-2">

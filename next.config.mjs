@@ -20,6 +20,11 @@ const nextConfig = {
         hostname: 'maps.gstatic.com',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '**',
+      },
     ],
     // domains: ['booking.com', 'q-xx.bstatic.com', 'maps.gstatic.com'],
   },
