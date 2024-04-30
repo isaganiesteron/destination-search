@@ -1061,7 +1061,7 @@ const Page = () => {
 
   if (user)
     return (
-      <main>
+      <main className="min-w-[500px]">
         <small className="float-end">v1.0.7</small>
         <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
           <div className="flex flex-row justify-end gap-2 items-center">
