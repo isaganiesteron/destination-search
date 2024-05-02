@@ -49,6 +49,8 @@ const Settings = ({
   const [curApartmentTypes, setCurApartmentTypes] = useState<object[]>([]);
   const [curFacilities, setCurFacilities] = useState<number[]>(settings.facilities);
 
+  const [showSaveDialog, setshowSaveDialog] = useState<boolean>(false);
+  const [curPresetName, setCurPresetName] = useState<string>('');
   const facilityHandler = (isChecked: boolean, facilityId: number) => {
     if (isChecked) {
       const tempcurFacilities = [...curFacilities];
@@ -81,6 +83,47 @@ const Settings = ({
         conditions: {},
       },
     });
+  };
+
+  const savePresetHandler = () => {
+    console.log('Save Preset');
+    console.log(curPresetName);
+
+    const fetchSettingPreset = {
+      ignoreReviewAndTier: curIgnoreReviewAndPrice,
+      review: curReviewScore,
+      budget: {
+        min_price: curBudgetMinPrice,
+        max_price: curBudgetMaxPrice,
+        conditions: {},
+      },
+      midrange: {
+        min_price: curMidrangeMinPrice,
+        max_price: curMidrangeMaxPrice,
+        conditions: {},
+      },
+      luxury: {
+        min_price: curLuxuryMinPrice,
+        max_price: curLuxuryMaxPrice,
+        conditions: {},
+      },
+    };
+
+    const settionPreset = {
+      useReviewQuantity: settings.useReviewQuantity,
+      hoteltypes: curHotelTypes?.map((x) => String(x['id' as keyof typeof x])),
+      apartmentTypes: curApartmentTypes?.map((x) => String(x['id' as keyof typeof x])),
+      facilities: curFacilities,
+      fetchMultiplePrices: settings.fetchMultiplePrices,
+      showFlats: settings.showFlats,
+      showTopTen: settings.showTopTen,
+      googleSearchRadius: settings.googleSearchRadius,
+    };
+
+    console.log('fetchSettingPreset');
+    console.log(JSON.stringify(fetchSettingPreset));
+    console.log('settionPreset');
+    console.log(JSON.stringify(settionPreset));
   };
 
   useEffect(() => {
@@ -127,6 +170,54 @@ const Settings = ({
 
   return (
     <>
+      {showSaveDialog && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="p-3 flex flex-col bg-white border border-black rounded-md shadow">
+            <div className="flex justify-end">
+              <button
+                onClick={() => setshowSaveDialog(false)}
+                className="text-xs text-black font-extrabold"
+              >
+                X
+              </button>
+            </div>
+            <div>
+              <p className="font-bold text-md pb-2">Save Preset</p>
+              <p className="font-bold text-sm">Preset Name</p>
+              <input
+                type="text"
+                value={curPresetName}
+                className="w-full border border-black rounded-md text-black text-md p-1"
+                onChange={(e) => setCurPresetName(e.target.value)}
+              />
+              <div className="flex flex-row justify-end gap-2">
+                <button
+                  disabled={curPresetName === ''}
+                  className={`first-line:p-1 text-xs underline ${
+                    curPresetName === ''
+                      ? 'text-gray-400'
+                      : 'text-blue-800 font-semibold hover:text-blue-950 hover:font-extrabold'
+                  } `}
+                  onClick={() => {
+                    savePresetHandler();
+
+                    setshowSaveDialog(false);
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
+                  onClick={() => setshowSaveDialog(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={() => setShowSettings(!isOpen)}
         className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
@@ -178,39 +269,7 @@ const Settings = ({
               onClick={() => {
                 console.log('Save Preset Button');
 
-                const fetchSettingPreset = {
-                  ignoreReviewAndTier: curIgnoreReviewAndPrice,
-                  review: curReviewScore,
-                  budget: {
-                    min_price: curBudgetMinPrice,
-                    max_price: curBudgetMaxPrice,
-                    conditions: {},
-                  },
-                  midrange: {
-                    min_price: curMidrangeMinPrice,
-                    max_price: curMidrangeMaxPrice,
-                    conditions: {},
-                  },
-                  luxury: {
-                    min_price: curLuxuryMinPrice,
-                    max_price: curLuxuryMaxPrice,
-                    conditions: {},
-                  },
-                };
-
-                const settionPreset = {
-                  useReviewQuantity: settings.useReviewQuantity,
-                  hoteltypes: curHotelTypes?.map((x) => String(x['id' as keyof typeof x])),
-                  apartmentTypes: curApartmentTypes?.map((x) => String(x['id' as keyof typeof x])),
-                  facilities: curFacilities,
-                  fetchMultiplePrices: settings.fetchMultiplePrices,
-                  showFlats: settings.showFlats,
-                  showTopTen: settings.showTopTen,
-                  googleSearchRadius: settings.googleSearchRadius,
-                };
-
-                console.log(fetchSettingPreset);
-                console.log(settionPreset);
+                setshowSaveDialog(true);
                 // get all fetchSettings
               }}
             >
