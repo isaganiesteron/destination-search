@@ -175,7 +175,44 @@ const Settings = ({
             </div>
             <button
               className="w-full border border-black rounded-md  bg-blue-100 hover:bg-blue-200 font-bold p-[3px]"
-              onClick={() => console.log('Save Preset Button')}
+              onClick={() => {
+                console.log('Save Preset Button');
+
+                const fetchSettingPreset = {
+                  ignoreReviewAndTier: curIgnoreReviewAndPrice,
+                  review: curReviewScore,
+                  budget: {
+                    min_price: curBudgetMinPrice,
+                    max_price: curBudgetMaxPrice,
+                    conditions: {},
+                  },
+                  midrange: {
+                    min_price: curMidrangeMinPrice,
+                    max_price: curMidrangeMaxPrice,
+                    conditions: {},
+                  },
+                  luxury: {
+                    min_price: curLuxuryMinPrice,
+                    max_price: curLuxuryMaxPrice,
+                    conditions: {},
+                  },
+                };
+
+                const settionPreset = {
+                  useReviewQuantity: settings.useReviewQuantity,
+                  hoteltypes: curHotelTypes?.map((x) => String(x['id' as keyof typeof x])),
+                  apartmentTypes: curApartmentTypes?.map((x) => String(x['id' as keyof typeof x])),
+                  facilities: curFacilities,
+                  fetchMultiplePrices: settings.fetchMultiplePrices,
+                  showFlats: settings.showFlats,
+                  showTopTen: settings.showTopTen,
+                  googleSearchRadius: settings.googleSearchRadius,
+                };
+
+                console.log(fetchSettingPreset);
+                console.log(settionPreset);
+                // get all fetchSettings
+              }}
             >
               Save Preset
             </button>
