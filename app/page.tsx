@@ -1053,7 +1053,21 @@ const Page = () => {
       const token = await fetch('/api/token');
       if (token.status === 200) {
         const tokenData = await token.json();
-        if (tokenData) setUser(tokenData);
+        if (tokenData) {
+          const userExists = await fetch(`/api/fetch-user?email=${tokenData.email}`)
+            .then((response) => response.json())
+            .then((data) => data.rows);
+          if (userExists.length === 0) {
+            const addUser = await fetch(
+              `/api/add-user?email=${tokenData.email}&name=${tokenData.name}&url=${tokenData.picture}`
+            );
+            if (addUser.status === 200) console.log('User Succesfully Added');
+            else console.log('Error Adding User');
+          } else {
+            console.log('User Found in DB');
+          }
+          setUser(tokenData);
+        }
       }
     };
     if (!user) getUser();

@@ -21,8 +21,6 @@ const Settings = ({
   settings,
   saveSettings,
 }: settingsProps) => {
-  console.log('Settings Fired');
-  console.log(user);
   // fetchSettings
   const [curIgnoreReviewAndPrice, setCurIgnoreReviewAndPrice] = useState<boolean>(
     fetchSettings.ignoreReviewAndTier
