@@ -182,36 +182,48 @@ const Settings = ({
               </button>
             </div>
             <div>
-              <p className="font-bold text-md pb-2">Save Preset</p>
-              <p className="font-bold text-sm">Preset Name</p>
-              <input
-                type="text"
-                value={curPresetName}
-                className="w-full border border-black rounded-md text-black text-md p-1"
-                onChange={(e) => setCurPresetName(e.target.value)}
-              />
-              <div className="flex flex-row justify-end gap-2">
-                <button
-                  disabled={curPresetName === ''}
-                  className={`first-line:p-1 text-xs underline ${
-                    curPresetName === ''
-                      ? 'text-gray-400'
-                      : 'text-blue-800 font-semibold hover:text-blue-950 hover:font-extrabold'
-                  } `}
-                  onClick={() => {
-                    savePresetHandler();
+              <div className="pb-2">
+                <p className="font-bold text-md pb-2">Update Current Preset:</p>
+                <div className="flex flex-row gap-2 items-center">
+                  <p>{`[Preset Name]`}</p>
+                  <button
+                    className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
+                    // className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
+                    onClick={() => setshowSaveDialog(false)}
+                  >
+                    Update
+                  </button>
+                </div>
+              </div>
 
-                    setshowSaveDialog(false);
-                  }}
-                >
-                  Save
-                </button>
-                <button
-                  className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
-                  onClick={() => setshowSaveDialog(false)}
-                >
-                  Cancel
-                </button>
+              <div className="pb-2">
+                <p className="font-bold text-md pb-2">Save as New Preset:</p>
+                <p className="font-bold text-sm">Preset Name</p>
+                <div className="flex flex-row justify-end gap-2 items-center">
+                  <input
+                    type="text"
+                    value={curPresetName}
+                    className="w-full border border-black rounded-md text-black text-md p-1"
+                    onChange={(e) => setCurPresetName(e.target.value)}
+                  />
+                  <button
+                    disabled={curPresetName === ''}
+                    className={`w-1/4 border border-black rounded-md ${
+                      curPresetName === '' ? 'bg-gray-200 text-gray-400' : 'bg-gray-100'
+                    }  hover:bg-gray-200 font-bold p-[3px]`}
+                    // className={`first-line:p-1 text-xs underline ${
+                    //   curPresetName === ''
+                    //     ? 'text-gray-400'
+                    //     : 'text-blue-800 font-semibold hover:text-blue-950 hover:font-extrabold'
+                    // } `}
+                    onClick={() => {
+                      savePresetHandler();
+                      // setshowSaveDialog(false);
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             </div>
           </div>
