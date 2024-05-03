@@ -51,6 +51,8 @@ const Settings = ({
 
   const [showSaveDialog, setshowSaveDialog] = useState<boolean>(false);
   const [curPresetName, setCurPresetName] = useState<string>('');
+  const [presetStatus, setPresetStatus] = useState<string>('');
+
   const facilityHandler = (isChecked: boolean, facilityId: number) => {
     if (isChecked) {
       const tempcurFacilities = [...curFacilities];
@@ -85,9 +87,8 @@ const Settings = ({
     });
   };
 
-  const savePresetHandler = () => {
-    console.log('Save Preset');
-    console.log(curPresetName);
+  const savePresetHandler = async () => {
+    // this should be a post
 
     const fetchSettingPreset = {
       ignoreReviewAndTier: curIgnoreReviewAndPrice,
@@ -109,7 +110,7 @@ const Settings = ({
       },
     };
 
-    const settionPreset = {
+    const settingPreset = {
       useReviewQuantity: settings.useReviewQuantity,
       hoteltypes: curHotelTypes?.map((x) => String(x['id' as keyof typeof x])),
       apartmentTypes: curApartmentTypes?.map((x) => String(x['id' as keyof typeof x])),
@@ -120,10 +121,23 @@ const Settings = ({
       googleSearchRadius: settings.googleSearchRadius,
     };
 
-    console.log('fetchSettingPreset');
-    console.log(JSON.stringify(fetchSettingPreset));
-    console.log('settionPreset');
-    console.log(JSON.stringify(settionPreset));
+    const result = await fetch('/api/new-preset', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: curPresetName,
+        user: user.email,
+        fetchSettingPreset,
+        settingPreset,
+      }),
+    });
+
+    const reponse = await result.json();
+    if (result.status === 200) {
+      if (reponse.rowCount === 1) setPresetStatus('Preset Saved Successfully.');
+      else setPresetStatus(`ERROR: ${reponse}`);
+    } else {
+      setPresetStatus(`ERROR: ${reponse}`);
+    }
   };
 
   useEffect(() => {
@@ -172,7 +186,7 @@ const Settings = ({
     <>
       {showSaveDialog && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="p-3 flex flex-col bg-white border border-black rounded-md shadow">
+          <div className="w-3/5 p-3 flex flex-col bg-white border border-black rounded-md shadow">
             <div className="flex justify-end">
               <button
                 onClick={() => setshowSaveDialog(false)}
@@ -188,7 +202,6 @@ const Settings = ({
                   <p>{`[Preset Name]`}</p>
                   <button
                     className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
-                    // className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
                     onClick={() => setshowSaveDialog(false)}
                   >
                     Update
@@ -211,12 +224,8 @@ const Settings = ({
                     className={`w-1/4 border border-black rounded-md ${
                       curPresetName === '' ? 'bg-gray-200 text-gray-400' : 'bg-gray-100'
                     }  hover:bg-gray-200 font-bold p-[3px]`}
-                    // className={`first-line:p-1 text-xs underline ${
-                    //   curPresetName === ''
-                    //     ? 'text-gray-400'
-                    //     : 'text-blue-800 font-semibold hover:text-blue-950 hover:font-extrabold'
-                    // } `}
                     onClick={() => {
+                      setPresetStatus('');
                       savePresetHandler();
                       // setshowSaveDialog(false);
                     }}
@@ -225,6 +234,7 @@ const Settings = ({
                   </button>
                 </div>
               </div>
+              {presetStatus !== '' && <p>{presetStatus}</p>}
             </div>
           </div>
         </div>

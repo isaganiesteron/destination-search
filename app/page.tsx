@@ -1371,7 +1371,7 @@ const Page = () => {
             )}
           </div>
 
-          <div>
+          <div className="m-full">
             <div className="flex flex-row">
               <div>{status['loading' as keyof typeof status] ? <Spinner /> : ''}</div>
               <p className="text-sm">{status['message' as keyof typeof status]}</p>
@@ -1385,7 +1385,7 @@ const Page = () => {
               settings={settings}
               saveSettings={setSettings}
             />
-            <div className="flex flex-row-reverse">
+            <div className="flex flex-row-reverse pt-2">
               <button
                 className="w-full border border-black rounded-md p-1 bg-red-400 hover:bg-red-500 font-bold"
                 onClick={() => {
