@@ -243,6 +243,7 @@ const Settings = ({
       console.log('Fetch User presets');
       fetchUserPresets();
     } else if (!isOpen && presetToLoad) {
+      setPresetToLoad(false);
       console.log('User closed settings and chose to load preset');
 
       // Only when user closes settings page will fetch settings be updated to the parent page
@@ -283,10 +284,6 @@ const Settings = ({
       setCurApartmentTypes(apartmentTypesChecked);
     }
   }, []);
-
-  useEffect(() => {
-    console.log(curUserPresets);
-  }, [curUserPresets]);
 
   useEffect(() => {
     if (curHotelTypes) {
@@ -408,6 +405,7 @@ const Settings = ({
               onClick={() => {
                 fetch('/api/delete-preset?id=' + encodeURIComponent(presetUsed)).then((res) => {
                   if (res.ok) {
+                    setCurChosenPreset({});
                     setPresetUsed('');
                     fetchUserPresets();
                     setshowDeleteDialog(false);
