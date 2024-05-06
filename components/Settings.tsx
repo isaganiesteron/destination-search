@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { accommodationTypes } from '@/constants/accommodationtypes';
+import { accommodationTypes, hotelTypes, apartmentTypes } from '@/constants/accommodationtypes';
 import { GoogleUser } from '@/constants/interfaces';
 
 type settingsProps = {
@@ -474,7 +474,7 @@ const Settings = ({
                   if (chosenPreset) setCurChosenPreset(chosenPreset);
                 }}
               >
-                <option value={'null'}>--</option>
+                <option value={'null'}>[default settings]</option>
                 {curUserPresets.map((preset) => {
                   return (
                     <option
@@ -501,6 +501,46 @@ const Settings = ({
                         settings: string;
                       }
                     );
+                  } else {
+                    console.log('-- selected');
+                    setPresetUsed('');
+
+                    // fetchsettings
+                    setCurIgnoreReviewAndPrice(false);
+                    setCurReviewScore(8.3);
+                    setCurBudgetMinPrice(0);
+                    setCurBudgetMaxPrice(100);
+                    setCurMidrangeMinPrice(100);
+                    setCurMidrangeMaxPrice(200);
+                    setCurLuxuryMinPrice(200);
+                    setCurLuxuryMaxPrice(20000);
+
+                    // display settings
+
+                    const hotelTypesChecked = hotelTypes.map((x: string) => {
+                      return accommodationTypes.find((type) => type.id === Number(x));
+                    }) as object[]; // Cast hotelTypesChecked to object[]
+                    setCurHotelTypes(hotelTypesChecked);
+
+                    const apartmentTypesChecked = apartmentTypes.map((x: string) => {
+                      return accommodationTypes.find((type) => type.id === Number(x));
+                    }) as object[]; // Cast apartmentTypesChecked to object[];
+                    console.log(apartmentTypesChecked);
+                    setCurApartmentTypes(apartmentTypesChecked);
+
+                    setCurFacilities([]);
+
+                    // This directly updates the parent page
+                    saveSettings({
+                      useReviewQuantity: true,
+                      hoteltypes: hotelTypes,
+                      apartmentTypes: apartmentTypes,
+                      facilities: [],
+                      fetchMultiplePrices: false,
+                      showFlats: true,
+                      showTopTen: true,
+                      googleSearchRadius: 1000,
+                    });
                   }
                 }}
               >
