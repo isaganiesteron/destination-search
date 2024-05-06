@@ -118,7 +118,7 @@ const Page = () => {
     if (data.suggestions) {
       setSuggestedCities(
         data.suggestions.map((x: any) => {
-          return { label: x.place1diction.text.text, place_id: x.placePrediction.placeId };
+          return { label: x.placePrediction.text.text, place_id: x.placePrediction.placeId };
         })
       );
     } else setSuggestedCities([]);
