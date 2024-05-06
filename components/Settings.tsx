@@ -161,7 +161,18 @@ const Settings = ({
     } else {
       setPresetStatus({ status: 'error', message: `ERROR: ${reponse}` });
     }
-    fetchUserPresets();
+    await fetchUserPresets();
+    setPresetToLoad(true);
+
+    if (isNew) {
+      setPresetUsed(curPresetName);
+      loadCurrentPreset({
+        id: curPresetName,
+        email: user.email,
+        fetchsettings: JSON.stringify(fetchSettingPreset),
+        settings: JSON.stringify(settingPreset),
+      });
+    }
   };
 
   const fetchUserPresets = async () => {
@@ -378,7 +389,7 @@ const Settings = ({
         </div>
       )}
 
-      {showDeleteDialog && presetUsed && (
+      {showDeleteDialog && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="w-3/5 p-3 flex flex-col bg-white border border-black rounded-md shadow">
             <div className="flex justify-end">
@@ -403,6 +414,7 @@ const Settings = ({
                   if (res.ok) {
                     setPresetUsed('');
                     fetchUserPresets();
+                    setshowDeleteDialog(false);
                   }
                 });
               }}
@@ -434,7 +446,7 @@ const Settings = ({
                 <button
                   className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
                   onClick={() => {
-                    setshowDeleteDialog(false);
+                    setshowDeleteDialog(true);
                     setPresetStatus({ status: '', message: '' });
                   }}
                 >
