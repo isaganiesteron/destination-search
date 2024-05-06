@@ -54,6 +54,7 @@ const Settings = ({
   const [curFacilities, setCurFacilities] = useState<number[]>(settings.facilities);
 
   const [showSaveDialog, setshowSaveDialog] = useState<boolean>(false);
+  const [showDeleteDialog, setshowDeleteDialog] = useState<boolean>(false);
   const [curPresetName, setCurPresetName] = useState<string>('');
   const [presetStatus, setPresetStatus] = useState<{ status: string; message: string }>({
     status: '',
@@ -262,10 +263,6 @@ const Settings = ({
       });
       setCurApartmentTypes(apartmentTypesChecked);
     }
-    // if (user) {
-    //   console.log('Fetch User presets');
-    //   fetchUserPresets();
-    // }
   }, []);
 
   useEffect(() => {
@@ -362,6 +359,38 @@ const Settings = ({
         </div>
       )}
 
+      {showDeleteDialog && presetUsed && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="w-3/5 p-3 flex flex-col bg-white border border-black rounded-md shadow">
+            <div className="flex justify-end">
+              <button
+                onClick={() => setshowDeleteDialog(false)}
+                className="text-xs text-black font-extrabold"
+              >
+                X
+              </button>
+            </div>
+            <p className="font-bold text-md pb-2">
+              Are you sure you want to delete the following "{presetUsed}"?
+            </p>
+
+            <button
+              className="mt-4 w-1/4 border border-black rounded-md bg-red-400 hover:bg-red-200 font-bold p-[3px]"
+              onClick={() => {
+                fetch('/api/delete-preset?id=' + encodeURIComponent(presetUsed)).then((res) => {
+                  if (res.ok) {
+                    setPresetUsed('');
+                    fetchUserPresets();
+                  }
+                });
+              }}
+            >
+              Delete "{presetUsed}"
+            </button>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={() => setShowSettings(!isOpen)}
         className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
@@ -379,14 +408,16 @@ const Settings = ({
                   {presetUsed === '' ? 'None Selected' : presetUsed}
                 </span>
               </p>
-              <button
-                className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
-                onClick={() => {
-                  console.log('Delete Preset');
-                }}
-              >
-                Delete Preset
-              </button>
+              {presetUsed !== '' && (
+                <button
+                  className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
+                  onClick={() => {
+                    setshowDeleteDialog(true);
+                  }}
+                >
+                  Delete Preset
+                </button>
+              )}
             </div>
             <div className="pb-4 flex flex-row gap-1">
               <select
