@@ -228,12 +228,8 @@ const Settings = ({
     // This directly updates the parent page
     saveSettings({
       useReviewQuantity: curSettings.useReviewQuantity,
-      hoteltypes: curSettings.hoteltypes.map((x: string) => {
-        return accommodationTypes.find((type) => type.id === Number(x));
-      }),
-      apartmentTypes: curSettings.apartmentTypes.map((x: string) => {
-        return accommodationTypes.find((type) => type.id === Number(x));
-      }),
+      hoteltypes: curSettings.hoteltypes,
+      apartmentTypes: curSettings.apartmentTypes,
       facilities: curSettings.facilities,
       fetchMultiplePrices: curSettings.fetchMultiplePrices,
       showFlats: curSettings.showFlats,
@@ -502,7 +498,6 @@ const Settings = ({
                       }
                     );
                   } else {
-                    console.log('-- selected');
                     setPresetUsed('');
 
                     // fetchsettings

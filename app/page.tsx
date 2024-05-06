@@ -682,6 +682,8 @@ const Page = () => {
       `Prepared results starting with ${allAccommodations.length} ${accommodation_type} accommodations...`
     );
 
+    console.log(settings.hoteltypes);
+    console.log(settings.apartmentTypes);
     // Categorize the accommodations based on the type
     const accommodationsIncluded =
       accommodation_type == 'hotels' ? settings.hoteltypes : settings.apartmentTypes;
