@@ -2,9 +2,9 @@ const Page = () => {
   return (
     <main>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-        <h1 className="text-xl font-bold">v1.0.7 (current)</h1>
+        <h1 className="text-xl font-bold">v1.1.0 (current)</h1>
         <ul>
-          <li>User Presets</li>
+          <li>Save, Edit, Delete and Load Presets are now available</li>
         </ul>
         <h1 className="text-xl font-bold">v1.0.6</h1>
         <ul>
