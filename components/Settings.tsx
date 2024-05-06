@@ -400,7 +400,7 @@ const Settings = ({
               </button>
             </div>
             <p className="font-bold text-md pb-2">
-              Are you sure you want to delete the following "{presetUsed}"?
+              Are you sure you want to delete the following &quot;{presetUsed}&quot;?
             </p>
 
             <button
@@ -415,7 +415,7 @@ const Settings = ({
                 });
               }}
             >
-              Delete "{presetUsed}"
+              Delete &quot;{presetUsed}&quot;
             </button>
           </div>
         </div>
