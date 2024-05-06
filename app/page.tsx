@@ -45,8 +45,6 @@ const Page = () => {
   const [selectedDistricts, setSelectedDistricts] = useState<number[]>([]);
   const [selectedStars, setSelectedStars] = useState<number[]>([0, 1, 2, 3, 4, 5]);
   const [selectedSources, setSelectedSources] = useState<number[]>([0, 1, 2]);
-  const [showSettings, setShowSettings] = useState<boolean>(false);
-
   const [destination, setDestination] = useState<string>('');
   const [suggestions, setSuggestions] = useState<object[]>([]);
   const [currentDestination, setCurrentDestination] = useState<object>({
@@ -65,6 +63,8 @@ const Page = () => {
     checkout: 'null',
   });
 
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [presetUsed, setPresetUsed] = useState<string>('');
   const [currentTier, setCurrentTier] = useState<string>('budget');
   const [fetchSettings, setFetchSettings] = useState<I_FetchSettings>({
     ignoreReviewAndTier: false,
@@ -118,7 +118,7 @@ const Page = () => {
     if (data.suggestions) {
       setSuggestedCities(
         data.suggestions.map((x: any) => {
-          return { label: x.placePrediction.text.text, place_id: x.placePrediction.placeId };
+          return { label: x.place1diction.text.text, place_id: x.placePrediction.placeId };
         })
       );
     } else setSuggestedCities([]);
@@ -1377,6 +1377,8 @@ const Page = () => {
               <p className="text-sm">{status['message' as keyof typeof status]}</p>
             </div>
             <Settings
+              presetUsed={presetUsed}
+              setPresetUsed={setPresetUsed}
               user={user}
               isOpen={showSettings}
               setShowSettings={setShowSettings}

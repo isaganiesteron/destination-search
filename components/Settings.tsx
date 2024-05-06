@@ -10,11 +10,15 @@ type settingsProps = {
   saveFetchSettings: Function;
   settings: any;
   saveSettings: Function;
+  presetUsed: string;
+  setPresetUsed: Function;
 };
 
 const Settings = ({
   user,
   isOpen,
+  presetUsed,
+  setPresetUsed,
   setShowSettings,
   fetchSettings,
   saveFetchSettings,
@@ -51,7 +55,14 @@ const Settings = ({
 
   const [showSaveDialog, setshowSaveDialog] = useState<boolean>(false);
   const [curPresetName, setCurPresetName] = useState<string>('');
-  const [presetStatus, setPresetStatus] = useState<string>('');
+  const [presetStatus, setPresetStatus] = useState<{ status: string; message: string }>({
+    status: '',
+    message: '',
+  });
+  const [curUserPresets, setCurUserPresets] = useState<object[]>([]);
+  const [curChosenPreset, setCurChosenPreset] = useState<object>({});
+
+  const [presetToLoad, setPresetToLoad] = useState<boolean>(false);
 
   const facilityHandler = (isChecked: boolean, facilityId: number) => {
     if (isChecked) {
@@ -88,8 +99,6 @@ const Settings = ({
   };
 
   const savePresetHandler = async () => {
-    // this should be a post
-
     const fetchSettingPreset = {
       ignoreReviewAndTier: curIgnoreReviewAndPrice,
       review: curReviewScore,
@@ -133,12 +142,112 @@ const Settings = ({
 
     const reponse = await result.json();
     if (result.status === 200) {
-      if (reponse.rowCount === 1) setPresetStatus('Preset Saved Successfully.');
-      else setPresetStatus(`ERROR: ${reponse}`);
+      if (reponse.rowCount === 1)
+        setPresetStatus({ status: 'success', message: 'Preset Saved Successfully.' });
+      else setPresetStatus({ status: 'error', message: `ERROR: ${reponse}` });
     } else {
-      setPresetStatus(`ERROR: ${reponse}`);
+      setPresetStatus({ status: 'error', message: `ERROR: ${reponse}` });
     }
+    fetchUserPresets();
   };
+
+  const fetchUserPresets = async () => {
+    const request = await fetch('/api/fetch-user-presets?email=' + user.email);
+    const rows = await request.json().then((data) => data.rows);
+    setCurUserPresets(rows);
+
+    const chosenPreset: object | undefined = curUserPresets.find(
+      (x) => x['id' as keyof typeof x] === presetUsed
+    );
+    if (chosenPreset) setCurChosenPreset(chosenPreset);
+  };
+
+  const loadCurrentPreset = async (preset: {
+    id: string;
+    email: string;
+    fetchsettings: string;
+    settings: string;
+  }) => {
+    const curFetchSettings = JSON.parse(preset.fetchsettings);
+    const curSettings = JSON.parse(preset.settings);
+
+    /**
+     * When user loads a preset, the variables on the settings page
+     * would be updated. BUT only the display settings will be directly
+     * updated to the parent page. Fetch Settings will only be updated
+     * to the parent page when the user closes the settings page.
+     */
+
+    // fetchsettings
+    setCurIgnoreReviewAndPrice(curFetchSettings.ignoreReviewAndTier);
+    setCurReviewScore(curFetchSettings.review);
+    setCurBudgetMinPrice(curFetchSettings.budget.min_price);
+    setCurBudgetMaxPrice(curFetchSettings.budget.max_price);
+    setCurMidrangeMinPrice(curFetchSettings.midrange.min_price);
+    setCurMidrangeMaxPrice(curFetchSettings.midrange.max_price);
+    setCurLuxuryMinPrice(curFetchSettings.luxury.min_price);
+    setCurLuxuryMaxPrice(curFetchSettings.luxury.max_price);
+
+    // display settings
+    setCurHotelTypes(
+      curSettings.hoteltypes.map((x: string) => {
+        return accommodationTypes.find((type) => type.id === Number(x));
+      })
+    );
+    setCurApartmentTypes(
+      curSettings.apartmentTypes.map((x: string) => {
+        return accommodationTypes.find((type) => type.id === Number(x));
+      })
+    );
+    setCurFacilities(curSettings.facilities);
+
+    // This directly updates the parent page
+    saveSettings({
+      useReviewQuantity: curSettings.useReviewQuantity,
+      hoteltypes: curSettings.hoteltypes.map((x: string) => {
+        return accommodationTypes.find((type) => type.id === Number(x));
+      }),
+      apartmentTypes: curSettings.apartmentTypes.map((x: string) => {
+        return accommodationTypes.find((type) => type.id === Number(x));
+      }),
+      facilities: curSettings.facilities,
+      fetchMultiplePrices: curSettings.fetchMultiplePrices,
+      showFlats: curSettings.showFlats,
+      showTopTen: curSettings.showTopTen,
+      googleSearchRadius: curSettings.googleSearchRadius,
+    });
+  };
+
+  useEffect(() => {
+    if (isOpen && user) {
+      console.log('Fetch User presets');
+      fetchUserPresets();
+    } else if (!isOpen && presetToLoad) {
+      console.log('User closed settings and chose to load preset');
+
+      // Only when user closes settings page will fetch settings be updated to the parent page
+      saveFetchSettings({
+        ...fetchSettings,
+        ignoreReviewAndTier: curIgnoreReviewAndPrice,
+        review: curReviewScore,
+        budget: {
+          min_price: curBudgetMinPrice,
+          max_price: curBudgetMaxPrice,
+          conditions: {},
+        },
+        midrange: {
+          min_price: curMidrangeMinPrice,
+          max_price: curMidrangeMaxPrice,
+          conditions: {},
+        },
+        luxury: {
+          min_price: curLuxuryMinPrice,
+          max_price: curLuxuryMaxPrice,
+          conditions: {},
+        },
+      });
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (settings.hoteltypes) {
@@ -153,7 +262,15 @@ const Settings = ({
       });
       setCurApartmentTypes(apartmentTypesChecked);
     }
+    // if (user) {
+    //   console.log('Fetch User presets');
+    //   fetchUserPresets();
+    // }
   }, []);
+
+  useEffect(() => {
+    console.log(curUserPresets);
+  }, [curUserPresets]);
 
   useEffect(() => {
     if (curHotelTypes) {
@@ -199,7 +316,7 @@ const Settings = ({
               <div className="pb-2">
                 <p className="font-bold text-md pb-2">Update Current Preset:</p>
                 <div className="flex flex-row gap-2 items-center">
-                  <p>{`[Preset Name]`}</p>
+                  <p>{presetUsed === '' ? 'None Selected' : presetUsed}</p>
                   <button
                     className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
                     onClick={() => setshowSaveDialog(false)}
@@ -225,16 +342,21 @@ const Settings = ({
                       curPresetName === '' ? 'bg-gray-200 text-gray-400' : 'bg-gray-100'
                     }  hover:bg-gray-200 font-bold p-[3px]`}
                     onClick={() => {
-                      setPresetStatus('');
+                      setPresetStatus({ status: '', message: '' });
                       savePresetHandler();
-                      // setshowSaveDialog(false);
                     }}
                   >
                     Save
                   </button>
                 </div>
               </div>
-              {presetStatus !== '' && <p>{presetStatus}</p>}
+              {presetStatus.message !== '' && (
+                <p
+                  className={presetStatus.status === 'success' ? 'text-green-700' : 'text-red-500'}
+                >
+                  {presetStatus.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -251,7 +373,12 @@ const Settings = ({
           <div className="p-2 border border-black rounded-md ">
             <p className="font-bold text-md pb-2">Presets:</p>
             <div className="flex flex-row pb-2">
-              <p className="text-sm underline">Current Preset: {'[Preset Name]'}</p>
+              <p className="text-sm">
+                Current Preset:{' '}
+                <span className="underline">
+                  {presetUsed === '' ? 'None Selected' : presetUsed}
+                </span>
+              </p>
               <button
                 className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
                 onClick={() => {
@@ -263,37 +390,60 @@ const Settings = ({
             </div>
             <div className="pb-4 flex flex-row gap-1">
               <select
-                disabled={fetchSettings.ignoreReviewAndTier}
                 className="w-3/4 border border-black rounded-md text-black text-md p-[3px]"
                 name="preset"
-                onChange={(e) => console.log(e.target.value)}
+                value={
+                  curChosenPreset['id' as keyof typeof curChosenPreset]
+                    ? curChosenPreset['id' as keyof typeof curChosenPreset]
+                    : 'null'
+                }
+                onChange={(e) => {
+                  if (e.target.value === 'null') {
+                    setCurChosenPreset({});
+                    return;
+                  }
+                  const chosenPreset: object | undefined = curUserPresets.find(
+                    (x) => x['id' as keyof typeof x] === e.target.value
+                  );
+                  if (chosenPreset) setCurChosenPreset(chosenPreset);
+                }}
               >
-                <option value={'preset1'}>preset1</option>
-                <option value={'preset2'}>preset2</option>
-                <option value={'preset3'}>preset3</option>
+                <option value={'null'}>--</option>
+                {curUserPresets.map((preset) => {
+                  return (
+                    <option
+                      key={preset['id' as keyof typeof preset]}
+                      value={preset['id' as keyof typeof preset]}
+                    >
+                      {preset['id' as keyof typeof preset]}
+                    </option>
+                  );
+                })}
               </select>
 
               <button
                 className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
-                onClick={() => console.log('Load Preset Button')}
+                onClick={() => {
+                  if (JSON.stringify(curChosenPreset) !== '{}') {
+                    setPresetUsed(curChosenPreset['id' as keyof typeof curChosenPreset] as string);
+                    setPresetToLoad(true);
+                    loadCurrentPreset(
+                      curChosenPreset as {
+                        id: string;
+                        email: string;
+                        fetchsettings: string;
+                        settings: string;
+                      }
+                    );
+                  }
+                }}
               >
                 Load Preset
               </button>
-              {/* <input
-              type="number"
-              value={curReviewScore}
-              className="w-full border border-black rounded-md text-black text-md px-1"
-              onChange={(e) => setCurReviewScore(Number(e.target.value))}
-            /> */}
             </div>
             <button
               className="w-full border border-black rounded-md  bg-blue-100 hover:bg-blue-200 font-bold p-[3px]"
-              onClick={() => {
-                console.log('Save Preset Button');
-
-                setshowSaveDialog(true);
-                // get all fetchSettings
-              }}
+              onClick={() => setshowSaveDialog(true)}
             >
               Save Preset
             </button>
