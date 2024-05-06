@@ -99,7 +99,8 @@ const Settings = ({
     });
   };
 
-  const savePresetHandler = async () => {
+  const updatePresetHandler = async (presetId?: string) => {
+    const isNew = !presetId;
     const fetchSettingPreset = {
       ignoreReviewAndTier: curIgnoreReviewAndPrice,
       review: curReviewScore,
@@ -131,20 +132,31 @@ const Settings = ({
       googleSearchRadius: settings.googleSearchRadius,
     };
 
-    const result = await fetch('/api/new-preset', {
+    const requestBody = isNew
+      ? {
+          name: curPresetName,
+          user: user.email,
+          fetchSettingPreset,
+          settingPreset,
+        }
+      : {
+          name: presetUsed,
+          fetchSettingPreset,
+          settingPreset,
+        };
+
+    const result = await fetch(isNew ? '/api/new-preset' : '/api/edit-preset', {
       method: 'POST',
-      body: JSON.stringify({
-        name: curPresetName,
-        user: user.email,
-        fetchSettingPreset,
-        settingPreset,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const reponse = await result.json();
     if (result.status === 200) {
       if (reponse.rowCount === 1)
-        setPresetStatus({ status: 'success', message: 'Preset Saved Successfully.' });
+        setPresetStatus({
+          status: 'success',
+          message: `Preset ${isNew ? 'Saved' : 'Updated'} Successfully.`,
+        });
       else setPresetStatus({ status: 'error', message: `ERROR: ${reponse}` });
     } else {
       setPresetStatus({ status: 'error', message: `ERROR: ${reponse}` });
@@ -303,26 +315,33 @@ const Settings = ({
           <div className="w-3/5 p-3 flex flex-col bg-white border border-black rounded-md shadow">
             <div className="flex justify-end">
               <button
-                onClick={() => setshowSaveDialog(false)}
+                onClick={() => {
+                  setshowSaveDialog(false);
+                  setPresetStatus({ status: '', message: '' });
+                }}
                 className="text-xs text-black font-extrabold"
               >
                 X
               </button>
             </div>
             <div>
-              <div className="pb-2">
-                <p className="font-bold text-md pb-2">Update Current Preset:</p>
-                <div className="flex flex-row gap-2 items-center">
-                  <p>{presetUsed === '' ? 'None Selected' : presetUsed}</p>
-                  <button
-                    className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
-                    onClick={() => setshowSaveDialog(false)}
-                  >
-                    Update
-                  </button>
+              {presetUsed !== '' && (
+                <div className="pb-2">
+                  <p className="font-bold text-md pb-2">`Update `Current Preset:</p>
+                  <div className="flex flex-row gap-2 items-center">
+                    <p className="text-xl underline">{presetUsed}</p>
+                    <button
+                      className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
+                      onClick={() => {
+                        setPresetStatus({ status: '', message: '' });
+                        updatePresetHandler(presetUsed);
+                      }}
+                    >
+                      Update
+                    </button>
+                  </div>
                 </div>
-              </div>
-
+              )}
               <div className="pb-2">
                 <p className="font-bold text-md pb-2">Save as New Preset:</p>
                 <p className="font-bold text-sm">Preset Name</p>
@@ -340,7 +359,7 @@ const Settings = ({
                     }  hover:bg-gray-200 font-bold p-[3px]`}
                     onClick={() => {
                       setPresetStatus({ status: '', message: '' });
-                      savePresetHandler();
+                      updatePresetHandler();
                     }}
                   >
                     Save
@@ -364,7 +383,10 @@ const Settings = ({
           <div className="w-3/5 p-3 flex flex-col bg-white border border-black rounded-md shadow">
             <div className="flex justify-end">
               <button
-                onClick={() => setshowDeleteDialog(false)}
+                onClick={() => {
+                  setshowDeleteDialog(false);
+                  setPresetStatus({ status: '', message: '' });
+                }}
                 className="text-xs text-black font-extrabold"
               >
                 X
@@ -412,7 +434,8 @@ const Settings = ({
                 <button
                   className="p-1 text-xs text-blue-800 font-semibold underline hover:text-blue-950 hover:font-extrabold"
                   onClick={() => {
-                    setshowDeleteDialog(true);
+                    setshowDeleteDialog(false);
+                    setPresetStatus({ status: '', message: '' });
                   }}
                 >
                   Delete Preset
@@ -474,9 +497,12 @@ const Settings = ({
             </div>
             <button
               className="w-full border border-black rounded-md  bg-blue-100 hover:bg-blue-200 font-bold p-[3px]"
-              onClick={() => setshowSaveDialog(true)}
+              onClick={() => {
+                setshowSaveDialog(true);
+                setPresetStatus({ status: '', message: '' });
+              }}
             >
-              Save Preset
+              {presetUsed === '' ? 'Save Preset' : 'Save or Edit Preset'}
             </button>
           </div>
           <div className="p-2 border border-black rounded-md">
