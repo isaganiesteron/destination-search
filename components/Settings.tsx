@@ -165,6 +165,7 @@ const Settings = ({
     setPresetToLoad(true);
 
     if (isNew) {
+      setCurChosenPreset(curPresetName);
       setPresetUsed(curPresetName);
       loadCurrentPreset({
         id: curPresetName,
@@ -372,6 +373,7 @@ const Settings = ({
                     onClick={() => {
                       setPresetStatus({ status: '', message: '' });
                       updatePresetHandler();
+                      setCurPresetName('');
                     }}
                   >
                     Save
