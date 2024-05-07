@@ -251,6 +251,10 @@ const Settings = ({
   };
 
   useEffect(() => {
+    if (!showSaveDialog) setCurPresetName('');
+  }, [showSaveDialog]);
+
+  useEffect(() => {
     if (isOpen && user) {
       fetchUserPresets();
     } else if (!isOpen && presetToLoad) {
@@ -373,7 +377,6 @@ const Settings = ({
                     onClick={() => {
                       setPresetStatus({ status: '', message: '' });
                       updatePresetHandler();
-                      setCurPresetName('');
                     }}
                   >
                     Save

@@ -2,7 +2,16 @@ const Page = () => {
   return (
     <main>
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
-        <h1 className="text-xl font-bold">v1.1.0 (current)</h1>
+        <h1 className="text-xl font-bold">v1.1.1 (current)</h1>
+        <ul>
+          <li>
+            Bug Fixed: Clicking on Load Preset button will without a preset loaded will load
+            previous preset.
+          </li>
+          <li>Bug Fixed: After creating new preset it will not be selected in the dropdown</li>
+          <li>Bug Fixed: Preset name textbox should be reset after saving</li>
+        </ul>
+        <h1 className="text-xl font-bold">v1.1.0</h1>
         <ul>
           <li>Save, Edit, Delete and Load Presets are now available</li>
         </ul>
