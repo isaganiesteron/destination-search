@@ -61,7 +61,7 @@ const Settings = ({
     message: '',
   });
   const [curUserPresets, setCurUserPresets] = useState<object[]>([]);
-  const [curChosenPreset, setCurChosenPreset] = useState<object>({});
+  const [curChosenPreset, setCurChosenPreset] = useState<string>('');
 
   const [presetToLoad, setPresetToLoad] = useState<boolean>(false);
 
@@ -183,7 +183,7 @@ const Settings = ({
     const chosenPreset: object | undefined = curUserPresets.find(
       (x) => x['id' as keyof typeof x] === presetUsed
     );
-    if (chosenPreset) setCurChosenPreset(chosenPreset);
+    if (chosenPreset) setCurChosenPreset(chosenPreset['id' as keyof typeof chosenPreset] as string);
   };
 
   const loadCurrentPreset = async (preset: {
@@ -238,14 +238,22 @@ const Settings = ({
     });
   };
 
+  const deleteCurrentPreset = async (presetUsed: string) => {
+    await fetch('/api/delete-preset?id=' + encodeURIComponent(presetUsed)).then(async (res) => {
+      if (res.ok) {
+        await fetchUserPresets();
+        setshowDeleteDialog(false);
+        setCurChosenPreset('');
+        setPresetUsed('');
+      }
+    });
+  };
+
   useEffect(() => {
     if (isOpen && user) {
-      console.log('Fetch User presets');
       fetchUserPresets();
     } else if (!isOpen && presetToLoad) {
       setPresetToLoad(false);
-      console.log('User closed settings and chose to load preset');
-
       // Only when user closes settings page will fetch settings be updated to the parent page
       saveFetchSettings({
         ...fetchSettings,
@@ -402,16 +410,7 @@ const Settings = ({
 
             <button
               className="mt-4 w-1/4 border border-black rounded-md bg-red-400 hover:bg-red-200 font-bold p-[3px]"
-              onClick={() => {
-                fetch('/api/delete-preset?id=' + encodeURIComponent(presetUsed)).then((res) => {
-                  if (res.ok) {
-                    setCurChosenPreset({});
-                    setPresetUsed('');
-                    fetchUserPresets();
-                    setshowDeleteDialog(false);
-                  }
-                });
-              }}
+              onClick={async () => await deleteCurrentPreset(presetUsed)}
             >
               Delete &quot;{presetUsed}&quot;
             </button>
@@ -452,20 +451,17 @@ const Settings = ({
               <select
                 className="w-3/4 border border-black rounded-md text-black text-md p-[3px]"
                 name="preset"
-                value={
-                  curChosenPreset['id' as keyof typeof curChosenPreset]
-                    ? curChosenPreset['id' as keyof typeof curChosenPreset]
-                    : 'null'
-                }
+                value={curChosenPreset ? curChosenPreset : 'null'}
                 onChange={(e) => {
                   if (e.target.value === 'null') {
-                    setCurChosenPreset({});
+                    setCurChosenPreset('');
                     return;
                   }
                   const chosenPreset: object | undefined = curUserPresets.find(
                     (x) => x['id' as keyof typeof x] === e.target.value
                   );
-                  if (chosenPreset) setCurChosenPreset(chosenPreset);
+                  if (chosenPreset)
+                    setCurChosenPreset(chosenPreset['id' as keyof typeof chosenPreset] as string);
                 }}
               >
                 <option value={'null'}>[default settings]</option>
@@ -484,11 +480,14 @@ const Settings = ({
               <button
                 className="w-1/4 border border-black rounded-md bg-gray-100 hover:bg-gray-200 font-bold p-[3px]"
                 onClick={() => {
-                  if (JSON.stringify(curChosenPreset) !== '{}') {
-                    setPresetUsed(curChosenPreset['id' as keyof typeof curChosenPreset] as string);
+                  if (curChosenPreset !== '') {
+                    setPresetUsed(curChosenPreset);
                     setPresetToLoad(true);
+                    const chosenPreset: object | undefined = curUserPresets.find(
+                      (x) => x['id' as keyof typeof x] === curChosenPreset
+                    );
                     loadCurrentPreset(
-                      curChosenPreset as {
+                      chosenPreset as {
                         id: string;
                         email: string;
                         fetchsettings: string;
@@ -518,7 +517,6 @@ const Settings = ({
                     const apartmentTypesChecked = apartmentTypes.map((x: string) => {
                       return accommodationTypes.find((type) => type.id === Number(x));
                     }) as object[]; // Cast apartmentTypesChecked to object[];
-                    console.log(apartmentTypesChecked);
                     setCurApartmentTypes(apartmentTypesChecked);
 
                     setCurFacilities([]);
