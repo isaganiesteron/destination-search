@@ -4,6 +4,7 @@ const Page = () => {
       <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
         <h1 className="text-xl font-bold">v1.1.1 (current)</h1>
         <ul>
+          <li>Included a signout button, allowing users to change google accounts</li>
           <li>
             Bug Fixed: Clicking on Load Preset button will without a preset loaded will load
             previous preset.
