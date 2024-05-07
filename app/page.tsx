@@ -1076,7 +1076,7 @@ const Page = () => {
   if (user)
     return (
       <main className="min-w-[500px]">
-        <small className="float-end">v1.1.0</small>
+        <small className="float-end">v1.1.1</small>
         <div className="p-4 w-full border-2 border-black flex flex-col rounded-md gap-3">
           <div className="flex flex-row justify-end gap-2 items-center">
             <p>{user.email}</p>
